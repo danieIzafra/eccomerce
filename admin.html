@@ -110,6 +110,7 @@
 
     <nav class="mobile-bottom-nav">
         <a href="#" class="nav-item active" onclick="openTab(event, 'tab-drops')"><i class="fas fa-box-open"></i><span>Drops</span></a>
+        <a href="#" class="nav-item" onclick="openTab(event, 'tab-lookbook')"><i class="fas fa-camera-retro"></i><span>Lookbook</span></a>
         <a href="#" class="nav-item" onclick="openTab(event, 'tab-design')"><i class="fas fa-palette"></i><span>Design</span></a>
     </nav>
 
@@ -117,6 +118,7 @@
         
         <div class="desktop-tabs">
             <button class="tab-btn active" onclick="openTab(event, 'tab-drops')"><i class="fas fa-box-open"></i> Inventário</button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-lookbook')"><i class="fas fa-camera-retro"></i> Lookbook</button>
             <button class="tab-btn" onclick="openTab(event, 'tab-design')"><i class="fas fa-palette"></i> Personalizar Loja</button>
         </div>
 
@@ -166,6 +168,37 @@
             </div>
         </div>
 
+        <div id="tab-lookbook" class="tab-content">
+            <div class="glass-accordion active">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <h2><i class="fas fa-plus-circle"></i> Adicionar Foto ao Lookbook</h2>
+                    <i class="fas fa-chevron-down accordion-icon"></i>
+                </div>
+                <div class="accordion-content">
+                    <form id="add-lookbook-form">
+                        <div class="form-group">
+                            <label>Foto do Lookbook (Estilo Lifestyle)</label>
+                            <div class="upload-dropzone" onclick="document.getElementById('lookbook-upload').click()">
+                                <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 10px; display:block;"></i> 
+                                <span id="lookbook-upload-text">Clique para selecionar a foto</span>
+                            </div>
+                            <input type="file" id="lookbook-upload" accept="image/*" style="display: none;" onchange="handleLookbookFileSelect(event)">
+                        </div>
+                        <button type="submit" class="btn-submit" id="btn-save-lookbook">
+                            <i class="fas fa-rocket"></i> Salvar no Lookbook
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2 class="panel-title">Galeria Atual</h2>
+                <div class="data-list" id="lookbook-list">
+                    <p style="text-align: center; color: var(--text-muted);">Carregando fotos do Lookbook...</p>
+                </div>
+            </div>
+        </div>
+
         <div id="tab-design" class="tab-content">
             <div class="panel" style="max-width: 500px; margin: 0 auto;">
                 <h2 class="panel-title">Cores do Sistema</h2>
@@ -191,6 +224,7 @@
     // VARIÁVEIS IMPORTANTES
     let lojaIdAtual = null;
     let selectedImageFile = null; 
+    let selectedLookbookFile = null; 
     const IMGBB_API_KEY = '351d3ebf4dcd475e4f3522a6198ef849'; 
 
     async function carregarDadosLoja() {
@@ -214,6 +248,7 @@
             }
             
             loadProducts(); 
+            loadLookbook();
         }
     }
 
@@ -358,6 +393,86 @@
         btn.innerHTML = '<i class="fas fa-rocket"></i> Salvar no Banco de Dados';
         btn.disabled = false;
     });
+
+    // === LÓGICA DO LOOKBOOK ===
+    function handleLookbookFileSelect(event) {
+        const file = event.target.files[0];
+        if(file) {
+            document.getElementById('lookbook-upload-text').innerText = `Arquivo pronto: ${file.name}`;
+            selectedLookbookFile = file; 
+        }
+    }
+
+    document.getElementById('add-lookbook-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!selectedLookbookFile) {
+            alert("⚠️ Escolha uma foto primeiro.");
+            return;
+        }
+
+        const btn = document.getElementById('btn-save-lookbook');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subindo foto...';
+        btn.disabled = true;
+
+        try {
+            const formData = new FormData();
+            formData.append('image', selectedLookbookFile);
+            formData.append('key', IMGBB_API_KEY);
+
+            const imgbbResponse = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
+            const imgbbData = await imgbbResponse.json();
+
+            if (!imgbbData.success) throw new Error("Erro no upload: " + imgbbData.error.message);
+
+            const imageUrl = imgbbData.data.url; 
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando no banco...';
+
+            const { error } = await supabaseClient.from('lookbook').insert([{ 
+                loja_id: lojaIdAtual,
+                imagem_url: imageUrl
+            }]);
+
+            if(error) alert("Erro ao salvar: " + error.message);
+            else {
+                document.getElementById('add-lookbook-form').reset();
+                document.getElementById('lookbook-upload-text').innerText = "Clique para selecionar a foto";
+                selectedLookbookFile = null; 
+                loadLookbook();
+            }
+        } catch (err) {
+            alert(err.message);
+        }
+        btn.innerHTML = '<i class="fas fa-rocket"></i> Salvar no Lookbook';
+        btn.disabled = false;
+    });
+
+    async function loadLookbook() {
+        if(!lojaIdAtual) return;
+        const container = document.getElementById('lookbook-list');
+        const { data: fotos, error } = await supabaseClient.from('lookbook').select('*').eq('loja_id', lojaIdAtual).order('id', { ascending: false });
+        
+        if (error) { container.innerHTML = `<p style="color: red;">Erro: ${error.message}</p>`; return; }
+        if (fotos.length === 0) { container.innerHTML = '<p style="text-align: center; color: var(--text-muted);">A galeria está vazia.</p>'; return; }
+
+        container.innerHTML = '';
+        fotos.forEach(f => {
+            container.innerHTML += `
+                <div class="data-card">
+                    <div class="card-header">
+                        <img src="${f.imagem_url}" style="width: 100px; height: 100px; border-radius: 8px; object-fit: cover;">
+                        <button class="btn-icon danger" onclick="deletarLookbook('${f.id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    async function deletarLookbook(id) {
+        if(confirm('Tem certeza que quer remover esta foto da vitrine?')) {
+            await supabaseClient.from('lookbook').delete().eq('id', id);
+            loadLookbook(); 
+        }
+    }
 
     function openTab(evt, tabName) {
         var i, tabcontent, tablinks;

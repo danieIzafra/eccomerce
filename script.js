@@ -325,6 +325,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // ==========================================
+        // CARREGAR LOOKBOOK DO BANCO DE DADOS
+        // ==========================================
+        const lookbookGrid = document.getElementById('lookbook-grid');
+        if (lookbookGrid && !idProduto && loja) {
+            const { data: fotos } = await supabase.from('lookbook').select('*').eq('loja_id', loja.id).order('id', { ascending: false });
+            
+            if (fotos && fotos.length > 0) {
+                lookbookGrid.innerHTML = ''; // Limpa a "placa" de aviso
+                fotos.forEach(f => {
+                    lookbookGrid.innerHTML += `
+                        <div class="lookbook-item">
+                            <img src="${f.imagem_url}" alt="Look" loading="lazy">
+                        </div>
+                    `;
+                });
+            }
+        }
+
         if (idProduto) {
             const { data: p } = await supabase.from('produtos').select('*').eq('id', idProduto).single();
             if (p) {
