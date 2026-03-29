@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Carregando Admin...</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* Variáveis de Tema */
+        :root { 
+            --accent-neon: #00d2ff; 
+            --gradient-sec: #7a00ff; 
+            --text-on-accent: #000000; 
+            --bg-base: #050505; 
+            --bg-glass-header: rgba(10, 10, 12, 0.7); 
+            --bg-glass-panel: rgba(255, 255, 255, 0.03); 
+            --bg-glass-accordion: rgba(255, 255, 255, 0.02); 
+            --bg-input: rgba(0, 0, 0, 0.5); 
+            --bg-card: rgba(20, 20, 22, 0.4); 
+            --border-color: rgba(255, 255, 255, 0.08); 
+            --border-highlight: rgba(255, 255, 255, 0.15); 
+            --text-main: #f4f4f5; 
+            --text-muted: #a1a1aa; 
+            --shadow-glass: 0 10px 30px 0 rgba(0, 0, 0, 0.5); 
+        }
+        
+        body.light-mode { 
+            --bg-base: #f3f4f6; --bg-glass-header: rgba(255, 255, 255, 0.7); --bg-glass-panel: rgba(255, 255, 255, 0.6); --bg-glass-accordion: rgba(255, 255, 255, 0.4); --bg-input: rgba(255, 255, 255, 0.9); --bg-card: rgba(255, 255, 255, 0.5); --border-color: rgba(0, 0, 0, 0.05); --border-highlight: rgba(255, 255, 255, 1); --text-main: #111827; --text-muted: #6b7280; --shadow-glass: 0 10px 30px 0 rgba(31, 38, 135, 0.05); 
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-base); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding-top: 100px; padding-bottom: 40px; transition: 0.3s ease; }
+        
+        .app-header { position: fixed; top: 0; left: 0; width: 100%; background: var(--bg-glass-header); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--border-color); z-index: 1000; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: var(--shadow-glass); }
+        .logo { color: var(--text-main); text-decoration: none; font-weight: 900; font-size: 1.3rem; letter-spacing: -0.5px; display: flex; align-items: baseline; gap: 5px; }
+        .logo span { background: linear-gradient(135deg, var(--accent-neon), var(--gradient-sec)); -webkit-background-clip: text; color: transparent; font-size: 0.8rem; text-transform: uppercase; font-weight: 900; }
+        .header-actions { display: flex; align-items: center; gap: 20px; }
+        .header-link { color: var(--text-muted); text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: color 0.2s; background: var(--bg-glass-panel); padding: 8px 15px; border-radius: 20px; border: 1px solid var(--border-color); }
+        .header-link:hover, .theme-toggle-btn:hover { color: var(--accent-neon); border-color: var(--accent-neon); }
+        .theme-toggle-btn { background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; transition: 0.2s; }
+        
+        .admin-container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        
+        .desktop-tabs { display: flex; gap: 15px; margin-bottom: 30px; border-bottom: 1px solid var(--border-color); overflow-x: auto; padding-bottom: 10px; }
+        .desktop-tabs::-webkit-scrollbar { display: none; }
+        .tab-btn { background: none; border: none; color: var(--text-muted); font-weight: 700; font-size: 0.9rem; padding: 10px 15px; cursor: pointer; transition: 0.3s; position: relative; white-space: nowrap; border-radius: 8px; }
+        .tab-btn:hover { background: var(--bg-glass-panel); color: var(--text-main); }
+        .tab-btn.active { color: var(--bg-base); background: var(--text-main); }
+        
+        .tab-content { display: none; animation: fadeIn 0.4s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .glass-accordion { background: var(--bg-glass-accordion); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--border-color); border-radius: 16px; margin-bottom: 20px; overflow: hidden; transition: 0.3s ease; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .accordion-header { padding: 20px 25px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+        .accordion-header h2 { font-size: 1.1rem; font-weight: 800; display: flex; align-items: center; gap: 12px; margin: 0; color: var(--text-main); }
+        .accordion-header h2 i { color: var(--accent-neon); font-size: 1.2rem; }
+        .accordion-icon { transition: transform 0.4s ease; color: var(--text-muted); }
+        .glass-accordion.active .accordion-icon { transform: rotate(180deg); color: var(--accent-neon); }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.5s ease, padding 0.5s ease; padding: 0 25px; background: rgba(0,0,0,0.2); }
+        .glass-accordion.active .accordion-content { max-height: 3000px; padding: 25px; border-top: 1px solid var(--border-color); }
+
+        .panel { background: var(--bg-glass-panel); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-radius: 16px; padding: 30px; border: 1px solid var(--border-color); margin-bottom: 25px; box-shadow: var(--shadow-glass); }
+        .panel-title { font-size: 1.2rem; font-weight: 800; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
+        
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+        .form-control { width: 100%; padding: 15px 18px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 12px; color: var(--text-main); outline: none; transition: 0.3s; }
+        .form-control:focus { border-color: var(--accent-neon); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        
+        .upload-dropzone { border: 2px dashed var(--border-color); background: var(--bg-input); border-radius: 12px; padding: 30px; text-align: center; cursor: pointer; color: var(--text-muted); transition: 0.3s; }
+        .upload-dropzone:hover { border-color: var(--accent-neon); color: var(--accent-neon); }
+        
+        .btn-submit { width: 100%; padding: 16px; background: var(--accent-neon); color: var(--text-on-accent); border: none; border-radius: 12px; font-weight: 900; text-transform: uppercase; cursor: pointer; transition: 0.3s; }
+        .btn-submit:hover { opacity: 0.9; transform: translateY(-2px); }
+        
+        .data-list { display: flex; flex-direction: column; gap: 15px; }
+        .data-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .card-title { font-weight: 800; font-size: 1.1rem; }
+        .card-id { font-size: 0.75rem; color: var(--text-muted); }
+        .btn-icon { width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--bg-input); color: var(--text-main); cursor: pointer; border: 1px solid var(--border-color); }
+        .btn-icon.danger:hover { background: #ff4444; color: white; }
+
+        .mobile-bottom-nav { display: none; }
+        @media (max-width: 768px) {
+            .desktop-tabs { display: none; }
+            .form-row { grid-template-columns: 1fr; }
+            .mobile-bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-glass-header); border-top: 1px solid var(--border-color); z-index: 1000; }
+            .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px 0; color: var(--text-muted); text-decoration: none; font-size: 0.7rem; }
+            .nav-item.active { color: var(--accent-neon); }
+            .nav-item i { font-size: 1.2rem; margin-bottom: 5px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="app-header">
+        <a href="#" class="logo"></a>
+        <div class="header-actions">
+            <button id="themeToggle" class="theme-toggle-btn"><i class="fas fa-moon"></i></button>
+            <a href="index.html" class="header-link" target="_blank"><i class="fas fa-external-link-alt"></i> Ver Loja</a>
+        </div>
+    </header>
+
+    <nav class="mobile-bottom-nav">
+        <a href="#" class="nav-item active" onclick="openTab(event, 'tab-drops')"><i class="fas fa-box-open"></i><span>Drops</span></a>
+        <a href="#" class="nav-item" onclick="openTab(event, 'tab-design')"><i class="fas fa-palette"></i><span>Design</span></a>
+    </nav>
+
+    <div class="admin-container">
+        
+        <div class="desktop-tabs">
+            <button class="tab-btn active" onclick="openTab(event, 'tab-drops')"><i class="fas fa-box-open"></i> Inventário</button>
+            <button class="tab-btn" onclick="openTab(event, 'tab-design')"><i class="fas fa-palette"></i> Personalizar Loja</button>
+        </div>
+
+        <div id="tab-drops" class="tab-content active">
+            
+            <div class="glass-accordion">
+                <div class="accordion-header" onclick="toggleAccordion(this)">
+                    <h2><i class="fas fa-plus-circle"></i> Lançar Novo Drop</h2>
+                    <i class="fas fa-chevron-down accordion-icon"></i>
+                </div>
+                <div class="accordion-content">
+                    <form id="add-product-form">
+                        <div class="form-group">
+                            <label>Nome da Peça</label>
+                            <input type="text" id="prod-name" class="form-control" required placeholder="Ex: Jaqueta Cyber">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Preço (R$)</label>
+                                <input type="number" step="0.01" id="prod-price" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Foto do Produto</label>
+                            <div class="upload-dropzone" onclick="document.getElementById('img-upload').click()">
+                                <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 10px; display:block;"></i> 
+                                <span id="upload-text">Clique para selecionar uma imagem</span>
+                            </div>
+                            <input type="file" id="img-upload" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+                        </div>
+                        <div class="form-group">
+                            <label>Descrição</label>
+                            <textarea id="prod-desc" class="form-control" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn-submit" id="btn-save-product">
+                            <i class="fas fa-rocket"></i> Salvar no Banco de Dados
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2 class="panel-title">Estoque Ativo</h2>
+                <div class="data-list" id="products-list">
+                    <p style="text-align: center; color: var(--text-muted);">Carregando produtos do Supabase...</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-design" class="tab-content">
+            <div class="panel" style="max-width: 500px; margin: 0 auto;">
+                <h2 class="panel-title">Cores do Sistema</h2>
+                <form id="settings-form">
+                    <div class="form-group">
+                        <label>Cor Primária (Neon)</label>
+                        <input type="color" id="color-accent" value="#00d2ff" class="form-control" style="height: 60px;">
+                    </div>
+                    <button type="button" onclick="saveColors()" class="btn-submit" style="margin-top: 10px;">
+                        <i class="fas fa-paint-roller"></i> Aplicar Tema
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+    const SUPABASE_URL = 'https://ikkjgtgvohrwurtiustm.supabase.co'; 
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra2pndGd2b2hyd3VydGl1c3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NzE4OTEsImV4cCI6MjA5MDE0Nzg5MX0.HNrSvCmSHWTe2yoQy27GOq5g_ZoZxFdox_eCW14f_nI';
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // VARIÁVEIS IMPORTANTES
+    let lojaIdAtual = null;
+    let selectedImageFile = null; 
+    const IMGBB_API_KEY = '351d3ebf4dcd475e4f3522a6198ef849'; 
+
+    async function carregarDadosLoja() {
+        const params = new URLSearchParams(window.location.search);
+        const slug = params.get('loja');
+        if (!slug) {
+            document.getElementById('products-list').innerHTML = "<p style='color:red;'>Erro: Nenhuma loja especificada na URL.</p>";
+            return;
+        }
+
+        const { data: loja } = await supabaseClient.from('lojas').select('*').eq('slug', slug).single();
+        if (loja) {
+            lojaIdAtual = loja.id;
+            document.querySelector('.logo').innerHTML = `${loja.nome_loja}<span>Admin</span>`;
+            document.title = `Admin | ${loja.nome_loja}`;
+            document.querySelector('.header-link').href = `index.html?loja=${slug}`;
+            
+            // Puxa a cor que está salva no banco para o seletor de cor
+            if (loja.cor_principal) {
+                document.getElementById('color-accent').value = loja.cor_principal;
+            }
+            
+            loadProducts(); 
+        }
+    }
+
+    // ==========================================
+    // NOVA FUNÇÃO: SALVA A COR NO BANCO DE DADOS
+    // ==========================================
+    async function saveColors() {
+        if(!lojaIdAtual) return;
+        
+        const novaCor = document.getElementById('color-accent').value;
+        const btn = document.querySelector('button[onclick="saveColors()"]');
+        const textoOriginal = btn.innerHTML;
+        
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Aplicando Tema...';
+        btn.disabled = true;
+
+        const { error } = await supabaseClient
+            .from('lojas')
+            .update({ cor_principal: novaCor })
+            .eq('id', lojaIdAtual);
+
+        if (error) {
+            alert("Erro ao salvar cor: " + error.message);
+            btn.innerHTML = textoOriginal;
+            btn.disabled = false;
+        } else {
+            // Efeito de sucesso visual no botão
+            btn.innerHTML = '<i class="fas fa-check"></i> Tema Aplicado!';
+            btn.style.backgroundColor = "#10b981"; // Verde sucesso
+            btn.style.color = "white";
+            
+            setTimeout(() => {
+                btn.innerHTML = textoOriginal;
+                btn.style.backgroundColor = ""; // Volta ao padrão
+                btn.disabled = false;
+            }, 2500);
+        }
+    }
+
+    async function loadProducts() {
+        if(!lojaIdAtual) return;
+        const container = document.getElementById('products-list');
+        
+        const { data: products, error } = await supabaseClient.from('produtos').select('*').eq('loja_id', lojaIdAtual).order('id', { ascending: false });
+        
+        if (error) {
+            container.innerHTML = `<p style="text-align: center; color: red;">Erro: ${error.message}</p>`;
+            return;
+        }
+
+        if (products.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Você ainda não lançou nenhum produto.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+
+        products.forEach(p => {
+            container.innerHTML += `
+                <div class="data-card">
+                    <div class="card-header">
+                        <div style="display:flex; gap: 15px; align-items: center;">
+                            <img src="${p.imagem_url}" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;">
+                            <div>
+                                <div class="card-title">${p.nome}</div>
+                                <div class="card-id">R$ ${parseFloat(p.preco).toFixed(2).replace('.', ',')}</div>
+                            </div>
+                        </div>
+                        <button class="btn-icon danger" onclick="deletarProduto('${p.id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    async function deletarProduto(id) {
+        if(confirm('Apagar este produto do banco de dados?')) {
+            await supabaseClient.from('produtos').delete().eq('id', id);
+            loadProducts(); 
+        }
+    }
+
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if(file) {
+            document.getElementById('upload-text').innerText = `Arquivo pronto: ${file.name}`;
+            selectedImageFile = file; 
+        }
+    }
+
+    document.getElementById('add-product-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        if (!selectedImageFile) {
+            alert("⚠️ Por favor, clique na área pontilhada e escolha uma foto para o produto.");
+            return;
+        }
+
+        const btn = document.getElementById('btn-save-product');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subindo foto para o ImgBB...';
+        btn.disabled = true;
+
+        try {
+            const formData = new FormData();
+            formData.append('image', selectedImageFile);
+            formData.append('key', IMGBB_API_KEY);
+
+            const imgbbResponse = await fetch('https://api.imgbb.com/1/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const imgbbData = await imgbbResponse.json();
+
+            if (!imgbbData.success) {
+                throw new Error("Erro no upload da imagem: " + imgbbData.error.message);
+            }
+
+            const imageUrl = imgbbData.data.url; 
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando produto...';
+
+            const { error } = await supabaseClient.from('produtos').insert([{ 
+                loja_id: lojaIdAtual,
+                nome: document.getElementById('prod-name').value,
+                preco: parseFloat(document.getElementById('prod-price').value),
+                imagem_url: imageUrl, 
+                descricao: document.getElementById('prod-desc').value
+            }]);
+
+            if(error) {
+                alert("Erro ao salvar: " + error.message);
+            } else {
+                document.getElementById('add-product-form').reset();
+                document.getElementById('upload-text').innerText = "Clique para selecionar uma imagem";
+                selectedImageFile = null; 
+                loadProducts();
+            }
+        } catch (err) {
+            alert(err.message);
+        }
+        
+        btn.innerHTML = '<i class="fas fa-rocket"></i> Salvar no Banco de Dados';
+        btn.disabled = false;
+    });
+
+    function openTab(evt, tabName) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabcontent.length; i++) tabcontent[i].classList.remove("active");
+        tablinks = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tablinks.length; i++) tablinks[i].classList.remove("active");
+        document.getElementById(tabName).classList.add("active");
+        if(evt.currentTarget.classList) evt.currentTarget.classList.add("active");
+    }
+
+    function toggleAccordion(element) {
+        element.parentElement.classList.toggle('active');
+    }
+
+    window.onload = carregarDadosLoja;
+    </script>
+</body>
+</html>

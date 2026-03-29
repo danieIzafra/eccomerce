@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carregando...</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="cart-overlay" id="cart-overlay"></div>
+
+    <aside class="cart-sidebar glass-heavy" id="cart-sidebar">
+        <div class="cart-header">
+            <h3><i class="fas fa-shopping-bag"></i> Seu Carrinho</h3>
+            <button id="close-cart" class="icon-btn" aria-label="Fechar Carrinho">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="cart-items" id="cart-items-container">
+            <p class="empty-msg">Seu carrinho está vazio.</p>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cart-total-price" class="gradient-text">R$ 0,00</span>
+            </div>
+            <button class="btn-primary w-100">Finalizar Compra</button>
+        </div>
+    </aside>
+
+    <header class="navbar glass-light" id="navbar">
+    <div class="container nav-container">
+        <a href="#" class="logo" id="nome-loja"></a>
+        
+        <nav class="nav-links" id="mobile-menu">
+            <div class="mobile-search glass-light">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Buscar produtos...">
+            </div>
+            
+            <a href="#hero">Início</a>
+            <a href="#products">Lançamentos</a>
+            <a href="#lookbook">Lookbook</a>
+            
+            <button id="close-menu" class="icon-btn close-menu-btn" aria-label="Fechar Menu">
+                <i class="fas fa-times"></i>
+            </button>
+        </nav>
+
+        <div class="nav-actions">
+            <div class="search-bar glass-light">
+                <i class="fas fa-search"></i>
+                <input type="text" placeholder="Buscar...">
+            </div>
+            
+            <button id="theme-toggle" class="icon-btn" aria-label="Alternar Tema">
+                <i class="fas fa-sun" id="theme-icon"></i>
+            </button>
+
+            <button class="icon-btn" aria-label="Minha Conta">
+                <i class="fas fa-user"></i>
+            </button>
+            
+            <button id="open-cart" class="icon-btn cart-btn" aria-label="Carrinho">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="cart-counter" id="cart-counter">0</span>
+            </button>
+
+            <button id="open-menu" class="icon-btn hamburger-btn" aria-label="Abrir Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </div>
+</header>
+
+    <main>
+        <section id="hero" class="hero-section">
+            <div class="hero-glow"></div>
+            <div class="container hero-content">
+                <h1 class="gradient-text">O Futuro do Design.<br>Em Seus Pés.</h1>
+                <p>Mergulhe na escuridão elegante. Nossa nova linha combina performance extrema com uma estética minimalista e premium.</p>
+                <a href="#products" class="btn-primary">Explorar Coleção <i class="fas fa-arrow-right"></i></a>
+            </div>
+        </section>
+
+        <section id="products" class="section-padding">
+            <div class="container">
+                <h2 class="section-title">Drop Exclusivo</h2>
+                
+                <div class="category-filters">
+                    <button class="filter-pill active">Todos</button>
+                    <button class="filter-pill">Sneakers</button>
+                    <button class="filter-pill">Streetwear</button>
+                    <button class="filter-pill">Acessórios</button>
+                </div>
+
+                <div class="product-grid" id="main-product-grid">
+                    <p style="text-align: center; width: 100%; color: var(--text-muted);">Carregando coleção oficial...</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="lookbook" class="section-padding">
+            <div class="container">
+                <h2 class="section-title">Lookbook | Lifestyle</h2>
+                <div class="lookbook-masonry">
+                    <div class="lookbook-item"><img src="https://loremflickr.com/600/800/fashion,clothing?random=10" alt="Look 1"></div>
+                    <div class="lookbook-item"><img src="https://loremflickr.com/600/600/fashion,clothing?random=11" alt="Look 2"></div>
+                    <div class="lookbook-item"><img src="https://loremflickr.com/600/900/fashion,clothing?random=12" alt="Look 3"></div>
+                    <div class="lookbook-item"><img src="https://loremflickr.com/600/700/fashion,clothing?random=13" alt="Look 4"></div>
+                    <div class="lookbook-item"><img src="https://loremflickr.com/600/850/fashion,clothing?random=14" alt="Look 5"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="reviews" class="section-padding">
+            <div class="container">
+                <h2 class="section-title">O Que Dizem</h2>
+                <div class="reviews-grid">
+                    <div class="review-card glass-heavy">
+                        <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                        <p class="review-text">"O design do site e a qualidade dos produtos são absurdos. Comprei e a entrega foi super rápida."</p>
+                        <p class="reviewer">— Lucas M.</p>
+                    </div>
+                    <div class="review-card glass-heavy">
+                        <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i></div>
+                        <p class="review-text">"Estética impecável e navegação fluida. Tive uma dúvida sobre o tamanho e o suporte resolveu em minutos."</p>
+                        <p class="reviewer">— Sofia R.</p>
+                    </div>
+                    <div class="review-card glass-heavy">
+                        <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                        <p class="review-text">"Achei minha nova loja favorita. O visual dark com os detalhes me ganhou de cara, ao vivo é ainda mais bonito."</p>
+                        <p class="reviewer">— Thiago V.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="trust-banner" class="trust-banner glass-light">
+            <div class="container trust-container">
+                <div class="trust-item"><i class="fas fa-lock"></i><span>Compra Segura (SSL)</span></div>
+                <div class="trust-item"><i class="fas fa-box-open"></i><span>Frete Grátis acima de R$ 300</span></div>
+                <div class="trust-item"><i class="fas fa-sync-alt"></i><span>Troca Fácil em 30 Dias</span></div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer glass-light">
+        <div class="container footer-content">
+            <div class="footer-col">
+                <h3 id="footer-nome-loja"></h3>
+                <p>Estética sombria. Performance brilhante.</p>
+            </div>
+            
+            <div class="footer-col footer-links">
+                <h4>Suporte & Ajuda</h4>
+                <ul>
+                    <li><a href="#"><i class="fas fa-chevron-right"></i> Rastrear Pedido</a></li>
+                    <li><a href="#"><i class="fas fa-chevron-right"></i> FAQ</a></li>
+                    <li><a href="#"><i class="fas fa-chevron-right"></i> Política de Devolução</a></li>
+                    <li><a href="#"><i class="fas fa-chevron-right"></i> Fale Conosco</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-col theme-customizer glass-heavy">
+                <h4><i class="fas fa-palette"></i> Personalize a Loja</h4>
+                <p>Escolha o tom do gradiente:</p>
+                <div class="color-picker-wrapper">
+                    <input type="color" id="accent-color-picker" value="#00d2ff">
+                    <span id="hex-value">#00d2ff</span>
+                </div>
+            </div>
+
+            <div class="footer-col newsletter">
+                <h4>VIP Access</h4>
+                <form action="#" class="newsletter-form">
+                    <input type="email" placeholder="E-mail" required>
+                    <button type="submit" class="btn-primary">Entrar</button>
+                </form>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+    <div id="glass-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);">
+    <div class="glass-heavy" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 450px; padding: 2.5rem 2rem; border-radius: 16px; text-align: center; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);">
+        <div style="font-size: 2.5rem; color: var(--accent-color); margin-bottom: 1rem;"><i class="fas fa-layer-group"></i></div>
+        <h3 id="modal-title" style="color: var(--text-primary); margin-bottom: 1rem; font-size: 1.3rem;">Suporte</h3>
+        <p id="modal-text" style="color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.6; font-size: 0.95rem;"></p>
+        <button class="btn-primary w-100" onclick="document.getElementById('glass-modal').style.display='none'">Incrível, entendi!</button>
+    </div>
+</div>
+</body>
+</html>
