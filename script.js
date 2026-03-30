@@ -329,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // CARREGAR LOOKBOOK DO BANCO DE DADOS
         // ==========================================
         const lookbookGrid = document.getElementById('lookbook-grid');
-        if (lookbookGrid && !idProduto && loja) {
+        if (lookbookGrid && loja) { // <-- Removi o "!idProduto" daqui
             const { data: fotos } = await supabase.from('lookbook').select('*').eq('loja_id', loja.id).order('id', { ascending: false });
             
             if (fotos && fotos.length > 0) {

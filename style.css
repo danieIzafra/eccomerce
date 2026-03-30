@@ -39,7 +39,6 @@ body {
     background-color: var(--bg-main);
     color: var(--text-primary);
     transition: background-color 0.4s ease, color 0.4s ease;
-    overflow-x: hidden;
 }
 
 a { text-decoration: none; color: inherit; }
@@ -113,7 +112,6 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .logo span { color: var(--accent-color); }
 .nav-links { display: flex; gap: 2rem; align-items: center; }
 .nav-links a:hover { color: var(--accent-color); }
-/* ALTERAÇÃO: Espaçamento reduzido de 1.5rem para 1.2rem para caber os novos ícones */
 .nav-actions { display: flex; gap: 1.2rem; align-items: center; }
 
 .icon-btn { font-size: 1.3rem; color: var(--text-primary); transition: transform 0.3s; }
@@ -122,7 +120,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .cart-counter { position: absolute; top: -8px; right: -12px; background: var(--accent-color); color: #000; font-size: 0.7rem; font-weight: 700; height: 18px; width: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
 
 /* ==========================================================================
-   HERO BANNER E PRODUTOS (SCROLL HORIZONTAL)
+   HERO BANNER E PRODUTOS (SCROLL HORIZONTAL NO DESKTOP)
    ========================================================================== */
 .hero-section { min-height: 100vh; display: flex; align-items: center; justify-content: center; position: relative; text-align: center; }
 .hero-glow { position: absolute; width: 400px; height: 400px; background: var(--accent-color); filter: blur(180px); opacity: 0.15; z-index: -1; border-radius: 50%; }
@@ -151,14 +149,57 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .price { font-size: 1.4rem; font-weight: 700; color: var(--accent-color); margin-bottom: 1.5rem; }
 
 /* ==========================================================================
-   LOOKBOOK E AVALIAÇÕES (NOVO HORIZONTAL)
+   LOOKBOOK (ESTILO FOTOS JOGADAS E ESPAÇADAS)
    ========================================================================== */
-.lookbook-masonry { columns: 3 280px; column-gap: 1.5rem; }
-.lookbook-item { width: 100%; margin-bottom: 1.5rem; display: inline-block; border-radius: 16px; overflow: hidden; border: 1px solid var(--glass-border); }
-.lookbook-item img { width: 100%; display: block; transition: transform 0.6s, filter 0.6s; filter: grayscale(40%) brightness(0.8); }
-.lookbook-item:hover img { transform: scale(1.08); filter: grayscale(0%) brightness(1); }
+.lookbook-masonry { 
+    display: flex; 
+    flex-wrap: wrap; 
+    justify-content: center; 
+    align-items: center;
+    padding: 3rem 1rem; 
+}
 
-/* Scroll Horizontal para Avaliações */
+.lookbook-item { 
+    width: 260px; 
+    margin: 10px 15px; /* Espaçamento positivo para as fotos respirarem */
+    border-radius: 12px; 
+    overflow: hidden; 
+    border: 3px solid var(--glass-highlight); 
+    position: relative;
+    z-index: 1; 
+    transition: transform 0.4s ease, z-index 0s, filter 0.6s; 
+    box-shadow: 0 15px 35px rgba(0,0,0,0.6); 
+}
+
+.lookbook-item img { 
+    width: 100%; 
+    height: 100%;
+    object-fit: cover;
+    display: block; 
+    transition: transform 0.6s; 
+    filter: grayscale(40%) brightness(0.8); 
+}
+
+/* Rotaciona e desloca fotos específicas para parecerem jogadas */
+.lookbook-item:nth-child(odd) { transform: rotate(-5deg) translateY(15px); }
+.lookbook-item:nth-child(even) { transform: rotate(4deg) translateY(-10px); z-index: 2; }
+.lookbook-item:nth-child(3n) { transform: rotate(-7deg) translateY(-25px); z-index: 3; }
+.lookbook-item:nth-child(4n) { transform: rotate(6deg) translateY(20px); }
+.lookbook-item:nth-child(5n) { transform: rotate(-3deg) translateY(10px); z-index: 4; }
+
+/* Quando passa o mouse ou toca, a foto vem para a frente e ganha cor */
+.lookbook-item:hover { 
+    z-index: 50; 
+    transform: scale(1.1) rotate(0deg) !important; 
+}
+.lookbook-item:hover img { 
+    transform: scale(1.05); 
+    filter: grayscale(0%) brightness(1); 
+}
+
+/* ==========================================================================
+   AVALIAÇÕES (SCROLL HORIZONTAL)
+   ========================================================================== */
 .reviews-wrapper {
     display: flex; overflow-x: auto; gap: 1.5rem;
     padding: 1rem 2rem 3rem 2rem; margin: 0 -2rem;
@@ -177,7 +218,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 .reviewer { font-weight: 600; color: var(--text-primary); border-left: 3px solid var(--accent-color); padding-left: 10px; }
 
 /* ==========================================================================
-   SELOS DE CONFIANÇA (VISUAL PREMIUM E HORIZONTAL)
+   SELOS DE CONFIANÇA
    ========================================================================== */
 .trust-banner { border-top: 1px solid var(--glass-border); border-bottom: 1px solid var(--glass-border); padding: 3rem 0; margin-bottom: 0; }
 .trust-container { display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; gap: 1rem; }
@@ -187,7 +228,7 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
 }
 .trust-item i { 
     font-size: 2.2rem; color: var(--accent-color); 
-    filter: drop-shadow(0 0 10px rgba(0, 210, 255, 0.4)); /* Efeito de brilho */
+    filter: drop-shadow(0 0 10px rgba(0, 210, 255, 0.4));
 }
 .trust-item span { color: var(--text-primary); line-height: 1.3; }
 
@@ -227,14 +268,22 @@ input[type="color"]::-webkit-color-swatch { border: 2px solid #fff; border-radiu
 .newsletter-form input { flex: 1; padding: 0.8rem; border-radius: 8px; background: var(--glass-bg-light); border: 1px solid var(--glass-border); color: #fff; }
 
 /* ==========================================================================
-   MOBILE UI/UX RESPONSIVO (Max 768px)
+   MOBILE UI/UX RESPONSIVO (Max 768px) - CORRIGIDO
    ========================================================================== */
 @media (max-width: 768px) {
+    /* 1. TRAVA DE ROLAGEM HORIZONTAL MESTRE */
+    html, body {
+        overflow-x: hidden;
+        width: 100vw;
+        max-width: 100%;
+    }
+
+    /* Trava o container para não vazar a tela */
+    .container { padding: 0 1.5rem; }
+    
+    /* 2. HEADER & MENU */
     .nav-container { align-items: center; }
-    
-    /* ALTERAÇÃO: Reduzido o espaço entre os botões no mobile para não quebrar a linha */
     .nav-actions { gap: 0.8rem; }
-    
     .search-bar, .desktop-only { display: none; }
     .hamburger-btn { display: block; }
     .close-menu-btn { display: block; position: absolute; top: 1.5rem; right: 1.5rem; }
@@ -264,41 +313,82 @@ input[type="color"]::-webkit-color-swatch { border: 2px solid #fff; border-radiu
         background: var(--glass-bg-light); color: var(--text-primary); font-size: 1rem; font-weight: 500;
     }
     
+    /* 3. HERO & EFEITOS (Evita que o glow vaze da tela) */
+    .hero-glow { width: 300px; height: 300px; } 
+    .hero-content h1 { font-size: 2.5rem; }
+    
+    /* 4. GRIDS HORIZONTAIS (Cards menores para scroll) */
+    .product-grid { 
+        padding: 1rem 0 2rem 0; 
+        margin: 0; 
+        gap: 1rem;
+        display: flex; 
+        overflow-x: auto; 
+        scroll-snap-type: x mandatory;
+        scroll-padding-left: 0; 
+    }
+    
+    .product-card { 
+        flex: 0 0 45vw; 
+        max-width: 180px; 
+        padding: 1rem; 
+        scroll-snap-align: start;
+    }
+
+    .product-card .card-img { height: 160px; margin-bottom: 1rem; }
+    .product-card .card-info h3 { font-size: 0.95rem; }
+    .product-card .price { font-size: 1.1rem; margin-bottom: 1rem; }
+    .product-card .btn-add-cart { padding: 0.5rem; font-size: 0.85rem; }
+    
     .category-filters {
         flex-wrap: nowrap; overflow-x: auto; justify-content: flex-start;
         scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none;
-        padding: 0 1.5rem; margin: 0 -2rem 3rem -2rem; 
+        padding: 0; margin: 0 0 2rem 0; 
     }
     .category-filters::-webkit-scrollbar { display: none; }
     .filter-pill { flex: 0 0 auto; scroll-snap-align: start; }
 
-    /* Produto e Avaliações no Mobile */
-    .product-grid, .reviews-wrapper { padding: 1rem 1rem 2rem 1rem; margin: 0 -1rem; scroll-padding-left: 1rem; }
-    .product-card { flex: 0 0 75vw; }
+    /* Avaliações continuam mais largas para poder ler o texto */
+    .reviews-wrapper { 
+        padding: 1rem 0 2rem 0; 
+        margin: 0; 
+        gap: 1rem;
+        scroll-padding-left: 0;
+    }
     .review-card { flex: 0 0 85vw; }
 
-    .footer-content { grid-template-columns: 1fr; gap: 2rem; }
-    .lookbook-masonry { columns: 2; column-gap: 1rem; }
-    .hero-content h1 { font-size: 2.8rem; }
+    /* 5. LOOKBOOK & FOOTER (Fotos jogadas menores no celular e com respiro) */
+    /* 5. LOOKBOOK & FOOTER (Fotos jogadas menores no celular e com respiro) */
+    .lookbook-masonry { 
+        padding: 1rem 0 3rem 0; 
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
     
+    .lookbook-item { 
+        width: 42%; /* A mágica está aqui: garante que cabem exatamente 2 por linha */
+        max-width: 160px; /* Impede que fiquem gigantes em celulares muito largos */
+        margin: 10px 2%; /* Margem em porcentagem para não quebrar a linha */
+    }
+    
+    .footer-content { grid-template-columns: 1fr; gap: 2rem; }
     .cart-sidebar { width: 100%; right: -100%; }
 
-    /* Selos Horizontal no Mobile sem Scroll */
+    /* 6. SELOS DE CONFIANÇA */
     .trust-container { 
-        flex-direction: row; /* Mantém horizontal */
-        justify-content: space-between;
-        gap: 0.5rem;
+        flex-direction: row; 
+        flex-wrap: wrap; 
+        justify-content: center;
+        gap: 1rem;
     }
-    .trust-item { 
-        font-size: 0.75rem; /* Texto menor para caber */
-    }
-    .trust-item i { 
-        font-size: 1.5rem; /* Ícone um pouco menor */
-    }
+    .trust-item { font-size: 0.75rem; flex: 1 1 30%; }
+    .trust-item i { font-size: 1.5rem; }
 
     .newsletter-form { flex-direction: column; }
     .newsletter-form button { width: 100%; }
 }
+
 /* ==========================================================================
    MODAL GLASSMORPHISM ANIMADO (RODAPÉ)
    ========================================================================== */
@@ -331,13 +421,11 @@ input[type="color"]::-webkit-color-swatch { border: 2px solid #fff; border-radiu
     width: 90%;
     max-width: 500px;
     text-align: center;
-    /* Começa menor e mais para baixo para o efeito "surgir" */
     transform: translateY(40px) scale(0.95);
     transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .modal-overlay.active .modal-glass-content {
-    /* Posição final da animação */
     transform: translateY(0) scale(1);
 }
 

@@ -57,9 +57,29 @@
         .product-description p { color: var(--text-secondary); line-height: 1.7; margin-bottom: 1rem; white-space: pre-wrap; }
 
         @media (max-width: 768px) {
-            .product-container { grid-template-columns: 1fr; gap: 2rem; }
+            .product-page-section { padding-top: 100px; padding-bottom: 2rem; }
+            .product-container { grid-template-columns: 1fr; gap: 1.5rem; }
             .product-gallery { position: relative; top: 0; }
-            .product-title { font-size: 2rem; }
+            
+            /* Centraliza as informações principais no celular */
+            .product-info { align-items: center; text-align: center; }
+            .product-title { font-size: 1.8rem; line-height: 1.3; }
+            .reviews-badge { justify-content: center; margin-top: 0.5rem; margin-bottom: 1rem; }
+            
+            /* Destaca e centraliza o preço */
+            .price-box { border-bottom: none; text-align: center; width: 100%; padding-bottom: 0.5rem; }
+            
+            /* Ajusta o seletor de tamanho para o centro */
+            .size-selector { width: 100%; display: flex; flex-direction: column; align-items: center; }
+            .size-grid { justify-content: center; }
+            
+            /* Mantém a caixa de frete e descrição alinhadas à esquerda para boa leitura */
+            .shipping-box, .product-description { width: 100%; text-align: left; }
+            .shipping-form { flex-direction: column; } /* Empilha o input e o botão de CEP */
+            
+            /* Melhora o scroll das fotos menores */
+            .thumbnails { padding-bottom: 10px; justify-content: flex-start; scroll-padding-left: 10px; }
+            .thumb-img { width: 70px; height: 70px; }
         }
     </style>
 </head>
@@ -140,7 +160,7 @@
                         <img id="main-product-img" src="" alt="Carregando Imagem..." style="opacity: 0.5;">
                     </div>
                     <div class="thumbnails" id="product-thumbnails">
-                        </div>
+                    </div>
                 </div>
 
                 <div class="product-info">
@@ -203,6 +223,15 @@
             </div>
         </section>
 
+        <section id="lookbook" class="section-padding" style="padding-top: 0;">
+            <div class="container">
+                <h2 class="section-title">Como a galera usa</h2>
+                <div class="lookbook-masonry" id="lookbook-grid">
+                    <p style="text-align: center; width: 100%; color: var(--text-muted);">Carregando estilo...</p>
+                </div>
+            </div>
+        </section>
+
     </main>
 
     <footer class="footer glass-light">
@@ -234,15 +263,15 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="script.js"></script>
+    
     <div id="glass-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 2000; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);">
-    <div class="glass-heavy" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 450px; padding: 2.5rem 2rem; border-radius: 16px; text-align: center; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);">
-        <div style="font-size: 2.5rem; color: var(--accent-color); margin-bottom: 1rem;"><i class="fas fa-layer-group"></i></div>
-        <h3 id="modal-title" style="color: var(--text-primary); margin-bottom: 1rem; font-size: 1.3rem;">Suporte</h3>
-        <p id="modal-text" style="color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.6; font-size: 0.95rem;"></p>
-        <button class="btn-primary w-100" onclick="document.getElementById('glass-modal').style.display='none'">Incrível, entendi!</button>
+        <div class="glass-heavy" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 450px; padding: 2.5rem 2rem; border-radius: 16px; text-align: center; border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow);">
+            <div style="font-size: 2.5rem; color: var(--accent-color); margin-bottom: 1rem;"><i class="fas fa-layer-group"></i></div>
+            <h3 id="modal-title" style="color: var(--text-primary); margin-bottom: 1rem; font-size: 1.3rem;">Suporte</h3>
+            <p id="modal-text" style="color: var(--text-secondary); margin-bottom: 2rem; line-height: 1.6; font-size: 0.95rem;"></p>
+            <button class="btn-primary w-100" onclick="document.getElementById('glass-modal').style.display='none'">Incrível, entendi!</button>
+        </div>
     </div>
-</div>
 </body>
 </html>
