@@ -2,8 +2,8 @@
 <html lang="pt-BR" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carregando...</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Carregando Produto...</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,73 +13,97 @@
     <link rel="stylesheet" href="style.css">
 
     <style>
-        .product-page-section { padding-top: 120px; padding-bottom: 4rem; }
-        .product-container { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: start; }
+        /* ==================== ANIMAÇÕES DE FUNDO (BLOBS) ==================== */
+        body::before, body::after { content: ''; position: fixed; border-radius: 50%; filter: blur(80px); z-index: -1; animation: float 10s infinite alternate; }
+        body::before { width: 400px; height: 400px; background: rgba(99, 102, 241, 0.15); top: -100px; left: -100px; }
+        body::after { width: 300px; height: 300px; background: rgba(16, 185, 129, 0.15); bottom: -50px; right: -50px; animation-delay: -5s; }
+        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 50px) scale(1.1); } }
+
+        /* ==================== LAYOUT PREMIUM (DESKTOP E BASE) ==================== */
+        .product-page-section { padding-top: 120px; padding-bottom: 2rem; }
+        .produto-grid-novo { display: grid; grid-template-columns: 1fr; gap: 2rem; border-radius: 1rem; margin-bottom: 3rem; overflow: hidden; }
+        @media (min-width: 768px) { .produto-grid-novo { grid-template-columns: 1fr 1fr; } }
         
-        .product-gallery { display: flex; flex-direction: column; gap: 1.5rem; position: sticky; top: 100px; }
-        .main-image { width: 100%; border-radius: 16px; overflow: hidden; }
-        .main-image img { width: 100%; height: auto; display: block; object-fit: cover; }
-        .thumbnails { display: flex; gap: 1rem; overflow-x: auto; scrollbar-width: none; }
+        .gallery-container { display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem; }
+        .main-image { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 1rem; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        
+        .thumbnails { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 0.5rem; scrollbar-width: none; }
         .thumbnails::-webkit-scrollbar { display: none; }
-        .thumb-img { width: 80px; height: 80px; border-radius: 10px; cursor: pointer; border: 2px solid transparent; overflow: hidden; flex-shrink: 0; transition: 0.3s; }
+        .thumb-img { width: 80px; height: 80px; flex-shrink: 0; border-radius: 0.5rem; cursor: pointer; border: 2px solid transparent; overflow: hidden; transition: 0.3s; opacity: 0.6;}
         .thumb-img img { width: 100%; height: 100%; object-fit: cover; }
-        .thumb-img.active, .thumb-img:hover { border-color: var(--accent-color); transform: translateY(-3px); }
+        .thumb-img.active, .thumb-img:hover { border-color: var(--accent-color); opacity: 1; transform: translateY(-3px); }
 
-        .product-info { display: flex; flex-direction: column; gap: 1.5rem; }
-        .product-category { color: var(--accent-color); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.9rem; }
-        .product-title { font-size: 2.5rem; line-height: 1.2; }
-        .reviews-badge { display: flex; align-items: center; gap: 0.5rem; color: #f59e0b; font-size: 0.9rem; margin-top: -0.5rem; }
-        .reviews-badge span { color: var(--text-secondary); }
+        .product-info-novo { padding: 1.5rem; display: flex; flex-direction: column; justify-content: center; }
+        .reviews { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary); }
+        .stars i { color: #fbbf24; }
+        
+        .product-title { font-size: 2.2rem; font-weight: 700; margin-bottom: 1rem; line-height: 1.2; color: var(--text-primary); }
+        
+        .pricing { margin-bottom: 1.5rem; }
+        .old-price { text-decoration: line-through; color: var(--text-secondary); font-size: 1.1rem; }
+        .current-price { font-size: 2.5rem; font-weight: 700; color: var(--accent-color); }
+        .discount-badge { background: #ef4444; color: white; padding: 0.2rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem; vertical-align: middle; margin-left: 0.5rem; font-weight: bold;}
 
-        .price-box { padding-bottom: 1.5rem; border-bottom: 1px solid var(--glass-border); }
-        .current-price { font-size: 2.2rem; font-weight: 700; color: var(--text-primary); }
-        .installments { color: var(--accent-color); font-size: 1.1rem; font-weight: 500; display: block; margin-top: 0.2rem; }
+        .scarcity { margin-bottom: 1.5rem; font-size: 0.9rem; color: #ef4444; font-weight: 500; }
+        .progress-bar { width: 100%; height: 6px; background: var(--glass-border); border-radius: 3px; margin-top: 0.5rem; overflow: hidden; }
+        .progress-fill { width: 15%; height: 100%; background: #ef4444; border-radius: 3px; }
 
-        .size-selector h4 { margin-bottom: 1rem; font-weight: 500; }
-        .size-grid { display: flex; flex-wrap: wrap; gap: 0.8rem; }
-        .size-btn { width: 50px; height: 50px; border-radius: 8px; border: 1px solid var(--glass-border); background: var(--glass-bg-light); color: var(--text-primary); font-size: 1rem; font-weight: 600; transition: all 0.3s; }
-        .size-btn:hover { border-color: var(--accent-color); }
-        .size-btn.active { background: var(--accent-color); color: #000; border-color: var(--accent-color); }
+        .options-group { margin-bottom: 1.5rem; }
+        .options-group h4 { margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+        .flex-options { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .size-btn { padding: 0.5rem 1rem; border: 1px solid var(--glass-border); border-radius: 0.5rem; background: transparent; color: var(--text-primary); cursor: pointer; font-weight: 500; transition: 0.3s; flex: 1 1 auto; text-align: center; }
+        .size-btn.active, .size-btn:hover { border-color: var(--accent-color); background: var(--accent-color); color: #000; }
 
-        .shipping-box { background: var(--glass-bg-light); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--glass-border); }
-        .shipping-box h4 { margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
-        .shipping-form { display: flex; gap: 0.5rem; }
-        .shipping-form input { flex: 1; padding: 0.8rem 1rem; border-radius: 8px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.2); color: var(--text-primary); outline: none; }
-        .shipping-form input:focus { border-color: var(--accent-color); }
-        .shipping-result { margin-top: 1rem; font-size: 0.9rem; color: var(--text-secondary); display: none; }
-        .shipping-result.active { display: block; }
-        .shipping-option { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px dashed var(--glass-border); }
+        .action-area { display: flex; gap: 1rem; flex-direction: column; margin-bottom: 2rem; }
+        .cta-btn { background: #10b981; color: white; border: none; padding: 1.2rem; border-radius: 0.5rem; font-size: 1.2rem; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 0.5rem; transition: 0.3s; width: 100%; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
+        .cta-btn:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
 
-        .product-actions { display: flex; flex-direction: column; gap: 1rem; margin-top: 1rem; }
+        .shipping-box-new { background: rgba(0,0,0,0.1); padding: 1rem; border-radius: 0.8rem; border: 1px dashed var(--glass-border); margin-bottom: 2rem;}
+        .shipping-form-new { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+        .shipping-form-new input { flex: 1; padding: 0.8rem; border-radius: 0.5rem; border: 1px solid var(--glass-border); background: var(--bg-main); color: var(--text-primary); outline: none; }
+        .shipping-result { display: none; margin-top: 1rem; font-size: 0.9rem; }
+        .shipping-result.active { display: block !important; }
 
-        .product-description { margin-top: 2rem; background: var(--glass-bg-light); padding: 1.5rem; border-radius: 12px; border: 1px solid var(--glass-border); }
-        .product-description h3 { margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--glass-border); }
-        .product-description p { color: var(--text-secondary); line-height: 1.7; margin-bottom: 1rem; white-space: pre-wrap; }
+        .trust-badges-new { display: flex; flex-direction: column; gap: 1rem; padding-top: 1.5rem; border-top: 1px solid var(--glass-border); }
+        @media (min-width: 768px) { .trust-badges-new { flex-direction: row; justify-content: space-between; } }
+        .badge-new { display: flex; align-items: center; gap: 1rem; font-size: 0.9rem; color: var(--text-secondary); }
+        .badge-new i { font-size: 1.5rem; color: var(--accent-color); width: 30px; text-align: center; }
 
+        .details-section { margin-bottom: 3rem; padding: 2rem; border-radius: 1rem; }
+        .details-section h3 { margin-bottom: 1rem; font-size: 1.5rem; color: var(--accent-color); }
+        .details-section p { color: var(--text-secondary); line-height: 1.7; white-space: pre-wrap; }
+        .pulse-dot { width: 8px; height: 8px; background: #ff4757; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite; }
+
+        /* ==================== OTIMIZAÇÃO MAXIMA PARA MOBILE ==================== */
         @media (max-width: 768px) {
-            .product-page-section { padding-top: 100px; padding-bottom: 2rem; }
-            .product-container { grid-template-columns: 1fr; gap: 1.5rem; }
-            .product-gallery { position: relative; top: 0; }
+            /* Mais espaço em cima por conta do menu, e em baixo por conta da barra de comprar fixa */
+            .product-page-section { padding-top: 100px; padding-bottom: 6rem; }
             
-            /* Centraliza as informações principais no celular */
-            .product-info { align-items: center; text-align: center; }
-            .product-title { font-size: 1.8rem; line-height: 1.3; }
-            .reviews-badge { justify-content: center; margin-top: 0.5rem; margin-bottom: 1rem; }
+            /* Remove as margens laterais no mobile para a imagem ficar "Edge-to-Edge" (Ponta a Ponta) */
+            .produto-grid-novo { margin-left: -1.5rem; margin-right: -1.5rem; border-radius: 0; border-left: none; border-right: none; gap: 0; }
             
-            /* Destaca e centraliza o preço */
-            .price-box { border-bottom: none; text-align: center; width: 100%; padding-bottom: 0.5rem; }
-            
-            /* Ajusta o seletor de tamanho para o centro */
-            .size-selector { width: 100%; display: flex; flex-direction: column; align-items: center; }
-            .size-grid { justify-content: center; }
-            
-            /* Mantém a caixa de frete e descrição alinhadas à esquerda para boa leitura */
-            .shipping-box, .product-description { width: 100%; text-align: left; }
-            .shipping-form { flex-direction: column; } /* Empilha o input e o botão de CEP */
-            
-            /* Melhora o scroll das fotos menores */
-            .thumbnails { padding-bottom: 10px; justify-content: flex-start; scroll-padding-left: 10px; }
+            /* Ajuste da imagem principal (cola na tela) e miniaturas */
+            .gallery-container { padding: 0 0 1rem 0; }
+            .main-image { border-radius: 0; } /* Tira os cantos arredondados pra colar na borda */
+            .thumbnails { padding: 0 1.5rem; } /* Devolve o respiro lateral só pras fotos pequenas */
             .thumb-img { width: 70px; height: 70px; }
+            
+            /* Ajuste de tipografia para não "estourar" a tela */
+            .product-info-novo { padding: 1rem 1.5rem 2rem 1.5rem; }
+            .product-title { font-size: 1.6rem; margin-bottom: 0.5rem; }
+            .current-price { font-size: 2rem; }
+            
+            /* Botões de tamanho mais altos (Área de toque maior para o polegar) */
+            .size-btn { padding: 0.8rem 0; min-width: 45px; font-size: 1.1rem; }
+            
+            /* Botão do CTA um pouco mais compacto pra não tomar a tela inteira sozinho */
+            .cta-btn { font-size: 1.1rem; padding: 1rem; }
+            
+            /* Empilha os inputs do calculador de frete pra melhor usabilidade com teclado virtual */
+            .shipping-form-new { flex-direction: column; }
+            .shipping-form-new button { padding: 1rem; margin-top: 0.5rem; width: 100%; border-radius: 0.5rem; }
+
+            .details-section { padding: 1.5rem; }
         }
     </style>
 </head>
@@ -90,9 +114,7 @@
     <aside class="cart-sidebar glass-heavy" id="cart-sidebar">
         <div class="cart-header">
             <h3><i class="fas fa-shopping-bag"></i> Seu Carrinho</h3>
-            <button id="close-cart" class="icon-btn" aria-label="Fechar Carrinho">
-                <i class="fas fa-times"></i>
-            </button>
+            <button id="close-cart" class="icon-btn" aria-label="Fechar Carrinho"><i class="fas fa-times"></i></button>
         </div>
         <div class="cart-items" id="cart-items-container">
             <p class="empty-msg">Seu carrinho está vazio.</p>
@@ -115,110 +137,115 @@
                     <i class="fas fa-search"></i>
                     <input type="text" placeholder="Buscar produtos...">
                 </div>
-                
                 <a href="index.html#hero" id="link-inicio">Início</a>
                 <a href="index.html#products" id="link-lancamentos">Lançamentos</a>
                 <a href="index.html#lookbook">Lookbook</a>
-                
-                <button id="close-menu" class="icon-btn close-menu-btn" aria-label="Fechar Menu">
-                    <i class="fas fa-times"></i>
-                </button>
+                <button id="close-menu" class="icon-btn close-menu-btn" aria-label="Fechar Menu"><i class="fas fa-times"></i></button>
             </nav>
 
             <div class="nav-actions">
-                <div class="search-bar glass-light">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Buscar...">
-                </div>
-                
-                <button id="theme-toggle" class="icon-btn" aria-label="Alternar Tema">
-                    <i class="fas fa-sun" id="theme-icon"></i>
-                </button>
-
-                <button class="icon-btn" aria-label="Minha Conta">
-                    <i class="fas fa-user"></i>
-                </button>
-                
+                <button id="theme-toggle" class="icon-btn" aria-label="Alternar Tema"><i class="fas fa-sun" id="theme-icon"></i></button>
+                <button class="icon-btn" aria-label="Minha Conta"><i class="fas fa-user"></i></button>
                 <button id="open-cart" class="icon-btn cart-btn" aria-label="Carrinho">
                     <i class="fas fa-shopping-cart"></i>
                     <span class="cart-counter" id="cart-counter">0</span>
                 </button>
-
-                <button id="open-menu" class="icon-btn hamburger-btn" aria-label="Abrir Menu">
-                    <i class="fas fa-bars"></i>
-                </button>
+                <button id="open-menu" class="icon-btn hamburger-btn" aria-label="Abrir Menu"><i class="fas fa-bars"></i></button>
             </div>
         </div>
     </header>
 
     <main>
         <section class="product-page-section">
-            <div class="container product-container">
-                
-                <div class="product-gallery">
-                    <div class="main-image glass-light" id="image-container">
-                        <img id="main-product-img" src="" alt="Carregando Imagem..." style="opacity: 0.5;">
+            <div class="container">
+                <div class="produto-grid-novo glass-light">
+                    
+                    <div class="gallery-container">
+                        <img id="main-product-img" src="" alt="Carregando Imagem..." class="main-image">
+                        <div class="thumbnails" id="product-thumbnails">
+                        </div>
                     </div>
-                    <div class="thumbnails" id="product-thumbnails">
+
+                    <div class="product-info-novo">
+                        
+                        <div class="reviews">
+                            <div class="stars">
+                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
+                            </div>
+                            <span>(4.8 de 5) - Alta Demanda</span>
+                        </div>
+
+                        <h1 class="product-title" id="product-name">Carregando Produto...</h1>
+
+                        <div class="pricing">
+                            <div style="margin-top: -5px; display: flex; align-items: center;">
+                                <span class="current-price" id="product-price">R$ 0,00</span>
+                                <span class="discount-badge">Lançamento</span>
+                            </div>
+                            <p id="product-installments" style="color: var(--text-secondary); font-size: 0.95rem; font-weight: 500;">Calculando parcelas...</p>
+                        </div>
+
+                        <div class="scarcity">
+                            <i class="fa-solid fa-fire"></i> <span class="pulse-dot"></span> <b id="live-viewers">12</b> pessoas estão olhando essa peça. Restam <b id="stock-left">3</b> unidades!
+                            <div class="progress-bar"><div class="progress-fill"></div></div>
+                        </div>
+
+                        <div class="options-group">
+                            <h4>Selecione o Tamanho:</h4>
+                            <div class="flex-options">
+                                <button class="size-btn">38</button>
+                                <button class="size-btn">39</button>
+                                <button class="size-btn active">40</button>
+                                <button class="size-btn">41</button>
+                                <button class="size-btn">42</button>
+                            </div>
+                        </div>
+
+                        <div class="action-area">
+                            <button class="cta-btn btn-add-cart" id="main-add-btn" data-name="" data-price="">
+                                <i class="fa-solid fa-cart-arrow-down"></i> Adicionar ao Carrinho
+                            </button>
+                        </div>
+
+                        <div class="shipping-box-new">
+                            <h4 style="color: var(--text-secondary); font-size: 0.85rem; text-transform: uppercase;"><i class="fas fa-truck"></i> Calcular Frete</h4>
+                            <div class="shipping-form-new">
+                                <input type="text" id="cep-input" placeholder="Digite seu CEP" maxlength="9">
+                                <button class="btn-primary" onclick="calculateShipping()">OK</button>
+                            </div>
+                            <div class="shipping-result" id="shipping-result">
+                                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px dashed var(--glass-border);">
+                                    <span>Expresso (2 a 4 dias)</span><strong style="color: var(--text-primary)">R$ 15,90</strong>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                                    <span>Padrão (5 a 8 dias)</span><strong style="color: var(--text-primary)">Grátis</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="trust-badges-new">
+                            <div class="badge-new">
+                                <i class="fa-solid fa-truck-fast"></i>
+                                <div>
+                                    <strong style="color: var(--text-primary)">Envio Rápido</strong><br>
+                                    <span style="font-size: 0.8rem;">Para todo o Brasil</span>
+                                </div>
+                            </div>
+                            <div class="badge-new">
+                                <i class="fa-solid fa-shield-halved"></i>
+                                <div>
+                                    <strong style="color: var(--text-primary)">Compra Segura</strong><br>
+                                    <span style="font-size: 0.8rem;">Criptografia SSL</span>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
-                <div class="product-info">
-                    <div>
-                        <span class="product-category">Lançamento</span>
-                        <h1 class="product-title" id="product-name">Carregando Produto...</h1>
-                        <div class="reviews-badge">
-                            <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star-half-alt"></i>
-                            <span>(Avaliações de Clientes)</span>
-                        </div>
-                    </div>
-
-                    <div class="price-box">
-                        <div class="current-price" id="product-price">R$ 0,00</div>
-                        <span class="installments" id="product-installments">Calculando parcelas...</span>
-                    </div>
-
-                    <div class="size-selector">
-                        <h4>Tamanho:</h4>
-                        <div class="size-grid">
-                            <button class="size-btn">38</button>
-                            <button class="size-btn">39</button>
-                            <button class="size-btn active">40</button>
-                            <button class="size-btn">41</button>
-                            <button class="size-btn">42</button>
-                            <button class="size-btn">43</button>
-                            <button class="size-btn">44</button>
-                        </div>
-                    </div>
-
-                    <div class="shipping-box">
-                        <h4><i class="fas fa-truck"></i> Calcular Frete</h4>
-                        <div class="shipping-form">
-                            <input type="text" id="cep-input" placeholder="Digite seu CEP" maxlength="9">
-                            <button class="btn-primary" onclick="calculateShipping()" style="padding: 0.8rem 1.5rem;">OK</button>
-                        </div>
-                        <div class="shipping-result" id="shipping-result">
-                            <div class="shipping-option">
-                                <span>Expresso (2 a 4 dias úteis)</span>
-                                <strong>R$ 15,90</strong>
-                            </div>
-                            <div class="shipping-option">
-                                <span>Padrão (5 a 8 dias úteis)</span>
-                                <strong>Grátis</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="product-actions">
-                        <button class="btn-primary w-100" style="padding: 1.2rem; font-size: 1.1rem;"><i class="fas fa-bolt"></i> Comprar Agora</button>
-                        <button class="btn-outline w-100 btn-add-cart" id="main-add-btn" data-name="" data-price=""><i class="fas fa-shopping-cart"></i> Adicionar ao Carrinho</button>
-                    </div>
-
-                    <div class="product-description">
-                        <h3>Descrição do Produto</h3>
-                        <p id="product-desc">Carregando detalhes...</p>
-                    </div>
-
+                <div class="details-section glass-light">
+                    <h3>Detalhes do Produto</h3>
+                    <p id="product-desc">Carregando detalhes diretamente do banco de dados...</p>
                 </div>
             </div>
         </section>
@@ -232,7 +259,25 @@
             </div>
         </section>
 
+        <section id="cross-sell" class="section-padding" style="padding-top: 0;">
+            <div class="container">
+                <h2 class="section-title">Complete o Look</h2>
+                <div class="product-grid" id="cross-sell-grid">
+                    <p style="text-align: center; color: var(--text-muted); width: 100%;">Carregando sugestões...</p>
+                </div>
+            </div>
+        </section>
     </main>
+
+    <div id="sticky-cart-bar" class="sticky-cart-bar glass-heavy">
+        <div class="sticky-info">
+            <span id="sticky-product-name">Nome do Produto</span>
+            <strong id="sticky-product-price" class="gradient-text">R$ 0,00</strong>
+        </div>
+        <button class="btn-primary btn-add-cart" id="sticky-add-btn"><i class="fas fa-shopping-cart"></i> Comprar</button>
+    </div>
+
+    <div id="toast-container"></div>
 
     <footer class="footer glass-light">
         <div class="container footer-content">
@@ -240,7 +285,6 @@
                 <h3 id="footer-nome-loja"></h3>
                 <p>Estética sombria. Performance brilhante.</p>
             </div>
-            
             <div class="footer-col footer-links">
                 <h4>Suporte & Ajuda</h4>
                 <ul>
@@ -250,7 +294,6 @@
                     <li><a href="#"><i class="fas fa-chevron-right"></i> Fale Conosco</a></li>
                 </ul>
             </div>
-
             <div class="footer-col theme-customizer glass-heavy">
                 <h4><i class="fas fa-palette"></i> Personalize a Loja</h4>
                 <p>Escolha o tom do gradiente:</p>
