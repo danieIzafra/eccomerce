@@ -106,6 +106,27 @@
             .details-section { padding: 1.5rem; }
         }
     </style>
+    <script>
+        // 1. Esconde a tela imediatamente para não piscar o conteúdo da loja
+        document.write('<style id="anti-piscar">body { opacity: 0 !important; pointer-events: none !important; transition: opacity 0.3s ease; }</style>');
+
+        // 2. Aplica a cor do cache
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const slug = params.get('loja');
+            if (slug) {
+                const savedColor = localStorage.getItem('theme_color_' + slug);
+                if (savedColor) {
+                    const r = parseInt(savedColor.substr(1,2),16), g = parseInt(savedColor.substr(3,2),16), b = parseInt(savedColor.substr(5,2),16);
+                    const textColor = (((r*299)+(g*587)+(b*114))/1000 >= 128) ? '#000000' : '#ffffff';
+                    document.documentElement.style.setProperty('--accent-color', savedColor);
+                    document.documentElement.style.setProperty('--accent-neon', savedColor);
+                    document.documentElement.style.setProperty('--text-on-accent', textColor);
+                    document.documentElement.style.setProperty('--btn-gradient', 'linear-gradient(135deg, ' + savedColor + ' 0%, #1a1c23 100%)');
+                }
+            }
+        })();
+    </script>
 </head>
 <body>
 
@@ -246,6 +267,24 @@
                 <div class="details-section glass-light">
                     <h3>Detalhes do Produto</h3>
                     <p id="product-desc">Carregando detalhes diretamente do banco de dados...</p>
+                </div>
+                <div class="details-section glass-light" style="margin-top: 2rem;">
+                    <h3>Avaliações da Comunidade</h3>
+                    
+                    <div id="lista-avaliacoes" style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 1rem;">
+                        <p style="color: var(--text-muted);">Carregando avaliações...</p>
+                    </div>
+
+                    <div class="form-avaliacao glass-heavy" style="padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--glass-border);">
+                        <h4 style="margin-bottom: 1rem; color: var(--accent-color); font-size: 1.1rem;">Deixe sua avaliação</h4>
+                        <form id="form-nova-avaliacao" style="display: flex; flex-direction: column; gap: 1rem;">
+                            <input type="text" id="aval-nome" placeholder="Seu Nome" required style="padding: 1rem; border-radius: 0.5rem; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: white; outline: none;">
+                            <textarea id="aval-texto" placeholder="O que você achou desta peça?" required rows="3" style="padding: 1rem; border-radius: 0.5rem; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); color: white; resize: vertical; outline: none;"></textarea>
+                            <button type="submit" class="btn-primary" id="btn-enviar-aval">
+                                <i class="fas fa-paper-plane"></i> Enviar Comentário
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
         </section>
