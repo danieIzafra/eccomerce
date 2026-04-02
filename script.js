@@ -135,6 +135,17 @@ document.addEventListener('DOMContentLoaded', () => {
         return (((r*299)+(g*587)+(b*114))/1000 >= 128) ? '#000000' : '#ffffff';
     }
 
+    // Função auxiliar para transformar HEX em RGBA e usar nas luzes de fundo
+    function hexToRgba(hex, alpha) {
+        if (!hex) return `rgba(255,255,255,${alpha})`;
+        hex = hex.replace("#", "");
+        if(hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+        let r = parseInt(hex.substring(0,2), 16),
+            g = parseInt(hex.substring(2,4), 16),
+            b = parseInt(hex.substring(4,6), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
     function liberarTela() {
         const antiPiscar = document.getElementById('anti-piscar');
         if(antiPiscar) antiPiscar.remove();
@@ -156,19 +167,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             document.title = loja.nome_loja; 
+            window.lojaNomeTexto = loja.nome_loja; 
+            window.lojaTextosAtuais = {}; 
             
             if (loja.cor_principal) {
                 const accent = loja.cor_principal; localStorage.setItem('theme_color_' + slug, accent); 
                 
                 let corSecundaria = '#1a1c23';
-                let textColor = getContrastYIQ(accent); // Valor automático padrão
+                let textColor = getContrastYIQ(accent);
 
-                // Verifica se há configurações customizadas de cores
                 if (loja.textos) {
                     const t = typeof loja.textos === 'string' ? JSON.parse(loja.textos) : loja.textos;
                     if (t.corSecundaria) corSecundaria = t.corSecundaria;
-                    
-                    // Sobrescreve a cor do botão se o dono da loja não escolheu "Automático"
                     if (t.corTextoBotao && t.corTextoBotao !== 'auto') {
                         textColor = t.corTextoBotao;
                     }
@@ -178,19 +188,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.documentElement.style.setProperty('--text-on-accent', textColor); 
                 document.documentElement.style.setProperty('--btn-gradient', `linear-gradient(135deg, ${accent} 0%, ${corSecundaria} 100%)`);
                 document.documentElement.style.setProperty('--brand-gradient', `linear-gradient(135deg, ${accent} 0%, ${corSecundaria} 100%)`);
+                
+                document.documentElement.style.setProperty('--blob-color-1', hexToRgba(accent, 0.15));
+                document.documentElement.style.setProperty('--blob-color-2', hexToRgba(corSecundaria, 0.15));
             }
 
-            // === APLICAÇÃO DE TEXTOS E DA LOGO ===
-            // === APLICAÇÃO DE TEXTOS E DA LOGO ===
             const nomesLojaEl = [document.getElementById('nome-loja'), document.getElementById('footer-nome-loja')];
-            let logoHtml = `${loja.nome_loja}`; // Nome em texto é o padrão
+            let logoHtml = `${loja.nome_loja}`; 
 
             if (loja.textos) {
                 const t = typeof loja.textos === 'string' ? JSON.parse(loja.textos) : loja.textos;
+                window.lojaTextosAtuais = t; 
                 
-                // Se a logo foi enviada, aplica a nova classe mágica que ajusta o tamanho e força a cor
-                if (t.logoUrl) {
-                    logoHtml = `<img src="${t.logoUrl}" alt="${loja.nome_loja}" class="brand-logo-img">`;
+                if (t.logoUrl && t.logoUrl.trim() !== '') {
+                    if (t.logoStyle === 'theme') {
+                        logoHtml = `<span class="brand-logo-wrapper"><img src="${t.logoUrl}" alt="${loja.nome_loja}" class="brand-logo-img theme-colored"></span>`;
+                    } else {
+                        logoHtml = `<img src="${t.logoUrl}" alt="${loja.nome_loja}" class="brand-logo-img">`;
+                    }
                 }
 
                 const safeSet = (id, val) => { if(val) { const el = document.getElementById(id); if(el) el.innerHTML = val; } };
@@ -203,7 +218,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            // Injeta a Logo (ou o nome em texto) nos espaços do site
             nomesLojaEl.forEach(el => { 
                 if(el) { 
                     el.innerHTML = logoHtml; 
@@ -213,6 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('link-inicio')?.setAttribute('href', `index.html?loja=${slug}#hero`); document.getElementById('link-lancamentos')?.setAttribute('href', `index.html?loja=${slug}#products`);
         }
 
+        // CARREGA A VITRINE DA TELA INICIAL
         const gridIndex = document.getElementById('main-product-grid');
         if (gridIndex && !idProduto && loja) {
             const { data: produtos } = await supabase.from('produtos').select('*').eq('loja_id', loja.id).order('id', { ascending: false });
@@ -265,12 +280,48 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
+        // CARREGA LOOKBOOK
         const lookbookGrid = document.getElementById('lookbook-grid');
         if (lookbookGrid && loja) { 
             const { data: fotos } = await supabase.from('lookbook').select('*').eq('loja_id', loja.id).order('id', { ascending: false });
             if (fotos && fotos.length > 0) { lookbookGrid.innerHTML = ''; fotos.forEach(f => { lookbookGrid.innerHTML += `<div class="lookbook-item"><img src="${f.imagem_url}" alt="Look" loading="lazy"></div>`; }); }
         }
 
+        // ==========================================
+        // NOVIDADE: CARREGA AVALIAÇÕES ALEATÓRIAS NA INDEX
+        // ==========================================
+        const reviewsWrapper = document.getElementById('dynamic-reviews-wrapper');
+        if (reviewsWrapper && loja) {
+            const { data: avaliacoesDb } = await supabase
+                .from('avaliacoes')
+                .select('*')
+                .eq('loja_id', loja.id)
+                .eq('aprovado', true);
+
+            if (avaliacoesDb && avaliacoesDb.length > 0) {
+                // Embaralha as avaliações para mostrar comentários diferentes sempre
+                const shuffled = avaliacoesDb.sort(() => 0.5 - Math.random());
+                const selecionadas = shuffled.slice(0, 6); // Pega até 6 avaliações
+                
+                reviewsWrapper.innerHTML = '';
+                selecionadas.forEach(av => {
+                    reviewsWrapper.innerHTML += `
+                        <div class="review-card glass-heavy">
+                            <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                            <p class="review-text">"${av.comentario}"</p>
+                            <p class="reviewer">— ${av.nome}</p>
+                        </div>
+                    `;
+                });
+            } else {
+                // Se não houver avaliações aprovadas, esconde a seção para não ficar vazia
+                const secReviews = document.getElementById('reviews');
+                if(secReviews) secReviews.style.display = 'none';
+            }
+        }
+
+
+        // CARREGA PÁGINA DE PRODUTO ESPECÍFICO
         if (idProduto) {
             const { data: p } = await supabase.from('produtos').select('*').eq('id', idProduto).single();
             if (p) {
@@ -346,10 +397,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     } else { const crossSection = document.getElementById('cross-sell'); if(crossSection) crossSection.style.display = 'none'; }
                 }
 
+                // CARREGA AVALIAÇÕES DO PRODUTO
                 async function carregarAvaliacoes() {
                     const container = document.getElementById('lista-avaliacoes'); if(!container) return;
                     const { data: avaliacoes } = await supabase.from('avaliacoes').select('*').eq('produto_id', idProduto).eq('aprovado', true).order('created_at', { ascending: false });
-                    if (!avaliacoes || avaliacoes.length === 0) { container.innerHTML = '<p style="color: var(--text-muted);">Ainda não há avaliações. Sê o primeiro a comentar!</p>'; return; }
+                    if (!avaliacoes || avaliacoes.length === 0) { container.innerHTML = '<p style="color: var(--text-muted);">Ainda não há avaliações. Seja o primeiro a comentar!</p>'; return; }
                     container.innerHTML = '';
                     avaliacoes.forEach(av => { container.innerHTML += `<div style="padding: 1rem; border-radius: 0.8rem; background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border);"><div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; align-items: center;"><strong style="color: var(--text-primary);"><i class="fas fa-user-circle"></i> ${av.nome}</strong><div class="stars" style="color: #fbbf24; font-size: 0.8rem;"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div></div><p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">"${av.comentario}"</p></div>`; });
                 }
@@ -370,4 +422,42 @@ document.addEventListener('DOMContentLoaded', () => {
         liberarTela();
     }
     init();
+
+    // ==========================================
+    // FUNÇÕES DO MODAL DE PÁGINAS LEGAIS
+    // ==========================================
+    window.abrirModalLegal = function(tipo) {
+        const titulos = {
+            'rastreio': 'Rastrear Pedido',
+            'faq': 'Perguntas Frequentes',
+            'devolucao': 'Política de Devolução',
+            'contato': 'Fale Conosco'
+        };
+        
+        const textosPadrao = {
+            'rastreio': 'Insira seu código de rastreio no site dos Correios ou da transportadora parceira para acompanhar a rota do seu pedido até a sua casa.',
+            'faq': '1. Qual o prazo de entrega?\\nO prazo varia de acordo com a sua região, geralmente levando de 5 a 12 dias úteis após o despacho.\\n\\n2. Os produtos são originais?\\nSim, garantimos a procedência e qualidade de todas as peças em nossa loja.',
+            'devolucao': 'Garantimos o seu direito de arrependimento. Você tem até 7 dias corridos após o recebimento do produto para solicitar a devolução ou troca. O produto deve estar com as etiquetas e sem marcas de uso.',
+            'contato': 'Estamos prontos para te ajudar!\\n\\nEnvie um email para: suporte@' + (window.lojaNomeTexto ? window.lojaNomeTexto.toLowerCase().replace(/\\s/g, '') : 'loja') + '.com\\nResponderemos em até 24 horas úteis.'
+        };
+
+        const titulo = titulos[tipo];
+        const conteudo = (window.lojaTextosAtuais && window.lojaTextosAtuais[tipo]) ? window.lojaTextosAtuais[tipo] : textosPadrao[tipo];
+        const nomeLoja = window.lojaNomeTexto || 'Nossa Loja';
+
+        document.getElementById('modal-legal-titulo').innerText = titulo;
+        document.getElementById('modal-legal-loja').innerText = nomeLoja;
+        document.getElementById('modal-legal-conteudo').innerText = conteudo;
+
+        const modal = document.getElementById('modal-legal');
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('active'), 10);
+    };
+
+    window.fecharModalLegal = function() {
+        const modal = document.getElementById('modal-legal');
+        modal.classList.remove('active');
+        setTimeout(() => modal.style.display = 'none', 400); 
+    };
+
 });

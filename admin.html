@@ -10,66 +10,72 @@
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        :root { --accent-neon: #00d2ff; --text-on-accent: #000000; --bg-base: #0b0d14; --bg-glass-header: rgba(11, 13, 20, 0.7); --bg-glass-panel: rgba(255, 255, 255, 0.03); --bg-input: rgba(0, 0, 0, 0.3); --bg-card: rgba(255, 255, 255, 0.02); --border-color: rgba(255, 255, 255, 0.06); --text-main: #f8fafc; --text-muted: #94a3b8; --radius-md: 12px; --radius-lg: 20px; }
+        :root { --accent-neon: #00d2ff; --text-on-accent: #000000; --bg-base: #0b0d14; --bg-glass-header: rgba(11, 13, 20, 0.7); --bg-glass-panel: rgba(255, 255, 255, 0.03); --bg-input: rgba(0, 0, 0, 0.3); --bg-card: rgba(255, 255, 255, 0.02); --border-color: rgba(255, 255, 255, 0.06); --text-main: #f8fafc; --text-muted: #94a3b8; --radius-md: 10px; --radius-lg: 16px; }
         body.light-mode { --bg-base: #f8fafc; --bg-glass-header: rgba(248, 250, 252, 0.8); --bg-glass-panel: rgba(255, 255, 255, 1); --bg-input: rgba(241, 245, 249, 0.8); --bg-card: rgba(255, 255, 255, 0.5); --border-color: rgba(0, 0, 0, 0.05); --text-main: #0f172a; --text-muted: #64748b; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-base); color: var(--text-main); padding-top: 90px; padding-bottom: 90px; transition: 0.3s ease; }
+        body { background-color: var(--bg-base); color: var(--text-main); padding-top: 80px; padding-bottom: 90px; transition: 0.3s ease; }
         
-        .app-header { position: fixed; top: 0; width: 100%; background: var(--bg-glass-header); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border-color); z-index: 1000; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; }
-        .logo { color: var(--text-main); text-decoration: none; font-weight: 800; font-size: 1.4rem; display: flex; align-items: center; gap: 8px; }
-        .logo span { background: var(--accent-neon); -webkit-background-clip: text; color: transparent; font-size: 0.75rem; text-transform: uppercase; padding: 2px 8px; border-radius: 20px; border: 1px solid rgba(0, 210, 255, 0.2); }
-        .header-actions { display: flex; align-items: center; gap: 15px; }
-        .header-link { color: var(--text-main); text-decoration: none; font-size: 0.85rem; font-weight: 600; background: var(--bg-card); padding: 8px 16px; border-radius: 20px; border: 1px solid var(--border-color); }
-        .theme-toggle-btn { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-muted); width: 36px; height: 36px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        .app-header { position: fixed; top: 0; width: 100%; background: var(--bg-glass-header); backdrop-filter: blur(16px); border-bottom: 1px solid var(--border-color); z-index: 1000; padding: 10px 5%; display: flex; justify-content: space-between; align-items: center; }
+        .logo { color: var(--text-main); text-decoration: none; font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
+        .logo span { background: var(--accent-neon); -webkit-background-clip: text; color: transparent; font-size: 0.7rem; text-transform: uppercase; padding: 2px 6px; border-radius: 20px; border: 1px solid rgba(0, 210, 255, 0.2); }
+        .header-actions { display: flex; align-items: center; gap: 10px; }
+        .header-link { color: var(--text-main); text-decoration: none; font-size: 0.8rem; font-weight: 600; background: var(--bg-card); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border-color); }
+        .theme-toggle-btn { background: var(--bg-input); border: 1px solid var(--border-color); color: var(--text-muted); width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; }
         
-        .admin-container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
-        .desktop-tabs { display: flex; gap: 12px; margin-bottom: 30px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; overflow-x: auto; }
+        .admin-container { max-width: 1000px; margin: 0 auto; padding: 0 15px; }
+        .desktop-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; overflow-x: auto; }
         .desktop-tabs::-webkit-scrollbar { display: none; }
-        .tab-btn { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-muted); font-weight: 600; font-size: 0.9rem; padding: 12px 20px; cursor: pointer; border-radius: var(--radius-md); display: flex; gap: 8px; align-items: center; }
+        .tab-btn { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-muted); font-weight: 600; font-size: 0.85rem; padding: 10px 16px; cursor: pointer; border-radius: var(--radius-md); display: flex; gap: 8px; align-items: center; transition: 0.2s; }
+        .tab-btn:hover { background: var(--bg-input); }
         .tab-btn.active { background: var(--accent-neon); color: var(--text-on-accent); border-color: var(--accent-neon); font-weight: 700; }
         
         .tab-content { display: none; }
-        .tab-content.active { display: block; animation: slideUp 0.4s ease; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        .tab-content.active { display: block; animation: slideUp 0.3s ease; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .panel { background: var(--bg-glass-panel); border-radius: var(--radius-lg); padding: 30px; border: 1px solid var(--border-color); margin-bottom: 25px; }
-        .panel-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
+        .panel { background: var(--bg-glass-panel); border-radius: var(--radius-lg); padding: 20px; border: 1px solid var(--border-color); margin-bottom: 15px; }
+        .panel-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; color: var(--text-main); }
         
-        .glass-accordion { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); margin-bottom: 25px; overflow: hidden; }
-        .accordion-header { padding: 20px 25px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .accordion-header h2 { font-size: 1.1rem; font-weight: 700; margin: 0; display: flex; gap: 10px; }
-        .accordion-header h2 i { color: var(--accent-neon); }
-        .accordion-icon { transition: 0.4s ease; color: var(--text-muted); }
+        .glass-accordion { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); margin-bottom: 15px; overflow: hidden; }
+        .accordion-header { padding: 15px 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; }
+        .accordion-header h2 { font-size: 1rem; font-weight: 600; margin: 0; display: flex; gap: 10px; align-items: center; }
+        .accordion-header h2 i { color: var(--accent-neon); font-size: 1.1rem; width: 20px; text-align: center; }
+        .accordion-icon { transition: 0.3s ease; color: var(--text-muted); }
+        .glass-accordion:hover .accordion-icon { color: var(--text-main); }
         .glass-accordion.active .accordion-icon { transform: rotate(180deg); color: var(--accent-neon); }
-        .accordion-content { max-height: 0; overflow: hidden; transition: 0.4s ease; padding: 0 25px; }
-        .glass-accordion.active .accordion-content { max-height: 5000px; padding: 0 25px 25px; border-top: 1px solid var(--border-color); margin-top: 15px; padding-top: 25px; }
+        .accordion-content { max-height: 0; overflow: hidden; transition: 0.4s ease; padding: 0 20px; }
+        .glass-accordion.active .accordion-content { max-height: 5000px; padding: 0 20px 20px; border-top: 1px solid var(--border-color); margin-top: 10px; padding-top: 20px; }
 
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; margin-bottom: 8px; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
-        .form-control { width: 100%; padding: 14px 18px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-main); outline: none; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 0.7rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-control { width: 100%; padding: 12px 15px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-main); outline: none; font-size: 0.9rem; transition: border-color 0.2s; }
+        .form-control:focus { border-color: var(--accent-neon); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         
-        .upload-dropzone { border: 2px dashed var(--border-color); background: var(--bg-input); border-radius: var(--radius-md); padding: 35px 20px; text-align: center; cursor: pointer; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 10px; transition: 0.3s; }
-        .upload-dropzone:hover { border-color: var(--accent-neon); color: var(--accent-neon); }
-        .upload-dropzone i { font-size: 2.5rem; }
+        .upload-dropzone { border: 2px dashed var(--border-color); background: var(--bg-input); border-radius: var(--radius-md); padding: 20px 15px; text-align: center; cursor: pointer; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 8px; transition: 0.3s; }
+        .upload-dropzone:hover { border-color: var(--accent-neon); color: var(--accent-neon); background: rgba(0, 210, 255, 0.05); }
+        .upload-dropzone i { font-size: 2rem; }
+        .upload-dropzone span { font-size: 0.85rem; font-weight: 500; }
         
-        .btn-submit { width: 100%; padding: 16px; background: var(--accent-neon); color: var(--text-on-accent); border: none; border-radius: var(--radius-md); font-weight: 800; text-transform: uppercase; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.2s; }
-        .btn-submit:hover { opacity: 0.9; transform: translateY(-2px); }
+        .btn-submit { width: 100%; padding: 14px; background: var(--accent-neon); color: var(--text-on-accent); border: none; border-radius: var(--radius-md); font-weight: 800; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.2s; }
+        .btn-submit:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 210, 255, 0.2); }
         
-        .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
-        .data-card { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .btn-icon { width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; border-radius: 8px; background: var(--bg-card); color: var(--text-muted); cursor: pointer; border: 1px solid var(--border-color); }
+        .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; }
+        .data-card { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 15px; display: flex; flex-direction: column; gap: 12px; }
+        .btn-icon { width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; border-radius: 8px; background: var(--bg-card); color: var(--text-muted); cursor: pointer; border: 1px solid var(--border-color); transition: 0.2s; }
+        .btn-icon:hover { color: var(--text-main); border-color: var(--text-muted); }
         .btn-icon.danger { color: #ef4444; }
+        .btn-icon.danger:hover { background: rgba(239, 68, 68, 0.1); border-color: #ef4444; }
         
-        .preview-container { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 15px; }
-        .preview-item { position: relative; width: 90px; height: 90px; border-radius: 12px; overflow: hidden; cursor: grab; background: var(--bg-input); }
+        .preview-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .preview-item { position: relative; width: 70px; height: 70px; border-radius: 8px; overflow: hidden; cursor: grab; background: var(--bg-input); border: 1px solid var(--border-color); }
         .preview-item img { width: 100%; height: 100%; object-fit: cover; }
-        .preview-item .remove-btn { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.7); color: #ef4444; border: none; border-radius: 6px; width: 24px; height: 24px; cursor: pointer; }
+        .preview-item .remove-btn { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.8); color: #ef4444; border: none; border-radius: 4px; width: 20px; height: 20px; cursor: pointer; display: flex; justify-content: center; align-items: center; font-size: 0.7rem; }
         
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 15px; }
-        .gallery-item { position: relative; border-radius: 12px; overflow: hidden; aspect-ratio: 1; border: 1px solid var(--border-color); }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+        .gallery-item { position: relative; border-radius: 8px; overflow: hidden; aspect-ratio: 1; border: 1px solid var(--border-color); }
         .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
-        .gallery-item .overlay-actions { position: absolute; inset: 0; background: rgba(0,0,0,0.5); opacity: 0; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
+        .gallery-item .overlay-actions { position: absolute; inset: 0; background: rgba(0,0,0,0.6); opacity: 0; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
         .gallery-item:hover .overlay-actions { opacity: 1; }
 
         .mobile-bottom-nav { display: none; }
@@ -77,12 +83,12 @@
 
         @media (max-width: 768px) {
             .desktop-tabs { display: none; }
-            .form-row { grid-template-columns: 1fr; }
+            .form-row { grid-template-columns: 1fr; gap: 10px; }
             .data-grid { grid-template-columns: 1fr; }
-            .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+            .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
             .mobile-bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-glass-header); border-top: 1px solid var(--border-color); z-index: 1000; }
             .nav-item { flex: 0 0 25%; display: flex; flex-direction: column; align-items: center; padding: 12px 5px; color: var(--text-muted); font-size: 0.65rem; font-weight: 600; text-decoration: none; }
-            .nav-item i { font-size: 1.3rem; margin-bottom: 6px; }
+            .nav-item i { font-size: 1.2rem; margin-bottom: 4px; }
             .nav-item.active { color: var(--accent-neon); }
             .gallery-item .overlay-actions { opacity: 1; background: transparent; align-items: flex-start; justify-content: flex-end; padding: 5px; }
         }
@@ -168,18 +174,19 @@
                             <div class="preview-container" id="product-previews"></div>
                         </div>
                         <div class="form-group"><label>Descrição</label><textarea id="prod-desc" class="form-control" rows="3"></textarea></div>
-                        <div style="display: flex; gap: 15px;">
+                        <div style="display: flex; gap: 10px;">
                             <button type="button" class="btn-submit" id="btn-cancel-edit" style="display: none; background: transparent; border: 1px solid var(--border-color); color: var(--text-main);" onclick="cancelarEdicao()">Cancelar</button>
                             <button type="submit" class="btn-submit" id="btn-save-product"><i class="fas fa-rocket"></i> Salvar</button>
                         </div>
                     </form>
                 </div>
             </div>
+            
             <div class="panel"><h2 class="panel-title"><i class="fas fa-boxes"></i> Estoque Ativo</h2><div class="data-grid" id="products-list"></div></div>
         </div>
 
         <div id="tab-collections" class="tab-content">
-            <div class="glass-accordion active">
+            <div class="glass-accordion">
                 <div class="accordion-header" onclick="toggleAccordion(this)">
                     <h2><i class="fas fa-folder-plus"></i> Nova Coleção</h2>
                     <i class="fas fa-chevron-down accordion-icon"></i>
@@ -196,6 +203,7 @@
 
         <div id="tab-social" class="tab-content">
             <div class="panel" style="border-color: var(--accent-neon);"><h2 class="panel-title"><i class="fas fa-star"></i> Avaliações</h2><div class="data-list" id="reviews-list"></div></div>
+            
             <div class="glass-accordion">
                 <div class="accordion-header" onclick="toggleAccordion(this)">
                     <h2><i class="fas fa-images"></i> Enviar pro Lookbook</h2>
@@ -216,74 +224,135 @@
         </div>
 
         <div id="tab-design" class="tab-content">
-            <div class="panel">
-                <h2 class="panel-title"><i class="fas fa-paint-brush"></i> Identidade Visual</h2>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Cor Primária</label>
-                        <input type="color" id="color-accent" value="#00d2ff" class="form-control" style="height: 60px; padding: 5px; cursor: pointer; border-radius: 16px;">
-                    </div>
-                    <div class="form-group">
-                        <label>Cor Secundária (Fundo do Gradiente)</label>
-                        <input type="color" id="color-secundary" value="#1a1c23" class="form-control" style="height: 60px; padding: 5px; cursor: pointer; border-radius: 16px;">
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Cor do Texto nos Botões</label>
-                        <select id="color-text-btn" class="form-control" style="height: 60px;">
-                            <option value="auto">Automático (Recomendado)</option>
-                            <option value="#ffffff">Forçar Claro (Branco)</option>
-                            <option value="#000000">Forçar Escuro (Preto)</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Logo da Loja (Opcional - PNG transparente)</label>
-                        <div class="upload-dropzone" style="padding: 15px;" onclick="document.getElementById('logo-upload').click()">
-                            <i class="fas fa-image" style="font-size: 1.5rem;"></i><span>Adicionar Logo</span>
-                        </div>
-                        <input type="file" id="logo-upload" accept="image/png, image/jpeg" style="display: none;" onchange="handleLogoFile(event)">
-                        <div id="logo-preview" style="margin-top: 10px; border-radius: 8px; overflow: hidden; display: none; background: rgba(255,255,255,0.05); padding: 10px; text-align: center; border: 1px solid var(--border-color);">
-                            <img id="logo-img-preview" src="" style="max-height: 40px; width: auto; object-fit: contain;">
-                        </div>
-                    </div>
-                </div>
+            <form id="settings-form">
                 
-                <div class="form-group" style="margin-top: 15px;">
-                    <label>Imagem de Fundo da Tela Inicial (Hero Image)</label>
-                    <div class="upload-dropzone" onclick="document.getElementById('hero-upload').click()">
-                        <i class="fas fa-image"></i><span>Alterar Imagem da Capa</span>
+                <div class="glass-accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h2><i class="fas fa-palette"></i> Cores e Estilo Global</h2>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
                     </div>
-                    <input type="file" id="hero-upload" accept="image/*" style="display: none;" onchange="handleHeroFile(event)">
-                    <div id="hero-preview" style="margin-top: 15px; border-radius: 12px; overflow: hidden; height: 250px; display: none; border: 2px solid var(--border-color);">
-                        <img id="hero-img-preview" src="" style="width: 100%; height: 100%; object-fit: cover;">
+                    <div class="accordion-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Cor Primária</label>
+                                <input type="color" id="color-accent" value="#00d2ff" class="form-control" style="height: 50px; padding: 2px; cursor: pointer; border-radius: 8px;">
+                            </div>
+                            <div class="form-group">
+                                <label>Cor Secundária (Fundo Gradiente)</label>
+                                <input type="color" id="color-secundary" value="#1a1c23" class="form-control" style="height: 50px; padding: 2px; cursor: pointer; border-radius: 8px;">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Cor Texto dos Botões</label>
+                                <select id="color-text-btn" class="form-control">
+                                    <option value="auto">Automático</option>
+                                    <option value="#ffffff">Forçar Branco</option>
+                                    <option value="#000000">Forçar Preto</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Estilo da Logo</label>
+                                <select id="logo-style" class="form-control">
+                                    <option value="auto">Automático (P/B)</option>
+                                    <option value="theme">Usar Cor Primária</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="panel">
-                <h2 class="panel-title"><i class="fas fa-font"></i> Textos do Site</h2>
-                <form id="settings-form">
-                    <div class="form-row">
-                        <div class="form-group"><label>Título Principal (Início)</label><input type="text" id="txt-hero-title" class="form-control" placeholder="O Futuro do Design.<br>Em Seus Pés."></div>
-                        <div class="form-group"><label>Texto do Botão (Início)</label><input type="text" id="txt-hero-btn" class="form-control" placeholder="Explorar Coleção"></div>
+                <div class="glass-accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h2><i class="fas fa-image"></i> Logo e Imagem de Capa</h2>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
                     </div>
-                    <div class="form-group"><label>Subtítulo (Início)</label><textarea id="txt-hero-subtitle" class="form-control" rows="2" placeholder="Mergulhe na escuridão elegante..."></textarea></div>
-                    <div class="form-group"><label>Título da Seção de Produtos</label><input type="text" id="txt-products-title" class="form-control" placeholder="Drop Exclusivo"></div>
-                    <div class="form-row">
-                        <div class="form-group"><label>Vantagem 1 (Ícone Cadeado)</label><input type="text" id="txt-trust-1" class="form-control" placeholder="Compra Segura (SSL)"></div>
-                        <div class="form-group"><label>Vantagem 2 (Ícone Caixa)</label><input type="text" id="txt-trust-2" class="form-control" placeholder="Frete Grátis acima de R$ 300"></div>
+                    <div class="accordion-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Logo da Loja</label>
+                                <div class="upload-dropzone" onclick="document.getElementById('logo-upload').click()">
+                                    <i class="fas fa-cloud-upload-alt"></i><span>Adicionar Logo</span>
+                                </div>
+                                <input type="file" id="logo-upload" accept="image/png, image/jpeg" style="display: none;" onchange="handleLogoFile(event)">
+                                <div id="logo-preview" style="margin-top: 10px; border-radius: 8px; overflow: hidden; display: none; background: rgba(255,255,255,0.05); padding: 10px; text-align: center; border: 1px solid var(--border-color); position: relative;">
+                                    <img id="logo-img-preview" src="" style="max-height: 40px; width: auto; object-fit: contain;">
+                                    <button type="button" class="btn-icon danger" style="position: absolute; top: 5px; right: 5px; width: 26px; height: 26px;" onclick="removerLogo()"><i class="fas fa-trash" style="font-size: 0.7rem;"></i></button>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Capa da Tela Inicial (Hero)</label>
+                                <div class="upload-dropzone" onclick="document.getElementById('hero-upload').click()">
+                                    <i class="fas fa-camera"></i><span>Alterar Capa</span>
+                                </div>
+                                <input type="file" id="hero-upload" accept="image/*" style="display: none;" onchange="handleHeroFile(event)">
+                                <div id="hero-preview" style="margin-top: 10px; border-radius: 8px; overflow: hidden; height: 80px; display: none; border: 1px solid var(--border-color);">
+                                    <img id="hero-img-preview" src="" style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group"><label>Vantagem 3 (Ícone Troca)</label><input type="text" id="txt-trust-3" class="form-control" placeholder="Troca Fácil em 30 Dias"></div>
-                        <div class="form-group"><label>Slogan do Rodapé</label><input type="text" id="txt-footer-slogan" class="form-control" placeholder="Estética sombria. Performance brilhante."></div>
-                    </div>
+                </div>
 
-                    <button type="button" onclick="saveSettings()" class="btn-submit" style="margin-top: 15px;"><i class="fas fa-save"></i> Salvar Identidade e Textos</button>
-                </form>
-            </div>
+                <div class="glass-accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h2><i class="fas fa-font"></i> Textos da Vitrine Principais</h2>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="form-row">
+                            <div class="form-group"><label>Título Início</label><input type="text" id="txt-hero-title" class="form-control" placeholder="O Futuro do Design..."></div>
+                            <div class="form-group"><label>Botão Início</label><input type="text" id="txt-hero-btn" class="form-control" placeholder="Explorar Coleção"></div>
+                        </div>
+                        <div class="form-group"><label>Subtítulo Início</label><textarea id="txt-hero-subtitle" class="form-control" rows="2" placeholder="Mergulhe na escuridão elegante..."></textarea></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Título Produtos</label><input type="text" id="txt-products-title" class="form-control" placeholder="Drop Exclusivo"></div>
+                            <div class="form-group"><label>Slogan Rodapé</label><input type="text" id="txt-footer-slogan" class="form-control" placeholder="Estética sombria. Performance brilhante."></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h2><i class="fas fa-shield-alt"></i> Selos de Confiança (Vantagens)</h2>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="form-group"><label><i class="fas fa-lock" style="color:var(--accent-neon);"></i> Vantagem 1</label><input type="text" id="txt-trust-1" class="form-control" placeholder="Compra Segura (SSL)"></div>
+                        <div class="form-group"><label><i class="fas fa-box-open" style="color:var(--accent-neon);"></i> Vantagem 2</label><input type="text" id="txt-trust-2" class="form-control" placeholder="Frete Grátis acima de R$ 300"></div>
+                        <div class="form-group"><label><i class="fas fa-sync-alt" style="color:var(--accent-neon);"></i> Vantagem 3</label><input type="text" id="txt-trust-3" class="form-control" placeholder="Troca Fácil em 30 Dias"></div>
+                    </div>
+                </div>
+
+                <div class="glass-accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h2><i class="fas fa-file-contract"></i> Páginas Legais & Suporte</h2>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="form-group">
+                            <label>Rastrear Pedido</label>
+                            <textarea id="txt-rastreio" class="form-control" rows="2" placeholder="Para rastrear seu pedido..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>FAQ (Perguntas Frequentes)</label>
+                            <textarea id="txt-faq" class="form-control" rows="2" placeholder="1. Qual o prazo..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Política de Devolução</label>
+                            <textarea id="txt-devolucao" class="form-control" rows="2" placeholder="Aceitamos devoluções em até..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Fale Conosco</label>
+                            <textarea id="txt-contato" class="form-control" rows="2" placeholder="Email: suporte@suamarca.com"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <button type="button" onclick="saveSettings()" class="btn-submit"><i class="fas fa-save"></i> Salvar Alterações de Design</button>
+                </div>
+            </form>
         </div>
 
     </div>
@@ -347,6 +416,14 @@
         }
     }
 
+    function removerLogo() {
+        logoImgFile = null;
+        logoImgUrlAtual = ''; 
+        document.getElementById('logo-preview').style.display = 'none';
+        document.getElementById('logo-img-preview').src = '';
+        document.getElementById('logo-upload').value = '';
+    }
+
     function liberarTelaAdmin() {
         const antiPiscar = document.getElementById('anti-piscar');
         if(antiPiscar) antiPiscar.remove();
@@ -382,6 +459,7 @@
                 
                 if (t.corSecundaria) { document.getElementById('color-secundary').value = t.corSecundaria; }
                 if (t.corTextoBotao) { document.getElementById('color-text-btn').value = t.corTextoBotao; }
+                if (t.logoStyle) { document.getElementById('logo-style').value = t.logoStyle; }
                 
                 if (t.heroImage) {
                     heroImgUrlAtual = t.heroImage;
@@ -389,7 +467,7 @@
                     document.getElementById('hero-img-preview').src = t.heroImage;
                 }
                 
-                if (t.logoUrl) {
+                if (t.logoUrl && t.logoUrl.trim() !== '') {
                     logoImgUrlAtual = t.logoUrl;
                     document.getElementById('logo-preview').style.display = 'block';
                     document.getElementById('logo-img-preview').src = t.logoUrl;
@@ -403,6 +481,11 @@
                 if(t.trust2) document.getElementById('txt-trust-2').value = t.trust2;
                 if(t.trust3) document.getElementById('txt-trust-3').value = t.trust3;
                 if(t.footerSlogan) document.getElementById('txt-footer-slogan').value = t.footerSlogan;
+
+                if(t.rastreio) document.getElementById('txt-rastreio').value = t.rastreio;
+                if(t.faq) document.getElementById('txt-faq').value = t.faq;
+                if(t.devolucao) document.getElementById('txt-devolucao').value = t.devolucao;
+                if(t.contato) document.getElementById('txt-contato').value = t.contato;
             }
             
             loadColecoes(); loadProducts(); loadLookbook(); loadReviews(); 
@@ -421,6 +504,7 @@
         const novaCor = document.getElementById('color-accent').value;
         const novaCorSecundaria = document.getElementById('color-secundary').value;
         const novaCorTextoBtn = document.getElementById('color-text-btn').value;
+        const novoEstiloLogo = document.getElementById('logo-style').value;
         
         let finalHeroUrl = heroImgUrlAtual;
         if (heroImgFile) {
@@ -445,8 +529,13 @@
             footerSlogan: document.getElementById('txt-footer-slogan').value,
             corSecundaria: novaCorSecundaria, 
             corTextoBotao: novaCorTextoBtn,
+            logoStyle: novoEstiloLogo,
             heroImage: finalHeroUrl, 
-            logoUrl: finalLogoUrl
+            logoUrl: finalLogoUrl,
+            rastreio: document.getElementById('txt-rastreio').value,
+            faq: document.getElementById('txt-faq').value,
+            devolucao: document.getElementById('txt-devolucao').value,
+            contato: document.getElementById('txt-contato').value
         };
 
         const slug = new URLSearchParams(window.location.search).get('loja');
@@ -507,7 +596,7 @@
         document.getElementById('titulo-form-produto').innerHTML = '<i class="fas fa-pen"></i> Editando'; document.getElementById('btn-cancel-edit').style.display = 'block'; document.getElementById('accordion-produto').classList.add('active'); window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function cancelarEdicao() { document.getElementById('form-produto').reset(); document.getElementById('edit-prod-id').value = ''; productImages = []; renderizarPreviewsProduto(); document.getElementById('titulo-form-produto').innerHTML = '<i class="fas fa-plus-circle"></i> Lançar'; document.getElementById('btn-cancel-edit').style.display = 'none'; }
+    function cancelarEdicao() { document.getElementById('form-produto').reset(); document.getElementById('edit-prod-id').value = ''; productImages = []; renderizarPreviewsProduto(); document.getElementById('titulo-form-produto').innerHTML = '<i class="fas fa-plus-circle"></i> Lançar'; document.getElementById('btn-cancel-edit').style.display = 'none'; document.getElementById('accordion-produto').classList.remove('active'); }
     async function deletarProduto(id) { if(confirm('Excluir?')) { await supabaseClient.from('produtos').delete().eq('id', id); loadProducts(); } }
 
     document.getElementById('form-produto').addEventListener('submit', async (e) => {
