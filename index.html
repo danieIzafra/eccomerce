@@ -13,7 +13,7 @@
         // 1. Esconde a tela imediatamente para não piscar o conteúdo da loja
         document.write('<style id="anti-piscar">body { opacity: 0 !important; pointer-events: none !important; transition: opacity 0.3s ease; }</style>');
 
-        // 2. Aplica a cor do cache
+        // 2. Aplica a cor do cache e a cor secundária (gradiente)
         (function() {
             const params = new URLSearchParams(window.location.search);
             const slug = params.get('loja');
@@ -47,26 +47,35 @@
         </div>
     </aside>
 
-    <header class="navbar glass-light" id="navbar">
+    <header class="navbar" id="navbar" style="background: transparent; border: none; box-shadow: none;">
         <div class="container nav-container">
-            <a href="#" class="logo" id="nome-loja"></a>
+            <a href="#" class="logo" id="nome-loja" style="font-weight: 800; letter-spacing: 1px; font-size: 1.8rem; text-transform: uppercase; color: var(--text-primary);"></a>
             <nav class="nav-links" id="mobile-menu">
                 <div class="mobile-search glass-light"><i class="fas fa-search"></i><input type="text" placeholder="Buscar produtos..."></div>
                 <a href="#hero">Início</a><a href="#products">Lançamentos</a><a href="#lookbook">Lookbook</a>
                 <button id="close-menu" class="icon-btn close-menu-btn"><i class="fas fa-times"></i></button>
             </nav>
+            
             <div class="nav-actions">
-                <div class="search-bar glass-light"><i class="fas fa-search"></i><input type="text" placeholder="Buscar..."></div>
-                <button id="theme-toggle" class="icon-btn"><i class="fas fa-sun" id="theme-icon"></i></button>
-                <button class="icon-btn"><i class="fas fa-user"></i></button>
-                <button id="open-cart" class="icon-btn cart-btn"><i class="fas fa-shopping-cart"></i><span class="cart-counter" id="cart-counter">0</span></button>
-                <button id="open-menu" class="icon-btn hamburger-btn"><i class="fas fa-bars"></i></button>
+                <div class="search-bar glass-light desktop-only"><i class="fas fa-search"></i><input type="text" placeholder="Buscar..."></div>
+                
+                <button id="theme-toggle" class="icon-btn"><i class="fas fa-moon" id="theme-icon"></i></button>
+                
+                <button class="icon-btn desktop-only"><i class="fas fa-user"></i></button>
+                
+                <button id="open-cart" class="icon-btn cart-btn">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span class="cart-counter" id="cart-counter" style="background: #ef4444; color: white;">0</span>
+                </button>
+                
+                <button id="open-menu" class="icon-btn hamburger-btn"><i class="fas fa-bars" style="font-weight: 400;"></i></button>
             </div>
         </div>
     </header>
 
     <main>
         <section id="hero" class="hero-section">
+            <div class="hero-overlay"></div>
             <div class="hero-glow"></div>
             <div class="container hero-content">
                 <h1 class="gradient-text" id="dyn-hero-title">O Futuro do Design.<br>Em Seus Pés.</h1>
@@ -100,13 +109,13 @@
 
         <section id="collections-section" class="section-padding" style="display: none; padding-top: 0;">
             <div class="container" id="collections-container">
-                </div>
+            </div>
         </section>
 
         <section id="reviews" class="section-padding">
             <div class="container">
                 <h2 class="section-title">O Que Dizem</h2>
-                <div class="reviews-grid">
+                <div class="reviews-wrapper">
                     <div class="review-card glass-heavy">
                         <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
                         <p class="review-text">"O design do site e a qualidade dos produtos são absurdos. Comprei e a entrega foi super rápida."</p>

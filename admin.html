@@ -8,51 +8,10 @@
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <script>
-        (function() {
-            const params = new URLSearchParams(window.location.search);
-            const slug = params.get('loja');
-            if (slug) {
-                const savedColor = localStorage.getItem('theme_color_' + slug);
-                if (savedColor) {
-                    const r = parseInt(savedColor.substr(1,2),16), g = parseInt(savedColor.substr(3,2),16), b = parseInt(savedColor.substr(5,2),16);
-                    const textColor = (((r*299)+(g*587)+(b*114))/1000 >= 128) ? '#000000' : '#ffffff';
-                    document.documentElement.style.setProperty('--accent-neon', savedColor);
-                    document.documentElement.style.setProperty('--text-on-accent', textColor);
-                }
-            }
-        })();
-    </script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        
-        :root { 
-            --accent-neon: #00d2ff; 
-            --text-on-accent: #000000; /* Agora é dinâmico */
-            --bg-base: #0b0d14; 
-            --bg-glass-header: rgba(11, 13, 20, 0.7); 
-            --bg-glass-panel: rgba(255, 255, 255, 0.03); 
-            --bg-input: rgba(0, 0, 0, 0.3); 
-            --bg-card: rgba(255, 255, 255, 0.02); 
-            --border-color: rgba(255, 255, 255, 0.06); 
-            --text-main: #f8fafc; 
-            --text-muted: #94a3b8; 
-            --radius-md: 12px; 
-            --radius-lg: 20px; 
-        }
-        
-        body.light-mode { 
-            --bg-base: #f8fafc; 
-            --bg-glass-header: rgba(248, 250, 252, 0.8); 
-            --bg-glass-panel: rgba(255, 255, 255, 1); 
-            --bg-input: rgba(241, 245, 249, 0.8); 
-            --bg-card: rgba(255, 255, 255, 0.5); 
-            --border-color: rgba(0, 0, 0, 0.05); 
-            --text-main: #0f172a; 
-            --text-muted: #64748b; 
-        }
-        
+        :root { --accent-neon: #00d2ff; --text-on-accent: #000000; --bg-base: #0b0d14; --bg-glass-header: rgba(11, 13, 20, 0.7); --bg-glass-panel: rgba(255, 255, 255, 0.03); --bg-input: rgba(0, 0, 0, 0.3); --bg-card: rgba(255, 255, 255, 0.02); --border-color: rgba(255, 255, 255, 0.06); --text-main: #f8fafc; --text-muted: #94a3b8; --radius-md: 12px; --radius-lg: 20px; }
+        body.light-mode { --bg-base: #f8fafc; --bg-glass-header: rgba(248, 250, 252, 0.8); --bg-glass-panel: rgba(255, 255, 255, 1); --bg-input: rgba(241, 245, 249, 0.8); --bg-card: rgba(255, 255, 255, 0.5); --border-color: rgba(0, 0, 0, 0.05); --text-main: #0f172a; --text-muted: #64748b; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         body { background-color: var(--bg-base); color: var(--text-main); padding-top: 90px; padding-bottom: 90px; transition: 0.3s ease; }
         
@@ -90,7 +49,8 @@
         .form-control { width: 100%; padding: 14px 18px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-main); outline: none; }
         .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         
-        .upload-dropzone { border: 2px dashed var(--border-color); background: var(--bg-input); border-radius: var(--radius-md); padding: 35px 20px; text-align: center; cursor: pointer; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .upload-dropzone { border: 2px dashed var(--border-color); background: var(--bg-input); border-radius: var(--radius-md); padding: 35px 20px; text-align: center; cursor: pointer; color: var(--text-muted); display: flex; flex-direction: column; align-items: center; gap: 10px; transition: 0.3s; }
+        .upload-dropzone:hover { border-color: var(--accent-neon); color: var(--accent-neon); }
         .upload-dropzone i { font-size: 2.5rem; }
         
         .btn-submit { width: 100%; padding: 16px; background: var(--accent-neon); color: var(--text-on-accent); border: none; border-radius: var(--radius-md); font-weight: 800; text-transform: uppercase; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.2s; }
@@ -98,7 +58,6 @@
         
         .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
         .data-card { background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .card-title { font-weight: 700; font-size: 1.05rem; color: var(--text-main); }
         .btn-icon { width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; border-radius: 8px; background: var(--bg-card); color: var(--text-muted); cursor: pointer; border: 1px solid var(--border-color); }
         .btn-icon.danger { color: #ef4444; }
         
@@ -129,10 +88,7 @@
         }
     </style>
     <script>
-        // 1. Esconde a tela imediatamente para não piscar o conteúdo da loja
         document.write('<style id="anti-piscar">body { opacity: 0 !important; pointer-events: none !important; transition: opacity 0.3s ease; }</style>');
-
-        // 2. Aplica a cor do cache
         (function() {
             const params = new URLSearchParams(window.location.search);
             const slug = params.get('loja');
@@ -141,10 +97,8 @@
                 if (savedColor) {
                     const r = parseInt(savedColor.substr(1,2),16), g = parseInt(savedColor.substr(3,2),16), b = parseInt(savedColor.substr(5,2),16);
                     const textColor = (((r*299)+(g*587)+(b*114))/1000 >= 128) ? '#000000' : '#ffffff';
-                    document.documentElement.style.setProperty('--accent-color', savedColor);
                     document.documentElement.style.setProperty('--accent-neon', savedColor);
                     document.documentElement.style.setProperty('--text-on-accent', textColor);
-                    document.documentElement.style.setProperty('--btn-gradient', 'linear-gradient(135deg, ' + savedColor + ' 0%, #1a1c23 100%)');
                 }
             }
         })();
@@ -167,7 +121,7 @@
             <i class="fas fa-hashtag"></i><span>Social</span>
             <span id="badge-reviews-mobile" class="badge-notification" style="display: none; top: 5px; right: 15px;">0</span>
         </a>
-        <a href="#" class="nav-item" onclick="openTab(event, 'tab-design')"><i class="fas fa-paint-brush"></i><span>Design & Textos</span></a>
+        <a href="#" class="nav-item" onclick="openTab(event, 'tab-design')"><i class="fas fa-paint-brush"></i><span>Design</span></a>
     </nav>
 
     <div class="admin-container">
@@ -195,6 +149,17 @@
                         <div class="form-row">
                             <div class="form-group"><label>Preço (R$)</label><input type="number" step="0.01" id="prod-price" class="form-control" required></div>
                             <div class="form-group"><label>Coleção</label><select id="prod-collection" class="form-control"><option value="">Nenhuma</option></select></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Grade de Tamanho</label>
+                                <select id="prod-size-type" class="form-control">
+                                    <option value="letras">Letras (P, M, G, GG)</option>
+                                    <option value="numeros_roupa">Roupas (36 ao 46)</option>
+                                    <option value="numeros_calcado" selected>Calçados (38 ao 43)</option>
+                                    <option value="unico">Tamanho Único</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Fotos (Arraste para reordenar)</label>
@@ -226,7 +191,7 @@
                     </form>
                 </div>
             </div>
-            <div class="panel"><h2 class="panel-title"><i class="fas fa-layer-group"></i> Coleções</h2><div class="data-grid" id="collections-list"></div></div>
+            <div class="panel"><h2 class="panel-title"><i class="fas fa-layer-group"></i> Coleções (Arraste para reordenar)</h2><div class="data-grid" id="collections-list"></div></div>
         </div>
 
         <div id="tab-social" class="tab-content">
@@ -253,9 +218,48 @@
         <div id="tab-design" class="tab-content">
             <div class="panel">
                 <h2 class="panel-title"><i class="fas fa-paint-brush"></i> Identidade Visual</h2>
-                <div class="form-group">
-                    <label>Cor Primária</label>
-                    <input type="color" id="color-accent" value="#00d2ff" class="form-control" style="height: 60px; padding: 5px; cursor: pointer; border-radius: 16px;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cor Primária</label>
+                        <input type="color" id="color-accent" value="#00d2ff" class="form-control" style="height: 60px; padding: 5px; cursor: pointer; border-radius: 16px;">
+                    </div>
+                    <div class="form-group">
+                        <label>Cor Secundária (Fundo do Gradiente)</label>
+                        <input type="color" id="color-secundary" value="#1a1c23" class="form-control" style="height: 60px; padding: 5px; cursor: pointer; border-radius: 16px;">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Cor do Texto nos Botões</label>
+                        <select id="color-text-btn" class="form-control" style="height: 60px;">
+                            <option value="auto">Automático (Recomendado)</option>
+                            <option value="#ffffff">Forçar Claro (Branco)</option>
+                            <option value="#000000">Forçar Escuro (Preto)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Logo da Loja (Opcional - PNG transparente)</label>
+                        <div class="upload-dropzone" style="padding: 15px;" onclick="document.getElementById('logo-upload').click()">
+                            <i class="fas fa-image" style="font-size: 1.5rem;"></i><span>Adicionar Logo</span>
+                        </div>
+                        <input type="file" id="logo-upload" accept="image/png, image/jpeg" style="display: none;" onchange="handleLogoFile(event)">
+                        <div id="logo-preview" style="margin-top: 10px; border-radius: 8px; overflow: hidden; display: none; background: rgba(255,255,255,0.05); padding: 10px; text-align: center; border: 1px solid var(--border-color);">
+                            <img id="logo-img-preview" src="" style="max-height: 40px; width: auto; object-fit: contain;">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>Imagem de Fundo da Tela Inicial (Hero Image)</label>
+                    <div class="upload-dropzone" onclick="document.getElementById('hero-upload').click()">
+                        <i class="fas fa-image"></i><span>Alterar Imagem da Capa</span>
+                    </div>
+                    <input type="file" id="hero-upload" accept="image/*" style="display: none;" onchange="handleHeroFile(event)">
+                    <div id="hero-preview" style="margin-top: 15px; border-radius: 12px; overflow: hidden; height: 250px; display: none; border: 2px solid var(--border-color);">
+                        <img id="hero-img-preview" src="" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
                 </div>
             </div>
 
@@ -263,44 +267,18 @@
                 <h2 class="panel-title"><i class="fas fa-font"></i> Textos do Site</h2>
                 <form id="settings-form">
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Título Principal (Início)</label>
-                            <input type="text" id="txt-hero-title" class="form-control" placeholder="O Futuro do Design.<br>Em Seus Pés.">
-                        </div>
-                        <div class="form-group">
-                            <label>Texto do Botão (Início)</label>
-                            <input type="text" id="txt-hero-btn" class="form-control" placeholder="Explorar Coleção">
-                        </div>
+                        <div class="form-group"><label>Título Principal (Início)</label><input type="text" id="txt-hero-title" class="form-control" placeholder="O Futuro do Design.<br>Em Seus Pés."></div>
+                        <div class="form-group"><label>Texto do Botão (Início)</label><input type="text" id="txt-hero-btn" class="form-control" placeholder="Explorar Coleção"></div>
                     </div>
-                    <div class="form-group">
-                        <label>Subtítulo (Início)</label>
-                        <textarea id="txt-hero-subtitle" class="form-control" rows="2" placeholder="Mergulhe na escuridão elegante..."></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>Título da Seção de Produtos</label>
-                        <input type="text" id="txt-products-title" class="form-control" placeholder="Drop Exclusivo">
-                    </div>
-                    
+                    <div class="form-group"><label>Subtítulo (Início)</label><textarea id="txt-hero-subtitle" class="form-control" rows="2" placeholder="Mergulhe na escuridão elegante..."></textarea></div>
+                    <div class="form-group"><label>Título da Seção de Produtos</label><input type="text" id="txt-products-title" class="form-control" placeholder="Drop Exclusivo"></div>
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Vantagem 1 (Ícone Cadeado)</label>
-                            <input type="text" id="txt-trust-1" class="form-control" placeholder="Compra Segura (SSL)">
-                        </div>
-                        <div class="form-group">
-                            <label>Vantagem 2 (Ícone Caixa)</label>
-                            <input type="text" id="txt-trust-2" class="form-control" placeholder="Frete Grátis acima de R$ 300">
-                        </div>
+                        <div class="form-group"><label>Vantagem 1 (Ícone Cadeado)</label><input type="text" id="txt-trust-1" class="form-control" placeholder="Compra Segura (SSL)"></div>
+                        <div class="form-group"><label>Vantagem 2 (Ícone Caixa)</label><input type="text" id="txt-trust-2" class="form-control" placeholder="Frete Grátis acima de R$ 300"></div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Vantagem 3 (Ícone Troca)</label>
-                            <input type="text" id="txt-trust-3" class="form-control" placeholder="Troca Fácil em 30 Dias">
-                        </div>
-                        <div class="form-group">
-                            <label>Slogan do Rodapé</label>
-                            <input type="text" id="txt-footer-slogan" class="form-control" placeholder="Estética sombria. Performance brilhante.">
-                        </div>
+                        <div class="form-group"><label>Vantagem 3 (Ícone Troca)</label><input type="text" id="txt-trust-3" class="form-control" placeholder="Troca Fácil em 30 Dias"></div>
+                        <div class="form-group"><label>Slogan do Rodapé</label><input type="text" id="txt-footer-slogan" class="form-control" placeholder="Estética sombria. Performance brilhante."></div>
                     </div>
 
                     <button type="button" onclick="saveSettings()" class="btn-submit" style="margin-top: 15px;"><i class="fas fa-save"></i> Salvar Identidade e Textos</button>
@@ -311,7 +289,6 @@
     </div>
 
     <script>
-    // === CÁLCULO DE CONTRASTE ===
     function getContrastYIQ(hexcolor) {
         if (!hexcolor) return '#ffffff';
         hexcolor = hexcolor.replace("#", "");
@@ -320,7 +297,6 @@
         return (yiq >= 128) ? '#000000' : '#ffffff';
     }
 
-    // === CONFIGURAÇÕES GLOBAIS ===
     const themeToggleBtn = document.getElementById('themeToggle');
     const themeIcon = themeToggleBtn.querySelector('i');
     if (localStorage.getItem('admin_theme') === 'light') { document.body.classList.add('light-mode'); themeIcon.classList.replace('fa-sun', 'fa-moon'); }
@@ -335,6 +311,11 @@
     let produtosGlobais = [];
     let productImages = []; 
     let lookbookImages = [];
+    
+    let heroImgFile = null;
+    let heroImgUrlAtual = '';
+    let logoImgFile = null;
+    let logoImgUrlAtual = '';
 
     Sortable.create(document.getElementById('product-previews'), { animation: 150 });
     Sortable.create(document.getElementById('lookbook-previews'), { animation: 150 });
@@ -346,8 +327,26 @@
         if (!data.success) throw new Error(data.error.message); return data.data.url;
     }
 
-    // === CARREGAR DADOS INICIAIS ===
-    // === CARREGAR DADOS INICIAIS ===
+    function handleHeroFile(e) {
+        const file = e.target.files[0];
+        if (file) {
+            heroImgFile = file;
+            const r = new FileReader();
+            r.onload = (evt) => { document.getElementById('hero-preview').style.display = 'block'; document.getElementById('hero-img-preview').src = evt.target.result; };
+            r.readAsDataURL(file);
+        }
+    }
+
+    function handleLogoFile(e) {
+        const file = e.target.files[0];
+        if (file) {
+            logoImgFile = file;
+            const r = new FileReader();
+            r.onload = (evt) => { document.getElementById('logo-preview').style.display = 'block'; document.getElementById('logo-img-preview').src = evt.target.result; };
+            r.readAsDataURL(file);
+        }
+    }
+
     function liberarTelaAdmin() {
         const antiPiscar = document.getElementById('anti-piscar');
         if(antiPiscar) antiPiscar.remove();
@@ -355,26 +354,16 @@
         document.body.style.pointerEvents = 'auto';
     }
 
-    // === CARREGAR DADOS INICIAIS ===
     async function carregarDadosLoja() {
         const slug = new URLSearchParams(window.location.search).get('loja');
         if (!slug) return;
         const { data: loja } = await supabaseClient.from('lojas').select('*').eq('slug', slug).single();
         
         if (loja) {
-            // === BLOQUEIO DE LOJA SUSPENSA (GRL) ===
             if (loja.ativo === false) {
-                document.body.innerHTML = `
-                    <div style="height: 100vh; width: 100vw; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #0b0d14; color: #f8fafc; font-family: 'Inter', sans-serif; text-align: center; padding: 20px; position: fixed; top: 0; left: 0; z-index: 999999;">
-                        <i class="fas fa-lock" style="font-size: 5rem; color: #ef4444; margin-bottom: 1.5rem;"></i>
-                        <h1 style="font-size: 2.5rem; margin-bottom: 1rem; font-weight: 800;">Acesso Suspenso</h1>
-                        <p style="color: #94a3b8; font-size: 1.1rem; max-width: 500px; line-height: 1.6;">O acesso ao painel de administração desta loja foi bloqueado pelo sistema. Entre em contato com a administração da plataforma SaaS para regularizar a situação.</p>
-                    </div>
-                `;
-                liberarTelaAdmin();
-                return; // Trava o admin inteiro aqui!
+                document.body.innerHTML = `<div style="height: 100vh; width: 100vw; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #0b0d14; color: #f8fafc; font-family: 'Inter', sans-serif; text-align: center; padding: 20px; position: fixed; top: 0; left: 0; z-index: 999999;"><i class="fas fa-lock" style="font-size: 5rem; color: #ef4444; margin-bottom: 1.5rem;"></i><h1 style="font-size: 2.5rem; margin-bottom: 1rem; font-weight: 800;">Acesso Suspenso</h1><p style="color: #94a3b8; font-size: 1.1rem; max-width: 500px; line-height: 1.6;">O acesso ao painel de administração desta loja foi bloqueado pelo sistema.</p></div>`;
+                liberarTelaAdmin(); return; 
             }
-            // =========================================
 
             lojaIdAtual = loja.id;
             document.title = `Admin | ${loja.nome_loja}`;
@@ -390,6 +379,22 @@
             
             if (loja.textos) {
                 const t = typeof loja.textos === 'string' ? JSON.parse(loja.textos) : loja.textos;
+                
+                if (t.corSecundaria) { document.getElementById('color-secundary').value = t.corSecundaria; }
+                if (t.corTextoBotao) { document.getElementById('color-text-btn').value = t.corTextoBotao; }
+                
+                if (t.heroImage) {
+                    heroImgUrlAtual = t.heroImage;
+                    document.getElementById('hero-preview').style.display = 'block';
+                    document.getElementById('hero-img-preview').src = t.heroImage;
+                }
+                
+                if (t.logoUrl) {
+                    logoImgUrlAtual = t.logoUrl;
+                    document.getElementById('logo-preview').style.display = 'block';
+                    document.getElementById('logo-img-preview').src = t.logoUrl;
+                }
+
                 if(t.heroTitle) document.getElementById('txt-hero-title').value = t.heroTitle;
                 if(t.heroSubtitle) document.getElementById('txt-hero-subtitle').value = t.heroSubtitle;
                 if(t.heroBtn) document.getElementById('txt-hero-btn').value = t.heroBtn;
@@ -405,11 +410,30 @@
         }
     }
 
-    // === SALVAR CONFIGURAÇÕES ===
     async function saveSettings() {
         if(!lojaIdAtual) return;
         
+        const btn = document.querySelector('button[onclick="saveSettings()"]');
+        const textOrig = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A guardar...';
+        btn.disabled = true;
+
         const novaCor = document.getElementById('color-accent').value;
+        const novaCorSecundaria = document.getElementById('color-secundary').value;
+        const novaCorTextoBtn = document.getElementById('color-text-btn').value;
+        
+        let finalHeroUrl = heroImgUrlAtual;
+        if (heroImgFile) {
+            try { finalHeroUrl = await uploadToImgBB(heroImgFile); heroImgUrlAtual = finalHeroUrl; heroImgFile = null; } 
+            catch(e) { alert("Erro ao salvar foto de capa: " + e.message); }
+        }
+
+        let finalLogoUrl = logoImgUrlAtual;
+        if (logoImgFile) {
+            try { finalLogoUrl = await uploadToImgBB(logoImgFile); logoImgUrlAtual = finalLogoUrl; logoImgFile = null; } 
+            catch(e) { alert("Erro ao salvar logo: " + e.message); }
+        }
+
         const textosCustomizados = {
             heroTitle: document.getElementById('txt-hero-title').value,
             heroSubtitle: document.getElementById('txt-hero-subtitle').value,
@@ -418,42 +442,40 @@
             trust1: document.getElementById('txt-trust-1').value,
             trust2: document.getElementById('txt-trust-2').value,
             trust3: document.getElementById('txt-trust-3').value,
-            footerSlogan: document.getElementById('txt-footer-slogan').value
+            footerSlogan: document.getElementById('txt-footer-slogan').value,
+            corSecundaria: novaCorSecundaria, 
+            corTextoBotao: novaCorTextoBtn,
+            heroImage: finalHeroUrl, 
+            logoUrl: finalLogoUrl
         };
 
         const slug = new URLSearchParams(window.location.search).get('loja');
         if(slug) localStorage.setItem('theme_color_' + slug, novaCor); 
 
-        const btn = document.querySelector('button[onclick="saveSettings()"]');
-        const textOrig = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A guardar...';
-        
-        // Atualiza cores e contraste em tempo real no admin
-        const textColor = getContrastYIQ(novaCor);
+        const textColor = novaCorTextoBtn === 'auto' ? getContrastYIQ(novaCor) : novaCorTextoBtn;
         document.documentElement.style.setProperty('--accent-neon', novaCor);
         document.documentElement.style.setProperty('--text-on-accent', textColor);
         
-        await supabaseClient.from('lojas').update({ 
-            cor_principal: novaCor,
-            textos: textosCustomizados
-        }).eq('id', lojaIdAtual);
+        await supabaseClient.from('lojas').update({ cor_principal: novaCor, textos: textosCustomizados }).eq('id', lojaIdAtual);
         
         btn.innerHTML = '<i class="fas fa-check"></i> Sucesso!';
+        btn.disabled = false;
         setTimeout(() => btn.innerHTML = textOrig, 2000);
     }
 
-    // Demais funções mantidas (Coleções, Produtos, Lookbook)
     async function loadColecoes() {
         const list = document.getElementById('collections-list'); const select = document.getElementById('prod-collection');
-        const { data: colecoes } = await supabaseClient.from('colecoes').select('*').eq('loja_id', lojaIdAtual).order('id', { ascending: false });
+        const { data: colecoes } = await supabaseClient.from('colecoes').select('*').eq('loja_id', lojaIdAtual).order('ordem', { ascending: true, nullsFirst: false }).order('id', { ascending: false });
         select.innerHTML = '<option value="">Nenhuma</option>';
         if(!colecoes || colecoes.length===0) { list.innerHTML = '<p>Vazio</p>'; return; }
         list.innerHTML = '';
         colecoes.forEach(c => {
-            list.innerHTML += `<div class="data-card" style="flex-direction:row; align-items:center;"><div id="col-view-${c.id}" style="display:flex; justify-content:space-between; width:100%;"><span style="font-weight: 700;">${c.nome}</span><div><button class="btn-icon edit" onclick="document.getElementById('col-view-${c.id}').style.display='none';document.getElementById('col-edit-${c.id}').style.display='flex';"><i class="fas fa-pen"></i></button><button class="btn-icon danger" onclick="supabaseClient.from('colecoes').delete().eq('id','${c.id}').then(()=>loadColecoes())"><i class="fas fa-trash"></i></button></div></div><div id="col-edit-${c.id}" style="display:none; width:100%; gap:10px;"><input type="text" id="input-col-${c.id}" class="form-control" value="${c.nome}" style="padding: 8px; height: 38px;"><button class="btn-icon" style="background:#10b981;color:white;" onclick="salvarEdicaoColecao('${c.id}', '${c.nome}')"><i class="fas fa-check"></i></button></div></div>`;
+            list.innerHTML += `<div class="data-card collection-item" data-id="${c.id}" style="flex-direction:row; align-items:center; cursor: grab; background: rgba(255,255,255,0.03);"><i class="fas fa-grip-lines" style="color: var(--text-muted); padding: 0 10px; cursor: inherit;"></i><div id="col-view-${c.id}" style="display:flex; justify-content:space-between; width:100%; align-items: center;"><span style="font-weight: 700;">${c.nome}</span><div><button class="btn-icon edit" onclick="document.getElementById('col-view-${c.id}').style.display='none';document.getElementById('col-edit-${c.id}').style.display='flex';"><i class="fas fa-pen"></i></button><button class="btn-icon danger" onclick="supabaseClient.from('colecoes').delete().eq('id','${c.id}').then(()=>loadColecoes())"><i class="fas fa-trash"></i></button></div></div><div id="col-edit-${c.id}" style="display:none; width:100%; gap:10px;"><input type="text" id="input-col-${c.id}" class="form-control" value="${c.nome}" style="padding: 8px; height: 38px;"><button class="btn-icon" style="background:#10b981;color:white;" onclick="salvarEdicaoColecao('${c.id}', '${c.nome}')"><i class="fas fa-check"></i></button></div></div>`;
             select.innerHTML += `<option value="${c.nome}">${c.nome}</option>`;
         });
+        if (!window.sortableColecoes) { window.sortableColecoes = Sortable.create(list, { animation: 150, handle: '.collection-item', ghostClass: 'sortable-ghost', onEnd: async function () { const items = list.querySelectorAll('.collection-item'); const btnCols = document.querySelector('button[onclick*="tab-collections"]'); const textOrig = btnCols ? btnCols.innerHTML : ''; if(btnCols) btnCols.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando ordem...'; for (let i = 0; i < items.length; i++) { const idColecao = items[i].getAttribute('data-id'); await supabaseClient.from('colecoes').update({ ordem: i }).eq('id', idColecao); } if(btnCols) btnCols.innerHTML = textOrig; } }); }
     }
+
     async function salvarEdicaoColecao(id, nomeAntigo) { const novoNome = document.getElementById(`input-col-${id}`).value.trim(); if(novoNome && novoNome !== nomeAntigo) { await supabaseClient.from('colecoes').update({ nome: novoNome }).eq('id', id); await supabaseClient.from('produtos').update({ colecao: novoNome }).eq('colecao', nomeAntigo).eq('loja_id', lojaIdAtual); loadColecoes(); loadProducts(); } }
     document.getElementById('add-collection-form').addEventListener('submit', async (e) => { e.preventDefault(); await supabaseClient.from('colecoes').insert([{ loja_id: lojaIdAtual, nome: document.getElementById('col-name').value }]); document.getElementById('add-collection-form').reset(); loadColecoes(); });
 
@@ -474,7 +496,13 @@
 
     function editarProduto(id) {
         const p = produtosGlobais.find(x => x.id == id); if(!p) return;
-        document.getElementById('edit-prod-id').value = p.id; document.getElementById('prod-name').value = p.nome; document.getElementById('prod-price').value = p.preco; document.getElementById('prod-collection').value = p.colecao || ''; document.getElementById('prod-desc').value = p.descricao;
+        document.getElementById('edit-prod-id').value = p.id; 
+        document.getElementById('prod-name').value = p.nome; 
+        document.getElementById('prod-price').value = p.preco; 
+        document.getElementById('prod-collection').value = p.colecao || ''; 
+        document.getElementById('prod-desc').value = p.descricao;
+        document.getElementById('prod-size-type').value = p.tipo_tamanho || 'numeros_calcado'; 
+        
         productImages = []; (p.imagens && p.imagens.length ? p.imagens : [p.imagem_url]).forEach(url => { if(url) productImages.push({ id: gerarIdUnico(), url: url }); }); renderizarPreviewsProduto();
         document.getElementById('titulo-form-produto').innerHTML = '<i class="fas fa-pen"></i> Editando'; document.getElementById('btn-cancel-edit').style.display = 'block'; document.getElementById('accordion-produto').classList.add('active'); window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -492,7 +520,7 @@
                 if (img.url) finalUrls.push(img.url); else if (img.file) finalUrls.push(await uploadToImgBB(img.file));
             }
             const isEdit = document.getElementById('edit-prod-id').value;
-            const payload = { loja_id: lojaIdAtual, nome: document.getElementById('prod-name').value, preco: parseFloat(document.getElementById('prod-price').value), imagem_url: finalUrls[0], imagens: finalUrls, descricao: document.getElementById('prod-desc').value, colecao: document.getElementById('prod-collection').value || null };
+            const payload = { loja_id: lojaIdAtual, nome: document.getElementById('prod-name').value, preco: parseFloat(document.getElementById('prod-price').value), imagem_url: finalUrls[0], imagens: finalUrls, descricao: document.getElementById('prod-desc').value, colecao: document.getElementById('prod-collection').value || null, tipo_tamanho: document.getElementById('prod-size-type').value };
             if (isEdit) await supabaseClient.from('produtos').update(payload).eq('id', isEdit); else await supabaseClient.from('produtos').insert([payload]);
             cancelarEdicao(); loadProducts();
         } catch (err) { alert(err.message); }

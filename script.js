@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
         #cart-counter, .cart-counter, .size-btn.active, .newsletter-form button { background-color: var(--accent-color) !important; color: var(--text-on-accent, #ffffff) !important; }
         .size-btn.active { border-color: var(--accent-color) !important; }
         .btn-outline:hover { background-color: var(--accent-color) !important; color: var(--text-on-accent, #ffffff) !important; border-color: var(--accent-color) !important; }
-        .toast i { color: var(--accent-color) !important; }
+        .toast i { color: var(--text-primary) !important; }
         .filter-pill.active, .filter-pill:hover { background-color: var(--accent-color) !important; color: var(--text-on-accent, #ffffff) !important; border-color: var(--accent-color) !important; }
         #cart-sidebar { display: flex; flex-direction: column; } #cart-items-container { flex: 1; overflow-y: auto; padding-bottom: 20px; }
         .cart-footer { padding: 20px; background: var(--bg-main, #050505); border-top: 1px solid var(--glass-border); position: sticky; bottom: 0; z-index: 10; }
@@ -42,6 +42,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function toggleCart(show) { if (show) { cartSidebar?.classList.add('active'); cartOverlay?.classList.add('active'); } else { cartSidebar?.classList.remove('active'); cartOverlay?.classList.remove('active'); } }
     document.getElementById('open-cart')?.addEventListener('click', () => toggleCart(true)); document.getElementById('close-cart')?.addEventListener('click', () => toggleCart(false)); cartOverlay?.addEventListener('click', () => toggleCart(false));
 
+    window.addEventListener('scroll', () => {
+        const navbar = document.getElementById('navbar');
+        if(navbar) {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        }
+    });
+
     let carrinho = JSON.parse(localStorage.getItem(CHAVE_CARRINHO)) || [];
     window.atualizarCarrinho = function() {
         const container = document.getElementById('cart-items-container'); const counter = document.getElementById('cart-counter'); const totalEl = document.getElementById('cart-total-price');
@@ -68,26 +79,49 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('click', (e) => {
         const btnAdd = e.target.closest('.btn-add-cart');
         if (btnAdd) {
-            e.preventDefault(); const nome = btnAdd.getAttribute('data-name'); const preco = parseFloat(btnAdd.getAttribute('data-price'));
+            e.preventDefault(); 
+            let nome = btnAdd.getAttribute('data-name'); 
+            const preco = parseFloat(btnAdd.getAttribute('data-price'));
+            
+            const btnTamanhoAtivo = document.querySelector('.size-btn.active');
+            if (btnTamanhoAtivo && document.getElementById('size-options-container')?.style.display !== 'none') {
+                nome = `${nome} (Tam: ${btnTamanhoAtivo.innerText})`;
+            }
+
             if (!nome || isNaN(preco)) return;
             const originalHtml = btnAdd.innerHTML; btnAdd.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A processar...'; btnAdd.style.pointerEvents = 'none';
             setTimeout(() => {
                 const existente = carrinho.find(i => i.nome === nome);
                 if (existente) existente.quantidade += 1; else carrinho.push({ nome, preco, quantidade: 1 });
-                atualizarCarrinho(); btnAdd.innerHTML = originalHtml; btnAdd.style.pointerEvents = 'auto'; mostrarToast(`<b>${nome}</b> adicionado ao carrinho!`);
+                atualizarCarrinho(); btnAdd.innerHTML = originalHtml; btnAdd.style.pointerEvents = 'auto'; mostrarToast(`<b>${nome}</b> adicionado!`);
                 const cartCounter = document.getElementById('cart-counter'); if(cartCounter) { cartCounter.style.transform = 'scale(1.5)'; setTimeout(() => cartCounter.style.transform = 'scale(1)', 300); }
             }, 500);
         }
     });
 
     window.fecharModal = function() { const modal = document.getElementById('glass-modal'); if(modal) { modal.classList.remove('active'); setTimeout(() => modal.style.display = 'none', 400); } }
-    const sizeBtns = document.querySelectorAll('.size-btn'); sizeBtns.forEach(btn => { btn.addEventListener('click', function() { sizeBtns.forEach(b => b.classList.remove('active')); this.classList.add('active'); }); });
+    
+    function initSizeButtons() {
+        const sizeBtns = document.querySelectorAll('.size-btn'); 
+        sizeBtns.forEach(btn => { 
+            btn.addEventListener('click', function() { 
+                sizeBtns.forEach(b => b.classList.remove('active')); 
+                this.classList.add('active'); 
+            }); 
+        });
+    }
+    initSizeButtons();
+
     const cepInput = document.getElementById('cep-input'); if(cepInput) { cepInput.addEventListener('input', function(e) { let value = e.target.value.replace(/\D/g, ""); if (value.length > 5) value = value.replace(/^(\d{5})(\d)/, "$1-$2"); e.target.value = value.substring(0, 9); }); }
 
-    window.changeImage = function(thumbElement, imageUrl) {
-        const mainImg = document.getElementById('main-product-img');
-        if (mainImg) { mainImg.style.opacity = '0.5'; setTimeout(() => { mainImg.src = imageUrl; mainImg.style.opacity = '1'; }, 150); }
-        document.querySelectorAll('.thumb-img').forEach(el => el.classList.remove('active')); if (thumbElement) thumbElement.classList.add('active');
+    window.changeImage = function(thumbElement, imageUrl, index) {
+        const carousel = document.getElementById('main-carousel');
+        if (carousel && index !== undefined) {
+            const slide = document.getElementById(`slide-${index}`);
+            if (slide) carousel.scrollTo({ left: slide.offsetLeft, behavior: 'smooth' });
+        }
+        document.querySelectorAll('.thumb-img').forEach(el => el.classList.remove('active')); 
+        if (thumbElement) thumbElement.classList.add('active');
     };
 
     function injetarSEODinamico(produto, lojaNome) {
@@ -118,31 +152,72 @@ document.addEventListener('DOMContentLoaded', () => {
         if (loja) {
             if (loja.ativo === false) {
                 document.body.innerHTML = `<div style="height: 100vh; width: 100vw; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #050505; color: #ffffff; font-family: 'Poppins', sans-serif; text-align: center; padding: 20px; position: fixed; top: 0; left: 0; z-index: 999999;"><i class="fas fa-store-slash" style="font-size: 5rem; color: #ef4444; margin-bottom: 1.5rem;"></i><h1 style="font-size: 2.5rem; margin-bottom: 1rem; font-weight: 700;">Loja Indisponível</h1><p style="color: #a0a0a0; font-size: 1.1rem; max-width: 500px; line-height: 1.6;">Esta loja encontra-se temporariamente suspensa. Tente novamente mais tarde.</p></div>`;
-                liberarTela();
-                return; 
+                liberarTela(); return; 
             }
 
             document.title = loja.nome_loja; 
-            const nomesLojaEl = [document.getElementById('nome-loja'), document.getElementById('footer-nome-loja')];
-            nomesLojaEl.forEach(el => { if(el) { el.innerHTML = `${loja.nome_loja}<span>.</span>`; el.href = `index.html?loja=${slug}`; } });
-            document.getElementById('link-inicio')?.setAttribute('href', `index.html?loja=${slug}#hero`); document.getElementById('link-lancamentos')?.setAttribute('href', `index.html?loja=${slug}#products`);
-
+            
             if (loja.cor_principal) {
-                const accent = loja.cor_principal; localStorage.setItem('theme_color_' + slug, accent); const textColor = getContrastYIQ(accent);
-                document.documentElement.style.setProperty('--accent-color', accent); document.documentElement.style.setProperty('--text-on-accent', textColor); document.documentElement.style.setProperty('--btn-gradient', `linear-gradient(135deg, ${accent} 0%, #1a1c23 100%)`);
+                const accent = loja.cor_principal; localStorage.setItem('theme_color_' + slug, accent); 
+                
+                let corSecundaria = '#1a1c23';
+                let textColor = getContrastYIQ(accent); // Valor automático padrão
+
+                // Verifica se há configurações customizadas de cores
+                if (loja.textos) {
+                    const t = typeof loja.textos === 'string' ? JSON.parse(loja.textos) : loja.textos;
+                    if (t.corSecundaria) corSecundaria = t.corSecundaria;
+                    
+                    // Sobrescreve a cor do botão se o dono da loja não escolheu "Automático"
+                    if (t.corTextoBotao && t.corTextoBotao !== 'auto') {
+                        textColor = t.corTextoBotao;
+                    }
+                }
+                
+                document.documentElement.style.setProperty('--accent-color', accent); 
+                document.documentElement.style.setProperty('--text-on-accent', textColor); 
+                document.documentElement.style.setProperty('--btn-gradient', `linear-gradient(135deg, ${accent} 0%, ${corSecundaria} 100%)`);
+                document.documentElement.style.setProperty('--brand-gradient', `linear-gradient(135deg, ${accent} 0%, ${corSecundaria} 100%)`);
             }
+
+            // === APLICAÇÃO DE TEXTOS E DA LOGO ===
+            // === APLICAÇÃO DE TEXTOS E DA LOGO ===
+            const nomesLojaEl = [document.getElementById('nome-loja'), document.getElementById('footer-nome-loja')];
+            let logoHtml = `${loja.nome_loja}`; // Nome em texto é o padrão
 
             if (loja.textos) {
                 const t = typeof loja.textos === 'string' ? JSON.parse(loja.textos) : loja.textos;
+                
+                // Se a logo foi enviada, aplica a nova classe mágica que ajusta o tamanho e força a cor
+                if (t.logoUrl) {
+                    logoHtml = `<img src="${t.logoUrl}" alt="${loja.nome_loja}" class="brand-logo-img">`;
+                }
+
                 const safeSet = (id, val) => { if(val) { const el = document.getElementById(id); if(el) el.innerHTML = val; } };
                 safeSet('dyn-hero-title', t.heroTitle); safeSet('dyn-hero-subtitle', t.heroSubtitle); safeSet('dyn-hero-btn', t.heroBtn);
                 safeSet('dyn-products-title', t.productsTitle); safeSet('dyn-trust-1', t.trust1); safeSet('dyn-trust-2', t.trust2); safeSet('dyn-trust-3', t.trust3); safeSet('dyn-footer-slogan', t.footerSlogan);
+                
+                const heroSection = document.getElementById('hero');
+                if (heroSection && t.heroImage) {
+                    heroSection.style.backgroundImage = `url('${t.heroImage}')`;
+                }
             }
+
+            // Injeta a Logo (ou o nome em texto) nos espaços do site
+            nomesLojaEl.forEach(el => { 
+                if(el) { 
+                    el.innerHTML = logoHtml; 
+                    el.href = `index.html?loja=${slug}`; 
+                } 
+            });
+            document.getElementById('link-inicio')?.setAttribute('href', `index.html?loja=${slug}#hero`); document.getElementById('link-lancamentos')?.setAttribute('href', `index.html?loja=${slug}#products`);
         }
 
         const gridIndex = document.getElementById('main-product-grid');
         if (gridIndex && !idProduto && loja) {
             const { data: produtos } = await supabase.from('produtos').select('*').eq('loja_id', loja.id).order('id', { ascending: false });
+            const { data: colecoesDb } = await supabase.from('colecoes').select('*').eq('loja_id', loja.id).order('ordem', { ascending: true, nullsFirst: false });
+            
             gridIndex.innerHTML = '';
             
             if (!produtos || produtos.length === 0) {
@@ -152,24 +227,40 @@ document.addEventListener('DOMContentLoaded', () => {
                     gridIndex.innerHTML += `<div class="product-card glass-light"><a href="produto.html?loja=${slug}&id=${p.id}" class="card-img" style="display:block;"><img src="${p.imagem_url}" alt="${p.nome}"></a><div class="card-info"><h3><a href="produto.html?loja=${slug}&id=${p.id}">${p.nome}</a></h3><p class="price">R$ ${parseFloat(p.preco).toFixed(2).replace('.', ',')}</p><button class="btn-outline btn-add-cart" data-name="${p.nome}" data-price="${p.preco}">Adicionar <i class="fas fa-plus"></i></button></div></div>`;
                 });
 
-                const collectionsSection = document.getElementById('collections-section'); const collectionsContainer = document.getElementById('collections-container'); const dynamicFilters = document.getElementById('dynamic-filters');
+                const collectionsSection = document.getElementById('collections-section'); 
+                const collectionsContainer = document.getElementById('collections-container'); 
+                const dynamicFilters = document.getElementById('dynamic-filters');
+                
                 if (collectionsContainer && collectionsSection) {
-                    const colecoes = [...new Set(produtos.map(p => p.colecao).filter(c => c && c.trim() !== ''))];
-                    if (colecoes.length > 0) {
-                        collectionsSection.style.display = 'block'; collectionsContainer.innerHTML = ''; 
+                    let nomesColecoesOrdenadas = colecoesDb ? colecoesDb.map(c => c.nome) : [];
+                    const colecoesSoltas = [...new Set(produtos.map(p => p.colecao).filter(c => c && c.trim() !== ''))];
+                    colecoesSoltas.forEach(c => {
+                        if (!nomesColecoesOrdenadas.includes(c)) nomesColecoesOrdenadas.push(c);
+                    });
+
+                    if (nomesColecoesOrdenadas.length > 0) {
+                        collectionsSection.style.display = 'block'; 
+                        collectionsContainer.innerHTML = ''; 
                         let filtersHtml = `<button class="filter-pill active" onclick="scrollToSection(event, 'products')">Todos</button>`;
                         
-                        colecoes.forEach(nomeColecao => {
-                            const sectionId = 'col-' + nomeColecao.replace(/\s+/g, '-').toLowerCase();
-                            filtersHtml += `<button class="filter-pill" onclick="scrollToSection(event, '${sectionId}')">${nomeColecao}</button>`;
-                            const produtosColecao = produtos.filter(p => p.colecao === nomeColecao); let cardsHtml = '';
-                            produtosColecao.forEach(p => {
-                                cardsHtml += `<div class="product-card glass-light"><a href="produto.html?loja=${slug}&id=${p.id}" class="card-img" style="display:block;"><img src="${p.imagem_url}" alt="${p.nome}"></a><div class="card-info"><h3><a href="produto.html?loja=${slug}&id=${p.id}">${p.nome}</a></h3><p class="price">R$ ${parseFloat(p.preco).toFixed(2).replace('.', ',')}</p><button class="btn-outline btn-add-cart" data-name="${p.nome}" data-price="${p.preco}">Adicionar <i class="fas fa-plus"></i></button></div></div>`;
-                            });
-                            collectionsContainer.innerHTML += `<div id="${sectionId}" style="margin-bottom: 4rem; scroll-margin-top: 100px;"><h2 class="section-title" style="margin-bottom: 2rem; text-align: left; font-size: 2rem; color: var(--accent-color);">${nomeColecao}</h2><div class="product-grid">${cardsHtml}</div></div>`;
+                        nomesColecoesOrdenadas.forEach(nomeColecao => {
+                            const produtosColecao = produtos.filter(p => p.colecao === nomeColecao); 
+                            
+                            if (produtosColecao.length > 0) {
+                                const sectionId = 'col-' + nomeColecao.replace(/\s+/g, '-').toLowerCase();
+                                filtersHtml += `<button class="filter-pill" onclick="scrollToSection(event, '${sectionId}')">${nomeColecao}</button>`;
+                                
+                                let cardsHtml = '';
+                                produtosColecao.forEach(p => {
+                                    cardsHtml += `<div class="product-card glass-light"><a href="produto.html?loja=${slug}&id=${p.id}" class="card-img" style="display:block;"><img src="${p.imagem_url}" alt="${p.nome}"></a><div class="card-info"><h3><a href="produto.html?loja=${slug}&id=${p.id}">${p.nome}</a></h3><p class="price">R$ ${parseFloat(p.preco).toFixed(2).replace('.', ',')}</p><button class="btn-outline btn-add-cart" data-name="${p.nome}" data-price="${p.preco}">Adicionar <i class="fas fa-plus"></i></button></div></div>`;
+                                });
+                                collectionsContainer.innerHTML += `<div id="${sectionId}" style="margin-bottom: 4rem; scroll-margin-top: 100px;"><h2 class="section-title" style="margin-bottom: 2rem; text-align: left; font-size: 2rem; color: var(--accent-color);">${nomeColecao}</h2><div class="product-grid">${cardsHtml}</div></div>`;
+                            }
                         });
                         if (dynamicFilters) dynamicFilters.innerHTML = filtersHtml;
-                    } else { if (dynamicFilters) dynamicFilters.innerHTML = `<button class="filter-pill active" onclick="scrollToSection(event, 'products')">Todos</button>`; }
+                    } else { 
+                        if (dynamicFilters) dynamicFilters.innerHTML = `<button class="filter-pill active" onclick="scrollToSection(event, 'products')">Todos</button>`; 
+                    }
                 }
             }
         }
@@ -188,25 +279,63 @@ document.addEventListener('DOMContentLoaded', () => {
                 const elPrice = document.getElementById('product-price'); if(elPrice) elPrice.textContent = `R$ ${parseFloat(p.preco).toFixed(2).replace('.', ',')}`;
                 const elInst = document.getElementById('product-installments'); if(elInst) elInst.textContent = `ou 10x de R$ ${(p.preco/10).toFixed(2).replace('.', ',')} sem juros`;
                 
-                const elImg = document.getElementById('main-product-img'); const elThumb = document.getElementById('product-thumbnails');
-                if(elImg) { elImg.src = p.imagem_url; elImg.style.transition = "opacity 0.2s ease"; }
+                const elCarousel = document.getElementById('main-carousel');
+                const elThumb = document.getElementById('product-thumbnails');
                 
-                if(elThumb) {
-                    let thumbHtml = ''; let galeria = [];
-                    if (p.imagens && Array.isArray(p.imagens) && p.imagens.length > 0) galeria = p.imagens;
-                    else if (p.imagens && typeof p.imagens === 'string') { try { galeria = JSON.parse(p.imagens); } catch(e) { galeria = [p.imagem_url]; } }
-                    else galeria = [p.imagem_url];
+                let galeria = [];
+                if (p.imagens && Array.isArray(p.imagens) && p.imagens.length > 0) galeria = p.imagens;
+                else if (p.imagens && typeof p.imagens === 'string') { try { galeria = JSON.parse(p.imagens); } catch(e) { galeria = [p.imagem_url]; } }
+                else galeria = [p.imagem_url];
 
-                    if (galeria.length > 1) { galeria.forEach((urlImg, idx) => { const activeClass = (idx === 0) ? 'active' : ''; thumbHtml += `<div class="thumb-img ${activeClass}" onclick="changeImage(this, '${urlImg}')"><img src="${urlImg}" alt="Miniatura"></div>`; }); }
-                    elThumb.innerHTML = thumbHtml;
+                if(elCarousel) {
+                    elCarousel.innerHTML = '';
+                    galeria.forEach((urlImg, idx) => { elCarousel.innerHTML += `<div class="carousel-item" id="slide-${idx}"><img src="${urlImg}" alt="${p.nome}"></div>`; });
+                    elCarousel.addEventListener('scroll', () => {
+                        let index = Math.round(elCarousel.scrollLeft / elCarousel.offsetWidth);
+                        const thumbs = document.querySelectorAll('.thumb-img');
+                        if(thumbs && thumbs[index]) { thumbs.forEach(el => el.classList.remove('active')); thumbs[index].classList.add('active'); }
+                    });
                 }
                 
+                if(elThumb) {
+                    let thumbHtml = '';
+                    if (galeria.length > 1) { 
+                        galeria.forEach((urlImg, idx) => { const activeClass = (idx === 0) ? 'active' : ''; thumbHtml += `<div class="thumb-img ${activeClass}" onclick="changeImage(this, '${urlImg}', ${idx})"><img src="${urlImg}" alt="Miniatura"></div>`; }); 
+                    }
+                    elThumb.innerHTML = thumbHtml;
+                }
+
                 const elDesc = document.getElementById('product-desc'); if(elDesc) elDesc.textContent = p.descricao;
                 const mainAddBtn = document.getElementById('main-add-btn'); if(mainAddBtn) { mainAddBtn.setAttribute('data-name', p.nome); mainAddBtn.setAttribute('data-price', p.preco); }
 
                 const stickyName = document.getElementById('sticky-product-name'); const stickyPrice = document.getElementById('sticky-product-price'); const stickyBtn = document.getElementById('sticky-add-btn');
                 if (stickyName) stickyName.textContent = p.nome; if (stickyPrice) stickyPrice.textContent = `R$ ${parseFloat(p.preco).toFixed(2).replace('.', ',')}`;
                 if (stickyBtn) { stickyBtn.setAttribute('data-name', p.nome); stickyBtn.setAttribute('data-price', p.preco); }
+
+                const sizeContainer = document.getElementById('size-options-container');
+                const dynamicSizes = document.getElementById('dynamic-sizes');
+                
+                if (sizeContainer && dynamicSizes) {
+                    const tipo = p.tipo_tamanho || 'numeros_calcado'; 
+                    
+                    if (tipo === 'unico') {
+                        sizeContainer.style.display = 'none';
+                    } else {
+                        sizeContainer.style.display = 'block';
+                        let sizes = [];
+                        
+                        if (tipo === 'letras') { sizes = ['P', 'M', 'G', 'GG', 'XG']; } 
+                        else if (tipo === 'numeros_roupa') { sizes = ['36', '38', '40', '42', '44', '46']; } 
+                        else if (tipo === 'numeros_calcado') { sizes = ['38', '39', '40', '41', '42', '43']; }
+
+                        dynamicSizes.innerHTML = ''; 
+                        sizes.forEach((s, idx) => {
+                            const activeClass = (idx === 0) ? 'active' : ''; 
+                            dynamicSizes.innerHTML += `<button class="size-btn ${activeClass}">${s}</button>`;
+                        });
+                        initSizeButtons();
+                    }
+                }
 
                 const crossSellGrid = document.getElementById('cross-sell-grid');
                 if (crossSellGrid && loja) {
@@ -238,7 +367,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } else { const elName = document.getElementById('product-name'); if(elName) elName.textContent = "Produto não encontrado ou indisponível."; }
         }
         
-        // Remove a tela "escondida" depois de tudo processado (efeito suave)
         liberarTela();
     }
     init();
