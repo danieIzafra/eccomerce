@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -389,11 +390,39 @@
     Sortable.create(document.getElementById('product-previews'), { animation: 150 });
     Sortable.create(document.getElementById('lookbook-previews'), { animation: 150 });
     function gerarIdUnico() { return Math.random().toString(36).substr(2, 9); }
+    
+    // ========================================================
+    // Função de Upload Atualizada com Compressão de Imagem
+    // ========================================================
     async function uploadToImgBB(file) {
-        const formData = new FormData(); formData.append('image', file); formData.append('key', IMGBB_API_KEY);
-        const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
-        const data = await res.json();
-        if (!data.success) throw new Error(data.error.message); return data.data.url;
+        const options = {
+            maxSizeMB: 0.3, // Tamanho máximo de 300kb
+            maxWidthOrHeight: 1080, // Resolução máxima 
+            useWebWorker: true // Usa o processador em segundo plano
+        };
+
+        try {
+            let arquivoFinal = file;
+            
+            // Só comprime se for imagem
+            if (file.type.startsWith('image/')) {
+                arquivoFinal = await browserImageCompression(file, options);
+            }
+
+            const formData = new FormData(); 
+            formData.append('image', arquivoFinal); 
+            formData.append('key', IMGBB_API_KEY);
+            
+            const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
+            const data = await res.json();
+            
+            if (!data.success) throw new Error(data.error.message); 
+            return data.data.url;
+            
+        } catch (error) {
+            console.error('Erro no upload/compressão:', error);
+            throw new Error('Falha ao processar imagem: ' + error.message);
+        }
     }
 
     function handleHeroFile(e) {
