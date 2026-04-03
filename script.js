@@ -155,7 +155,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const SUPABASE_URL = 'https://ikkjgtgvohrwurtiustm.supabase.co'; 
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra2pndGd2b2hyd3VydGl1c3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NzE4OTEsImV4cCI6MjA5MDE0Nzg5MX0.HNrSvCmSHWTe2yoQy27GOq5g_ZoZxFdox_eCW14f_nI';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // Configuração otimizada: desliga o sistema de autenticação inútil para a vitrine
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false }
+    });
 
     async function init() {
         const { data: loja } = await supabase.from('lojas').select('*').eq('slug', slug).single();

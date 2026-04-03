@@ -9,11 +9,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://ikkjgtgvohrwurtiustm.supabase.co" crossorigin>
     <script>
-        // 1. Esconde a tela imediatamente para não piscar o conteúdo da loja
-        document.write('<style id="anti-piscar">body { opacity: 0 !important; pointer-events: none !important; transition: opacity 0.3s ease; }</style>');
-
-        // 2. Aplica a cor do cache e a cor secundária (gradiente)
+        // O anti-piscar foi removido daqui!
+        // Aplica a cor do cache imediatamente
         (function() {
             const params = new URLSearchParams(window.location.search);
             const slug = params.get('loja');
