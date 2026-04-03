@@ -167,6 +167,13 @@
                                     <option value="unico">Tamanho Único</option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label>Frete Grátis?</label>
+                                <select id="prod-frete" class="form-control">
+                                    <option value="false">Não (Cobrar Frete)</option>
+                                    <option value="true">Sim (Frete Grátis)</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label>Fotos (Arraste para reordenar)</label>
@@ -391,74 +398,34 @@
     Sortable.create(document.getElementById('lookbook-previews'), { animation: 150 });
     function gerarIdUnico() { return Math.random().toString(36).substr(2, 9); }
     
-    // ========================================================
-    // Função de Upload Atualizada com Compressão de Imagem
-    // ========================================================
     async function uploadToImgBB(file) {
         const options = {
-            maxSizeMB: 0.3, // Tamanho máximo de 300kb
-            maxWidthOrHeight: 1080, // Resolução máxima 
-            useWebWorker: true // Usa o processador em segundo plano
+            maxSizeMB: 0.3, maxWidthOrHeight: 1080, useWebWorker: true 
         };
-
         try {
             let arquivoFinal = file;
-            
-            // Só comprime se for imagem
-            if (file.type.startsWith('image/')) {
-                arquivoFinal = await browserImageCompression(file, options);
-            }
-
-            const formData = new FormData(); 
-            formData.append('image', arquivoFinal); 
-            formData.append('key', IMGBB_API_KEY);
-            
+            // Correção: A função da biblioteca exposta é imageCompression() e não browserImageCompression()
+            if (file.type.startsWith('image/')) { arquivoFinal = await imageCompression(file, options); }
+            const formData = new FormData(); formData.append('image', arquivoFinal); formData.append('key', IMGBB_API_KEY);
             const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
             const data = await res.json();
-            
-            if (!data.success) throw new Error(data.error.message); 
-            return data.data.url;
-            
-        } catch (error) {
-            console.error('Erro no upload/compressão:', error);
-            throw new Error('Falha ao processar imagem: ' + error.message);
-        }
+            if (!data.success) throw new Error(data.error.message); return data.data.url;
+        } catch (error) { throw new Error('Falha ao processar imagem: ' + error.message); }
     }
 
     function handleHeroFile(e) {
         const file = e.target.files[0];
-        if (file) {
-            heroImgFile = file;
-            const r = new FileReader();
-            r.onload = (evt) => { document.getElementById('hero-preview').style.display = 'block'; document.getElementById('hero-img-preview').src = evt.target.result; };
-            r.readAsDataURL(file);
-        }
+        if (file) { heroImgFile = file; const r = new FileReader(); r.onload = (evt) => { document.getElementById('hero-preview').style.display = 'block'; document.getElementById('hero-img-preview').src = evt.target.result; }; r.readAsDataURL(file); }
     }
 
     function handleLogoFile(e) {
         const file = e.target.files[0];
-        if (file) {
-            logoImgFile = file;
-            const r = new FileReader();
-            r.onload = (evt) => { document.getElementById('logo-preview').style.display = 'block'; document.getElementById('logo-img-preview').src = evt.target.result; };
-            r.readAsDataURL(file);
-        }
+        if (file) { logoImgFile = file; const r = new FileReader(); r.onload = (evt) => { document.getElementById('logo-preview').style.display = 'block'; document.getElementById('logo-img-preview').src = evt.target.result; }; r.readAsDataURL(file); }
     }
 
-    function removerLogo() {
-        logoImgFile = null;
-        logoImgUrlAtual = ''; 
-        document.getElementById('logo-preview').style.display = 'none';
-        document.getElementById('logo-img-preview').src = '';
-        document.getElementById('logo-upload').value = '';
-    }
+    function removerLogo() { logoImgFile = null; logoImgUrlAtual = ''; document.getElementById('logo-preview').style.display = 'none'; document.getElementById('logo-img-preview').src = ''; document.getElementById('logo-upload').value = ''; }
 
-    function liberarTelaAdmin() {
-        const antiPiscar = document.getElementById('anti-piscar');
-        if(antiPiscar) antiPiscar.remove();
-        document.body.style.opacity = '1';
-        document.body.style.pointerEvents = 'auto';
-    }
+    function liberarTelaAdmin() { const antiPiscar = document.getElementById('anti-piscar'); if(antiPiscar) antiPiscar.remove(); document.body.style.opacity = '1'; document.body.style.pointerEvents = 'auto'; }
 
     async function carregarDadosLoja() {
         const slug = new URLSearchParams(window.location.search).get('loja');
@@ -471,36 +438,22 @@
                 liberarTelaAdmin(); return; 
             }
 
-            lojaIdAtual = loja.id;
-            document.title = `Admin | ${loja.nome_loja}`;
-            document.querySelector('.header-link').href = `index.html?loja=${slug}`;
+            lojaIdAtual = loja.id; document.title = `Admin | ${loja.nome_loja}`; document.querySelector('.header-link').href = `index.html?loja=${slug}`;
             
             if (loja.cor_principal) {
-                localStorage.setItem('theme_color_' + slug, loja.cor_principal);
-                document.getElementById('color-accent').value = loja.cor_principal;
+                localStorage.setItem('theme_color_' + slug, loja.cor_principal); document.getElementById('color-accent').value = loja.cor_principal;
                 const textColor = getContrastYIQ(loja.cor_principal);
-                document.documentElement.style.setProperty('--accent-neon', loja.cor_principal);
-                document.documentElement.style.setProperty('--text-on-accent', textColor);
+                document.documentElement.style.setProperty('--accent-neon', loja.cor_principal); document.documentElement.style.setProperty('--text-on-accent', textColor);
             }
             
             if (loja.textos) {
                 const t = typeof loja.textos === 'string' ? JSON.parse(loja.textos) : loja.textos;
-                
                 if (t.corSecundaria) { document.getElementById('color-secundary').value = t.corSecundaria; }
                 if (t.corTextoBotao) { document.getElementById('color-text-btn').value = t.corTextoBotao; }
                 if (t.logoStyle) { document.getElementById('logo-style').value = t.logoStyle; }
                 
-                if (t.heroImage) {
-                    heroImgUrlAtual = t.heroImage;
-                    document.getElementById('hero-preview').style.display = 'block';
-                    document.getElementById('hero-img-preview').src = t.heroImage;
-                }
-                
-                if (t.logoUrl && t.logoUrl.trim() !== '') {
-                    logoImgUrlAtual = t.logoUrl;
-                    document.getElementById('logo-preview').style.display = 'block';
-                    document.getElementById('logo-img-preview').src = t.logoUrl;
-                }
+                if (t.heroImage) { heroImgUrlAtual = t.heroImage; document.getElementById('hero-preview').style.display = 'block'; document.getElementById('hero-img-preview').src = t.heroImage; }
+                if (t.logoUrl && t.logoUrl.trim() !== '') { logoImgUrlAtual = t.logoUrl; document.getElementById('logo-preview').style.display = 'block'; document.getElementById('logo-img-preview').src = t.logoUrl; }
 
                 if(t.heroTitle) document.getElementById('txt-hero-title').value = t.heroTitle;
                 if(t.heroSubtitle) document.getElementById('txt-hero-subtitle').value = t.heroSubtitle;
@@ -516,69 +469,31 @@
                 if(t.devolucao) document.getElementById('txt-devolucao').value = t.devolucao;
                 if(t.contato) document.getElementById('txt-contato').value = t.contato;
             }
-            
-            loadColecoes(); loadProducts(); loadLookbook(); loadReviews(); 
-            liberarTelaAdmin();
+            loadColecoes(); loadProducts(); loadLookbook(); loadReviews(); liberarTelaAdmin();
         }
     }
 
     async function saveSettings() {
         if(!lojaIdAtual) return;
-        
-        const btn = document.querySelector('button[onclick="saveSettings()"]');
-        const textOrig = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A guardar...';
-        btn.disabled = true;
+        const btn = document.querySelector('button[onclick="saveSettings()"]'); const textOrig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A guardar...'; btn.disabled = true;
 
-        const novaCor = document.getElementById('color-accent').value;
-        const novaCorSecundaria = document.getElementById('color-secundary').value;
-        const novaCorTextoBtn = document.getElementById('color-text-btn').value;
-        const novoEstiloLogo = document.getElementById('logo-style').value;
+        const novaCor = document.getElementById('color-accent').value; const novaCorSecundaria = document.getElementById('color-secundary').value; const novaCorTextoBtn = document.getElementById('color-text-btn').value; const novoEstiloLogo = document.getElementById('logo-style').value;
         
-        let finalHeroUrl = heroImgUrlAtual;
-        if (heroImgFile) {
-            try { finalHeroUrl = await uploadToImgBB(heroImgFile); heroImgUrlAtual = finalHeroUrl; heroImgFile = null; } 
-            catch(e) { alert("Erro ao salvar foto de capa: " + e.message); }
-        }
-
-        let finalLogoUrl = logoImgUrlAtual;
-        if (logoImgFile) {
-            try { finalLogoUrl = await uploadToImgBB(logoImgFile); logoImgUrlAtual = finalLogoUrl; logoImgFile = null; } 
-            catch(e) { alert("Erro ao salvar logo: " + e.message); }
-        }
+        let finalHeroUrl = heroImgUrlAtual; if (heroImgFile) { try { finalHeroUrl = await uploadToImgBB(heroImgFile); heroImgUrlAtual = finalHeroUrl; heroImgFile = null; } catch(e) { alert("Erro ao salvar foto de capa: " + e.message); } }
+        let finalLogoUrl = logoImgUrlAtual; if (logoImgFile) { try { finalLogoUrl = await uploadToImgBB(logoImgFile); logoImgUrlAtual = finalLogoUrl; logoImgFile = null; } catch(e) { alert("Erro ao salvar logo: " + e.message); } }
 
         const textosCustomizados = {
-            heroTitle: document.getElementById('txt-hero-title').value,
-            heroSubtitle: document.getElementById('txt-hero-subtitle').value,
-            heroBtn: document.getElementById('txt-hero-btn').value,
-            productsTitle: document.getElementById('txt-products-title').value,
-            trust1: document.getElementById('txt-trust-1').value,
-            trust2: document.getElementById('txt-trust-2').value,
-            trust3: document.getElementById('txt-trust-3').value,
-            footerSlogan: document.getElementById('txt-footer-slogan').value,
-            corSecundaria: novaCorSecundaria, 
-            corTextoBotao: novaCorTextoBtn,
-            logoStyle: novoEstiloLogo,
-            heroImage: finalHeroUrl, 
-            logoUrl: finalLogoUrl,
-            rastreio: document.getElementById('txt-rastreio').value,
-            faq: document.getElementById('txt-faq').value,
-            devolucao: document.getElementById('txt-devolucao').value,
-            contato: document.getElementById('txt-contato').value
+            heroTitle: document.getElementById('txt-hero-title').value, heroSubtitle: document.getElementById('txt-hero-subtitle').value, heroBtn: document.getElementById('txt-hero-btn').value, productsTitle: document.getElementById('txt-products-title').value, trust1: document.getElementById('txt-trust-1').value, trust2: document.getElementById('txt-trust-2').value, trust3: document.getElementById('txt-trust-3').value, footerSlogan: document.getElementById('txt-footer-slogan').value, corSecundaria: novaCorSecundaria, corTextoBotao: novaCorTextoBtn, logoStyle: novoEstiloLogo, heroImage: finalHeroUrl, logoUrl: finalLogoUrl, rastreio: document.getElementById('txt-rastreio').value, faq: document.getElementById('txt-faq').value, devolucao: document.getElementById('txt-devolucao').value, contato: document.getElementById('txt-contato').value
         };
 
-        const slug = new URLSearchParams(window.location.search).get('loja');
-        if(slug) localStorage.setItem('theme_color_' + slug, novaCor); 
+        const slug = new URLSearchParams(window.location.search).get('loja'); if(slug) localStorage.setItem('theme_color_' + slug, novaCor); 
 
         const textColor = novaCorTextoBtn === 'auto' ? getContrastYIQ(novaCor) : novaCorTextoBtn;
-        document.documentElement.style.setProperty('--accent-neon', novaCor);
-        document.documentElement.style.setProperty('--text-on-accent', textColor);
+        document.documentElement.style.setProperty('--accent-neon', novaCor); document.documentElement.style.setProperty('--text-on-accent', textColor);
         
         await supabaseClient.from('lojas').update({ cor_principal: novaCor, textos: textosCustomizados }).eq('id', lojaIdAtual);
         
-        btn.innerHTML = '<i class="fas fa-check"></i> Sucesso!';
-        btn.disabled = false;
-        setTimeout(() => btn.innerHTML = textOrig, 2000);
+        btn.innerHTML = '<i class="fas fa-check"></i> Sucesso!'; btn.disabled = false; setTimeout(() => btn.innerHTML = textOrig, 2000);
     }
 
     async function loadColecoes() {
@@ -608,7 +523,8 @@
         container.innerHTML = '';
         produtosGlobais.forEach(p => {
             const tag = p.colecao ? `<span style="font-size:0.7rem; color:var(--accent-neon);">${p.colecao}</span>` : '';
-            container.innerHTML += `<div class="data-card"><div style="display:flex; gap:15px;"><img src="${p.imagem_url}" style="width:70px;height:70px;border-radius:10px;object-fit:cover;"><div style="flex:1;"><b>${p.nome}</b><br><small>R$ ${parseFloat(p.preco).toFixed(2)}</small><br>${tag}</div></div><div style="display:flex; gap:10px; margin-top:10px;"><button class="btn-icon edit" style="flex:1;" onclick="editarProduto('${p.id}')"><i class="fas fa-pen"></i></button><button class="btn-icon danger" style="flex:1;" onclick="deletarProduto('${p.id}')"><i class="fas fa-trash"></i></button></div></div>`;
+            const tagFrete = p.frete_gratis ? `<span style="font-size:0.7rem; color:#10b981; margin-left: 5px;">[Frete Grátis]</span>` : '';
+            container.innerHTML += `<div class="data-card"><div style="display:flex; gap:15px;"><img src="${p.imagem_url}" style="width:70px;height:70px;border-radius:10px;object-fit:cover;"><div style="flex:1;"><b>${p.nome}</b><br><small>R$ ${parseFloat(p.preco).toFixed(2)}</small><br>${tag} ${tagFrete}</div></div><div style="display:flex; gap:10px; margin-top:10px;"><button class="btn-icon edit" style="flex:1;" onclick="editarProduto('${p.id}')"><i class="fas fa-pen"></i></button><button class="btn-icon danger" style="flex:1;" onclick="deletarProduto('${p.id}')"><i class="fas fa-trash"></i></button></div></div>`;
         });
     }
 
@@ -620,6 +536,7 @@
         document.getElementById('prod-collection').value = p.colecao || ''; 
         document.getElementById('prod-desc').value = p.descricao;
         document.getElementById('prod-size-type').value = p.tipo_tamanho || 'numeros_calcado'; 
+        document.getElementById('prod-frete').value = p.frete_gratis ? 'true' : 'false';
         
         productImages = []; (p.imagens && p.imagens.length ? p.imagens : [p.imagem_url]).forEach(url => { if(url) productImages.push({ id: gerarIdUnico(), url: url }); }); renderizarPreviewsProduto();
         document.getElementById('titulo-form-produto').innerHTML = '<i class="fas fa-pen"></i> Editando'; document.getElementById('btn-cancel-edit').style.display = 'block'; document.getElementById('accordion-produto').classList.add('active'); window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -638,7 +555,18 @@
                 if (img.url) finalUrls.push(img.url); else if (img.file) finalUrls.push(await uploadToImgBB(img.file));
             }
             const isEdit = document.getElementById('edit-prod-id').value;
-            const payload = { loja_id: lojaIdAtual, nome: document.getElementById('prod-name').value, preco: parseFloat(document.getElementById('prod-price').value), imagem_url: finalUrls[0], imagens: finalUrls, descricao: document.getElementById('prod-desc').value, colecao: document.getElementById('prod-collection').value || null, tipo_tamanho: document.getElementById('prod-size-type').value };
+            const payload = { 
+                loja_id: lojaIdAtual, 
+                nome: document.getElementById('prod-name').value, 
+                preco: parseFloat(document.getElementById('prod-price').value), 
+                imagem_url: finalUrls[0], 
+                imagens: finalUrls, 
+                descricao: document.getElementById('prod-desc').value, 
+                colecao: document.getElementById('prod-collection').value || null, 
+                tipo_tamanho: document.getElementById('prod-size-type').value,
+                frete_gratis: document.getElementById('prod-frete').value === 'true'
+            };
+            
             if (isEdit) await supabaseClient.from('produtos').update(payload).eq('id', isEdit); else await supabaseClient.from('produtos').insert([payload]);
             cancelarEdicao(); loadProducts();
         } catch (err) { alert(err.message); }

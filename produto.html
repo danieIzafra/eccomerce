@@ -26,7 +26,6 @@
         
         .gallery-container { display: flex; flex-direction: column; gap: 1rem; padding: 1.5rem; }
         
-        /* NOVO CARROSSEL ARRASTÁVEL */
         .main-carousel { 
             display: flex; 
             overflow-x: auto; 
@@ -50,7 +49,7 @@
         .carousel-item img { 
             width: 100%; 
             height: 100%; 
-            object-fit: contain; /* A MÁGICA: Não corta a foto, se adapta perfeitamente ao quadrado */
+            object-fit: contain; 
         }
         
         .thumbnails { display: flex; gap: 1rem; overflow-x: auto; padding-bottom: 0.5rem; scrollbar-width: none; }
@@ -61,7 +60,6 @@
 
         .product-info-novo { padding: 1.5rem; display: flex; flex-direction: column; justify-content: center; }
         
-        /* ESTRELAS E BADGES DINÂMICOS (Puxando a cor do tema) */
         .reviews { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-secondary); }
         .stars i { color: var(--accent-color); } 
         
@@ -83,8 +81,10 @@
         .size-btn.active, .size-btn:hover { border-color: var(--accent-color); background: var(--accent-color); color: #000; }
 
         .action-area { display: flex; gap: 1rem; flex-direction: column; margin-bottom: 2rem; }
-        .cta-btn { background: #10b981; color: white; border: none; padding: 1.2rem; border-radius: 0.5rem; font-size: 1.2rem; font-weight: 600; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 0.5rem; transition: 0.3s; width: 100%; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); }
-        .cta-btn:hover { background: #059669; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4); }
+        .cta-btn { background: var(--btn-gradient, var(--accent-color)); color: var(--text-on-accent, #000); border: none; padding: 1.2rem; border-radius: 0.5rem; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 0.5rem; transition: 0.3s; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); filter: brightness(1.1); }
+        .cta-btn.outline { background: transparent; border: 2px solid var(--accent-color); color: var(--accent-color); box-shadow: none; }
+        .cta-btn.outline:hover { background: rgba(0, 210, 255, 0.1); transform: translateY(-2px); }
 
         .shipping-box-new { background: rgba(0,0,0,0.1); padding: 1rem; border-radius: 0.8rem; border: 1px dashed var(--glass-border); margin-bottom: 2rem;}
         .shipping-form-new { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
@@ -92,68 +92,21 @@
         .shipping-result { display: none; margin-top: 1rem; font-size: 0.9rem; }
         .shipping-result.active { display: block !important; }
 
-        /* ==================== SELOS DE CONFIANÇA (HORIZONTAL) ==================== */
-        .product-trust-banner {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 5px;
-            padding-top: 1.5rem;
-            margin-top: 1.5rem;
-            border-top: 1px dashed var(--glass-border);
-        }
-        .product-trust-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            gap: 8px;
-        }
-        .product-trust-item i {
-            font-size: 1.6rem;
-            color: var(--accent-color);
-            filter: drop-shadow(0 0 5px rgba(0, 210, 255, 0.3));
-        }
-        .product-trust-item span {
-            font-size: 0.75rem;
-            color: var(--text-primary);
-            line-height: 1.3;
-        }
+        .product-trust-banner { display: flex; justify-content: space-between; align-items: flex-start; gap: 5px; padding-top: 1.5rem; margin-top: 1.5rem; border-top: 1px dashed var(--glass-border); }
+        .product-trust-item { flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+        .product-trust-item i { font-size: 1.6rem; color: var(--accent-color); filter: drop-shadow(0 0 5px rgba(0, 210, 255, 0.3)); }
+        .product-trust-item span { font-size: 0.75rem; color: var(--text-primary); line-height: 1.3; }
 
-        /* ==================== DESCRIÇÃO RETRÁTIL ==================== */
         .details-section { margin-bottom: 3rem; padding: 2rem; border-radius: 1rem; }
         .details-section h3 { margin-bottom: 1rem; font-size: 1.5rem; color: var(--accent-color); }
         .details-section p { color: var(--text-secondary); line-height: 1.7; white-space: pre-wrap; }
         
-        .desc-content {
-            max-height: 100px;
-            overflow: hidden;
-            transition: max-height 0.5s ease;
-            -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
-            mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
-        }
-        .desc-content.expanded {
-            max-height: 2500px;
-            -webkit-mask-image: none;
-            mask-image: none;
-        }
-        .btn-ler-mais {
-            background: transparent;
-            border: none;
-            color: var(--accent-color);
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 0.95rem;
-            margin-top: 10px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+        .desc-content { max-height: 100px; overflow: hidden; transition: max-height 0.5s ease; -webkit-mask-image: linear-gradient(to bottom, black 40%, transparent 100%); mask-image: linear-gradient(to bottom, black 40%, transparent 100%); }
+        .desc-content.expanded { max-height: 2500px; -webkit-mask-image: none; mask-image: none; }
+        .btn-ler-mais { background: transparent; border: none; color: var(--accent-color); font-weight: 600; cursor: pointer; font-size: 0.95rem; margin-top: 10px; display: flex; align-items: center; gap: 6px; }
 
         .pulse-dot { width: 8px; height: 8px; background: #ff4757; border-radius: 50%; display: inline-block; animation: pulse 1.5s infinite; }
 
-        /* ==================== OTIMIZAÇÃO MAXIMA PARA MOBILE ==================== */
         @media (max-width: 768px) {
             .product-page-section { padding-top: 100px; padding-bottom: 6rem; }
             .produto-grid-novo { margin-left: -1.5rem; margin-right: -1.5rem; border-radius: 0; border-left: none; border-right: none; gap: 0; }
@@ -173,7 +126,6 @@
     </style>
     <script>
         document.write('<style id="anti-piscar">body { opacity: 0 !important; pointer-events: none !important; transition: opacity 0.3s ease; }</style>');
-
         (function() {
             const params = new URLSearchParams(window.location.search);
             const slug = params.get('loja');
@@ -208,7 +160,7 @@
                 <span>Total:</span>
                 <span id="cart-total-price" class="gradient-text">R$ 0,00</span>
             </div>
-            <button class="btn-primary w-100">Finalizar Compra</button>
+            <button class="btn-primary w-100 btn-checkout">Finalizar Compra</button>
         </div>
     </aside>
 
@@ -281,7 +233,10 @@
                         </div>
 
                         <div class="action-area">
-                            <button class="cta-btn btn-add-cart" id="main-add-btn" data-name="" data-price="">
+                            <button class="cta-btn" id="btn-buy-now">
+                                <i class="fa-solid fa-bolt"></i> Comprar Agora
+                            </button>
+                            <button class="cta-btn outline btn-add-cart" id="main-add-btn" data-name="" data-price="">
                                 <i class="fa-solid fa-cart-arrow-down"></i> Adicionar ao Carrinho
                             </button>
                         </div>
@@ -293,13 +248,7 @@
                                 <button class="btn-primary" onclick="calculateShipping()">OK</button>
                             </div>
                             <div class="shipping-result" id="shipping-result">
-                                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px dashed var(--glass-border);">
-                                    <span>Expresso (2 a 4 dias)</span><strong style="color: var(--text-primary)">R$ 15,90</strong>
                                 </div>
-                                <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
-                                    <span>Padrão (5 a 8 dias)</span><strong style="color: var(--text-primary)">Grátis</strong>
-                                </div>
-                            </div>
                         </div>
 
                         <div class="product-trust-banner">
@@ -377,7 +326,10 @@
             <span id="sticky-product-name">Nome do Produto</span>
             <strong id="sticky-product-price" class="gradient-text">R$ 0,00</strong>
         </div>
-        <button class="btn-primary btn-add-cart" id="sticky-add-btn"><i class="fas fa-shopping-cart"></i> Comprar</button>
+        <div style="display: flex; gap: 8px;">
+            <button class="btn-primary btn-add-cart" id="sticky-add-btn" style="padding: 0.8rem 1rem; background: transparent; border: 1px solid var(--accent-color); color: var(--accent-color); box-shadow: none;"><i class="fas fa-cart-plus"></i></button>
+            <button class="btn-primary" id="sticky-buy-now"><i class="fas fa-bolt"></i> Comprar</button>
+        </div>
     </div>
 
     <div id="toast-container"></div>
@@ -417,14 +369,58 @@
         function toggleDescription() {
             const contentBox = document.getElementById('desc-content-box');
             const btn = document.getElementById('btn-read-more');
+            if (contentBox.classList.contains('expanded')) { contentBox.classList.remove('expanded'); btn.innerHTML = 'Ler descrição completa <i class="fas fa-chevron-down"></i>'; } 
+            else { contentBox.classList.add('expanded'); btn.innerHTML = 'Ocultar descrição <i class="fas fa-chevron-up"></i>'; }
+        }
+
+        // Lógica consistente do cálculo de frete
+        document.getElementById('cep-input').addEventListener('input', function(e) {
+            let v = e.target.value.replace(/\D/g, ""); v = v.replace(/^(\d{5})(\d)/, "$1-$2"); e.target.value = v.substring(0, 9);
+        });
+
+        function calculateShipping() {
+            const cep = document.getElementById('cep-input').value.replace(/\D/g, '');
+            const resultDiv = document.getElementById('shipping-result');
+            const mainBtn = document.getElementById('main-add-btn');
+            const price = parseFloat(mainBtn ? mainBtn.getAttribute('data-price') : 0);
             
-            if (contentBox.classList.contains('expanded')) {
-                contentBox.classList.remove('expanded');
-                btn.innerHTML = 'Ler descrição completa <i class="fas fa-chevron-down"></i>';
-            } else {
-                contentBox.classList.add('expanded');
-                btn.innerHTML = 'Ocultar descrição <i class="fas fa-chevron-up"></i>';
+            if(cep.length !== 8) {
+                alert('Por favor, digite um CEP válido.'); return;
             }
+
+            resultDiv.innerHTML = '<div style="text-align:center; padding: 10px;"><i class="fas fa-spinner fa-spin"></i> Calculando...</div>';
+            resultDiv.classList.add('active');
+
+            fetch(`https://viacep.com.br/ws/${cep}/json/`)
+            .then(res => res.json())
+            .then(data => {
+                if(data.erro) throw new Error();
+                
+                let freteExpresso = 29.90;
+                let fretePadrao = 19.90; // Default: Sul / Etc
+                
+                const sudeste = ['SP', 'RJ', 'MG', 'ES'];
+                const norteNordeste = ['BA','CE','PE','MA','RN','PB','AL','SE','PI','AM','PA','AC','RR','RO','AP','TO','MT','GO','MS','DF'];
+
+                if(sudeste.includes(data.uf)) { freteExpresso = 25.90; fretePadrao = 15.90; }
+                else if(norteNordeste.includes(data.uf)) { freteExpresso = 45.90; fretePadrao = 29.90; }
+                
+                let htmlPadrao = `<span>Padrão (5 a 8 dias)</span><strong style="color: var(--text-primary)">R$ ${fretePadrao.toFixed(2).replace('.',',')}</strong>`;
+                if (price >= 300) { htmlPadrao = `<span>Padrão (5 a 8 dias)</span><strong style="color: #10b981">Grátis (Acima de R$300)</strong>`; }
+
+                resultDiv.innerHTML = `
+                    <div style="font-size: 0.8rem; color: var(--accent-color); margin-bottom: 8px;">Entregando em: ${data.localidade} - ${data.uf}</div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px dashed var(--glass-border);">
+                        <span>Expresso (2 a 4 dias)</span><strong style="color: var(--text-primary)">R$ ${freteExpresso.toFixed(2).replace('.', ',')}</strong>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
+                        ${htmlPadrao}
+                    </div>
+                `;
+            })
+            .catch(() => {
+                resultDiv.innerHTML = '<div style="color: #ef4444; padding: 10px;">CEP não encontrado ou inválido.</div>';
+            });
         }
     </script>
 </body>

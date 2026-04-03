@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Checkout Seguro</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --accent-color: #00d2ff;
+            --brand-gradient: linear-gradient(135deg, var(--accent-color) 0%, #000000 100%);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --bg-main: #050505; 
+            --glass-bg-light: rgba(20, 20, 20, 0.4);
+            --glass-bg-heavy: rgba(10, 10, 10, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.05);
+            --glass-input: rgba(0, 0, 0, 0.3);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            --blob-color-1: rgba(99, 102, 241, 0.15);
+            --blob-color-2: rgba(16, 185, 129, 0.15);
+        }
+
+        [data-theme="light"] {
+            --bg-main: #f0f2f5;
+            --text-primary: #111111;
+            --text-secondary: #555555;
+            --glass-bg-light: rgba(255, 255, 255, 0.6);
+            --glass-bg-heavy: rgba(255, 255, 255, 0.9);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --glass-input: rgba(255, 255, 255, 0.5);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+            --brand-gradient: linear-gradient(135deg, var(--accent-color) 0%, #ffffff 100%);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--bg-main); color: var(--text-primary); min-height: 100vh; transition: 0.3s ease; }
+
+        body::before, body::after { content: ''; position: fixed; border-radius: 50%; filter: blur(80px); z-index: -1; animation: float 10s infinite alternate; }
+        body::before { width: 400px; height: 400px; background: var(--blob-color-1); top: -100px; left: -100px; }
+        body::after { width: 300px; height: 300px; background: var(--blob-color-2); bottom: -50px; right: -50px; animation-delay: -5s; }
+        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 50px) scale(1.1); } }
+
+        .checkout-header { text-align: center; padding: 2rem 1rem; border-bottom: 1px solid var(--glass-border); background: var(--glass-bg-heavy); backdrop-filter: blur(12px); position: sticky; top: 0; z-index: 100; }
+        .checkout-header h1 { font-size: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .checkout-header h1 i { color: var(--accent-color); }
+
+        .container { max-width: 1200px; margin: 0 auto; padding: 2rem; display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; align-items: start; }
+        .glass-panel { background: var(--glass-bg-light); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 2rem; box-shadow: var(--glass-shadow); }
+
+        .stepper { display: flex; justify-content: space-between; margin-bottom: 2.5rem; position: relative; }
+        .stepper::before { content: ''; position: absolute; top: 20px; left: 10%; right: 10%; height: 2px; background: var(--glass-border); z-index: 0; }
+        .step { flex: 1; text-align: center; position: relative; z-index: 1; }
+        .step-circle { width: 42px; height: 42px; border-radius: 50%; background: var(--glass-bg-heavy); border: 2px solid var(--glass-border); color: var(--text-secondary); display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; font-weight: 600; transition: 0.4s; }
+        .step.active .step-circle { background: var(--accent-color); border-color: var(--accent-color); color: var(--text-on-accent, #000); box-shadow: 0 0 15px var(--accent-color); }
+        .step.completed .step-circle { background: var(--accent-color); border-color: var(--accent-color); color: var(--text-on-accent, #000); }
+        .step p { font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); transition: 0.4s; }
+        .step.active p, .step.completed p { color: var(--text-primary); }
+
+        .step-content { display: none; animation: fadeIn 0.4s ease; }
+        .step-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .form-group { margin-bottom: 1.2rem; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; }
+        .form-control { width: 100%; padding: 14px; background: var(--glass-input); border: 1px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); outline: none; transition: 0.3s; font-size: 0.95rem; }
+        .form-control:focus { border-color: var(--accent-color); box-shadow: 0 0 0 3px rgba(0, 210, 255, 0.1); }
+        .form-control.error-input { border-color: #ef4444 !important; }
+
+        .btn-primary { width: 100%; padding: 1rem; background: var(--brand-gradient); color: var(--text-on-accent, #fff); border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: 0.3s; text-transform: uppercase; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .btn-primary:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 8px 25px rgba(0,0,0,0.3); }
+        
+        .payment-methods { display: flex; gap: 1rem; margin-bottom: 2rem; }
+        .method-btn { flex: 1; padding: 1rem; background: var(--glass-bg-heavy); border: 1px solid var(--glass-border); border-radius: 12px; color: var(--text-primary); font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .method-btn i { font-size: 1.5rem; }
+        .method-btn.active { border-color: var(--accent-color); background: rgba(0, 210, 255, 0.05); color: var(--accent-color); }
+        
+        .payment-tab { display: none; }
+        .payment-tab.active { display: block; animation: fadeIn 0.4s ease; }
+
+        .pix-container { text-align: center; padding: 2rem; background: var(--glass-input); border-radius: 12px; border: 1px dashed var(--accent-color); }
+        .pix-code { margin: 1.5rem 0; background: #fff; padding: 10px; border-radius: 10px; display: inline-block; }
+        .pix-code img { width: 150px; height: 150px; }
+
+        .order-summary { position: sticky; top: 100px; }
+        .summary-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--glass-border); }
+        
+        .cart-items { max-height: 300px; overflow-y: auto; padding-right: 10px; margin-bottom: 1.5rem; }
+        .cart-items::-webkit-scrollbar { width: 6px; }
+        .cart-items::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
+        
+        .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--glass-border); }
+        .item-info h4 { font-size: 0.9rem; color: var(--text-primary); margin-bottom: 4px; }
+        .item-info span { font-size: 0.8rem; color: var(--text-secondary); }
+        .item-price { font-weight: 600; color: var(--accent-color); }
+
+        .summary-totals { border-top: 1px dashed var(--glass-border); padding-top: 1.5rem; }
+        .total-row { display: flex; justify-content: space-between; margin-bottom: 0.8rem; font-size: 0.95rem; color: var(--text-secondary); align-items: center; }
+        .total-row.grand-total { font-size: 1.3rem; font-weight: 700; color: var(--text-primary); margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--glass-border); }
+        .total-row.grand-total span:last-child { color: var(--accent-color); transition: 0.3s ease; }
+
+        .trust-badges { display: flex; justify-content: center; gap: 1rem; margin-top: 2rem; flex-wrap: wrap; }
+        .badge { display: flex; align-items: center; gap: 8px; font-size: 0.75rem; color: var(--text-secondary); background: var(--glass-bg-heavy); padding: 8px 12px; border-radius: 50px; border: 1px solid var(--glass-border); }
+        .badge i { color: #10b981; font-size: 1rem; }
+
+        .success-content { text-align: center; padding: 3rem 1rem; }
+        .success-icon { width: 80px; height: 80px; background: rgba(16, 185, 129, 0.1); color: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem; border: 2px solid #10b981; animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes scaleIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        
+        .error-message { color: #ef4444; font-size: 0.8rem; margin-top: 4px; display: none; }
+        
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; padding: 1rem; }
+            .order-summary { order: -1; position: relative; top: 0; margin-bottom: 1rem; } 
+            .form-row { grid-template-columns: 1fr; }
+            .stepper::before { left: 15%; right: 15%; }
+            .glass-panel { padding: 1.5rem; }
+        }
+    </style>
+
+    <script>
+        document.write('<style id="anti-piscar">body { opacity: 0 !important; pointer-events: none !important; transition: opacity 0.3s ease; }</style>');
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const slug = params.get('loja');
+            if (slug) {
+                const savedColor = localStorage.getItem('theme_color_' + slug);
+                if (savedColor) {
+                    const r = parseInt(savedColor.substr(1,2),16), g = parseInt(savedColor.substr(3,2),16), b = parseInt(savedColor.substr(5,2),16);
+                    const textColor = (((r*299)+(g*587)+(b*114))/1000 >= 128) ? '#000000' : '#ffffff';
+                    document.documentElement.style.setProperty('--accent-color', savedColor);
+                    document.documentElement.style.setProperty('--text-on-accent', textColor);
+                    document.documentElement.style.setProperty('--brand-gradient', 'linear-gradient(135deg, ' + savedColor + ' 0%, #1a1c23 100%)');
+                }
+                const savedTheme = localStorage.getItem(`tema_saas_${slug}`);
+                if (savedTheme) { document.documentElement.setAttribute('data-theme', savedTheme); }
+            }
+        })();
+    </script>
+</head>
+<body>
+
+    <header class="checkout-header">
+        <h1 id="store-name">Checkout Seguro <i class="fas fa-lock"></i></h1>
+    </header>
+
+    <div class="container">
+        
+        <main class="glass-panel" id="checkout-main">
+            
+            <div class="stepper" id="stepper">
+                <div class="step active" id="step-indicator-1">
+                    <div class="step-circle"><i class="fas fa-map-marker-alt"></i></div>
+                    <p>Entrega</p>
+                </div>
+                <div class="step" id="step-indicator-2">
+                    <div class="step-circle"><i class="fas fa-credit-card"></i></div>
+                    <p>Pagamento</p>
+                </div>
+                <div class="step" id="step-indicator-3">
+                    <div class="step-circle"><i class="fas fa-check"></i></div>
+                    <p>Concluído</p>
+                </div>
+            </div>
+
+            <div class="step-content active" id="step-1">
+                <h2 style="margin-bottom: 1.5rem; font-size: 1.2rem;">Dados de Contato e Entrega</h2>
+                <form id="form-address" onsubmit="validarEAvancar(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nome Completo</label>
+                            <input type="text" class="form-control" id="nome" required placeholder="Digite seu nome">
+                        </div>
+                        <div class="form-group">
+                            <label>CPF</label>
+                            <input type="text" class="form-control" id="cpf" required placeholder="000.000.000-00" maxlength="14" oninput="mascaraCPF(this)">
+                            <div class="error-message" id="erro-cpf">CPF inválido</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>E-mail</label>
+                            <input type="email" class="form-control" id="email" required placeholder="seu@email.com">
+                            <div class="error-message" id="erro-email">E-mail com formato incorreto</div>
+                        </div>
+                        <div class="form-group">
+                            <label>WhatsApp / Celular</label>
+                            <input type="tel" class="form-control" id="telefone" required placeholder="(00) 00000-0000" maxlength="15" oninput="mascaraTelefone(this)">
+                            <div class="error-message" id="erro-telefone">Telefone inválido</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row" style="margin-top: 1rem; border-top: 1px dashed var(--glass-border); padding-top: 1.5rem;">
+                        <div class="form-group">
+                            <label>CEP</label>
+                            <input type="text" class="form-control" required placeholder="00000-000" id="cep" maxlength="9" oninput="mascaraCEP(this)" onblur="buscarCEP(this.value)">
+                            <div class="error-message" id="erro-cep">CEP não encontrado</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Cidade / Estado</label>
+                            <input type="text" class="form-control" id="cidade_estado" required placeholder="Cidade - UF" readonly style="opacity: 0.7;">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Endereço (Rua)</label>
+                            <input type="text" class="form-control" id="rua" required placeholder="Preenchido pelo CEP">
+                        </div>
+                        <div class="form-group">
+                            <label>Bairro</label>
+                            <input type="text" class="form-control" id="bairro" required placeholder="Preenchido pelo CEP">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Número</label>
+                            <input type="text" class="form-control" id="numero" required placeholder="Ex: 123">
+                        </div>
+                        <div class="form-group">
+                            <label>Complemento (Opcional)</label>
+                            <input type="text" class="form-control" placeholder="Apto, Bloco...">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary" style="margin-top: 1rem;">Ir para o Pagamento <i class="fas fa-arrow-right"></i></button>
+                </form>
+            </div>
+
+            <div class="step-content" id="step-2">
+                <h2 style="margin-bottom: 1.5rem; font-size: 1.2rem;">Como você prefere pagar?</h2>
+                
+                <div class="payment-methods">
+                    <button class="method-btn active" onclick="setPaymentMethod('cc', this)">
+                        <i class="fas fa-credit-card"></i> Cartão
+                    </button>
+                    <button class="method-btn" onclick="setPaymentMethod('pix', this)">
+                        <i class="fab fa-pix"></i> PIX
+                    </button>
+                </div>
+
+                <div class="payment-tab active" id="tab-cc">
+                    <form id="form-cc" onsubmit="validarCartao(event)">
+                        <div class="form-group">
+                            <label>Número do Cartão</label>
+                            <input type="text" class="form-control" id="cc-num" required placeholder="0000 0000 0000 0000" maxlength="19" oninput="mascaraCartao(this)">
+                            <div class="error-message" id="erro-cc">Cartão de Crédito inválido ou inexistente</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Nome Impresso no Cartão</label>
+                            <input type="text" class="form-control" required placeholder="NOME DO TITULAR">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Validade</label>
+                                <input type="text" class="form-control" id="cc-val" required placeholder="MM/AA" maxlength="5" oninput="mascaraValidade(this)">
+                                <div class="error-message" id="erro-val">Data inválida ou vencida</div>
+                            </div>
+                            <div class="form-group">
+                                <label>CVV</label>
+                                <input type="text" class="form-control" id="cc-cvv" required placeholder="123" maxlength="4" oninput="this.value = this.value.replace(/\D/g, '')">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Parcelamento</label>
+                            <select class="form-control" id="select-parcelas" style="appearance: none;"></select>
+                        </div>
+                        
+                        <div style="display: flex; gap: 10px; margin-top: 1.5rem;">
+                            <button type="button" class="btn-primary" style="background: var(--glass-input); color: var(--text-primary); border: 1px solid var(--glass-border); flex: 0.4;" onclick="goToStep(1)">Voltar</button>
+                            <button type="submit" class="btn-primary" id="btn-finalizar-cc" style="flex: 1;"><i class="fas fa-lock"></i> Finalizar Compra</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="payment-tab" id="tab-pix">
+                    <div class="pix-container">
+                        <i class="fab fa-pix" style="font-size: 2.5rem; color: #32bcad; margin-bottom: 10px;"></i>
+                        <h3>Pagamento via PIX</h3>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 10px;">Escaneie o QR Code ou copie o código abaixo no aplicativo do seu banco para aprovação imediata.</p>
+                        
+                        <div class="pix-code">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=ExemploPagamentoPixSaaS" alt="QR Code PIX">
+                        </div>
+                        
+                        <input type="text" class="form-control" value="00020126580014br.gov.bcb.pix0136..." readonly style="text-align: center; margin-bottom: 10px;">
+                        
+                        <div style="display: flex; gap: 10px; margin-top: 1rem;">
+                            <button type="button" class="btn-primary" style="background: var(--glass-input); color: var(--text-primary); border: 1px solid var(--glass-border); flex: 0.4;" onclick="goToStep(1)">Voltar</button>
+                            <button type="button" class="btn-primary" id="btn-finalizar-pix" style="flex: 1;" onclick="concluirPagamento()"><i class="fas fa-copy"></i> Copiar e Finalizar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="step-content" id="step-3">
+                <div class="success-content">
+                    <div class="success-icon"><i class="fas fa-check"></i></div>
+                    <h2 style="font-size: 1.8rem; margin-bottom: 10px;">Pedido Confirmado!</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 2rem;">Obrigado pela compra. O seu pagamento foi processado com sucesso. Você receberá os detalhes da entrega no e-mail cadastrado.</p>
+                    
+                    <div style="background: var(--glass-input); padding: 1.5rem; border-radius: 12px; border: 1px dashed var(--glass-border); margin-bottom: 2rem; text-align: left;">
+                        <p><strong>Nº do Pedido:</strong> <span id="order-id" style="color: var(--accent-color);">#0000</span></p>
+                        <p><strong>Data:</strong> <span id="order-date">00/00/0000</span></p>
+                    </div>
+
+                    <button class="btn-primary" onclick="voltarParaLoja()"><i class="fas fa-shopping-bag"></i> Continuar Comprando</button>
+                </div>
+            </div>
+        </main>
+
+        <aside class="glass-panel order-summary" id="checkout-sidebar">
+            <h3 class="summary-title">Resumo do Pedido</h3>
+            <div class="cart-items" id="summary-items"></div>
+            <div class="summary-totals">
+                <div class="total-row"><span>Subtotal</span><span id="res-subtotal">R$ 0,00</span></div>
+                <div class="total-row"><span>Frete</span><span id="res-frete" style="color: var(--text-secondary); font-size: 0.85rem;">Aguardando CEP...</span></div>
+                <div class="total-row grand-total"><span>Total</span><span id="res-total">R$ 0,00</span></div>
+            </div>
+            <div class="trust-badges">
+                <div class="badge"><i class="fas fa-shield-alt"></i> Compra 100% Segura</div>
+                <div class="badge"><i class="fas fa-lock"></i> Dados Criptografados (SSL)</div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const slug = params.get('loja') || '';
+        const CHAVE_CARRINHO = `carrinho_saas_${slug}`;
+        let carrinho = JSON.parse(localStorage.getItem(CHAVE_CARRINHO)) || [];
+        let totalCarrinho = 0;
+        let valorFrete = 0;
+        
+        // Se pelo menos 1 item no carrinho possui frete grátis, consideramos que o pedido todo isenta o frete.
+        let isPedidoFreteGratis = carrinho.some(item => item.frete_gratis === true || item.frete_gratis === 'true');
+
+        window.onload = () => {
+            const antiPiscar = document.getElementById('anti-piscar');
+            if(antiPiscar) antiPiscar.remove();
+            document.body.style.opacity = '1';
+            
+            carrinho.forEach(item => { totalCarrinho += (item.preco * item.quantidade); });
+            
+            if (carrinho.length === 0) {
+                document.getElementById('summary-items').innerHTML = '<p style="color: var(--text-secondary); text-align: center;">Seu carrinho está vazio.</p>';
+                setTimeout(voltarParaLoja, 3000);
+                return;
+            }
+            
+            carregarResumo();
+        };
+
+        function carregarResumo() {
+            const container = document.getElementById('summary-items');
+            container.innerHTML = '';
+            
+            carrinho.forEach(item => {
+                const badgePromo = (item.frete_gratis === true || item.frete_gratis === 'true') ? `<span style="font-size: 0.7rem; color: #10b981;">(Frete Grátis)</span>` : '';
+                container.innerHTML += `
+                    <div class="cart-item">
+                        <div class="item-info"><h4>${item.nome}</h4><span>Qtd: ${item.quantidade} ${badgePromo}</span></div>
+                        <div class="item-price">R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}</div>
+                    </div>`;
+            });
+
+            atualizarTotaisDom();
+        }
+
+        function atualizarTotaisDom() {
+            const subtotalEl = document.getElementById('res-subtotal');
+            const freteEl = document.getElementById('res-frete');
+            const totalEl = document.getElementById('res-total');
+            const selectParcelas = document.getElementById('select-parcelas');
+
+            let freteGratisGeral = totalCarrinho >= 300 || isPedidoFreteGratis;
+            
+            if (freteGratisGeral) {
+                valorFrete = 0;
+            }
+
+            const totalGeral = totalCarrinho + valorFrete;
+
+            subtotalEl.innerText = `R$ ${totalCarrinho.toFixed(2).replace('.', ',')}`;
+            
+            if (freteGratisGeral) {
+                freteEl.innerHTML = '<span style="color: #10b981; font-weight: bold;">Grátis</span>';
+            } else if (valorFrete > 0) {
+                freteEl.innerHTML = `R$ ${valorFrete.toFixed(2).replace('.', ',')}`;
+            } else {
+                freteEl.innerHTML = '<span style="color: var(--text-secondary); font-size: 0.85rem;">Aguardando CEP...</span>';
+            }
+
+            const formatTotal = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
+            totalEl.innerText = formatTotal;
+
+            selectParcelas.innerHTML = `<option value="1">1x de ${formatTotal} sem juros</option>`;
+            for(let i = 2; i <= 12; i++) {
+                selectParcelas.innerHTML += `<option value="${i}">${i}x de R$ ${(totalGeral / i).toFixed(2).replace('.', ',')} sem juros</option>`;
+            }
+        }
+
+        // ====== MÁSCARAS ======
+        function mascaraCEP(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{5})(\d)/, "$1-$2"); i.value = v; }
+        function mascaraCPF(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2"); i.value = v; }
+        function mascaraTelefone(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{2})(\d)/g, "($1) $2"); v = v.replace(/(\d)(\d{4})$/, "$1-$2"); i.value = v; }
+        function mascaraCartao(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/(\d{4})(?=\d)/g, "$1 "); i.value = v; }
+        function mascaraValidade(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/(\d{2})(\d)/, "$1/$2"); i.value = v; }
+
+        async function buscarCEP(cep) {
+            cep = cep.replace(/\D/g, '');
+            const inputCep = document.getElementById('cep');
+            const errCep = document.getElementById('erro-cep');
+            
+            if (cep.length === 8) {
+                try {
+                    const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+                    const data = await res.json();
+                    if (!data.erro) {
+                        inputCep.classList.remove('error-input'); errCep.style.display = 'none';
+                        document.getElementById('rua').value = data.logradouro;
+                        document.getElementById('bairro').value = data.bairro;
+                        document.getElementById('cidade_estado').value = `${data.localidade} - ${data.uf}`;
+                        document.getElementById('numero').focus();
+                        
+                        calcularFrete(data.uf);
+                    } else { throw new Error('CEP Inexistente'); }
+                } catch(e) {
+                    inputCep.classList.add('error-input'); errCep.style.display = 'block';
+                    document.getElementById('rua').value = ''; document.getElementById('bairro').value = ''; document.getElementById('cidade_estado').value = '';
+                    valorFrete = 0; atualizarTotaisDom();
+                }
+            }
+        }
+
+        function calcularFrete(uf) {
+            let freteGratisGeral = totalCarrinho >= 300 || isPedidoFreteGratis;
+            if (freteGratisGeral) {
+                valorFrete = 0;
+            } else {
+                const sudeste = ['SP', 'RJ', 'MG', 'ES'];
+                const sul = ['PR', 'SC', 'RS'];
+                if (sudeste.includes(uf)) { valorFrete = 15.90; } 
+                else if (sul.includes(uf)) { valorFrete = 19.90; } 
+                else { valorFrete = 29.90; }
+            }
+            atualizarTotaisDom();
+        }
+
+        function testaCPF(cpf) {
+            cpf = cpf.replace(/[^\d]+/g,'');
+            if(cpf == '' || cpf.length != 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+            let add = 0;
+            for (let i=0; i < 9; i ++) add += parseInt(cpf.charAt(i)) * (10 - i);
+            let rev = 11 - (add % 11); if(rev == 10 || rev == 11) rev = 0; if(rev != parseInt(cpf.charAt(9))) return false;
+            add = 0;
+            for (let i = 0; i < 10; i ++) add += parseInt(cpf.charAt(i)) * (11 - i);
+            rev = 11 - (add % 11); if(rev == 10 || rev == 11) rev = 0; if(rev != parseInt(cpf.charAt(10))) return false;
+            return true;
+        }
+
+        function testaCartaoLuhn(numero) {
+            numero = numero.replace(/\D/g, '');
+            if(numero.length < 13) return false;
+            let sum = 0, alternate = false;
+            for (let i = numero.length - 1; i >= 0; i--) {
+                let n = parseInt(numero.charAt(i), 10);
+                if (alternate) { n *= 2; if (n > 9) n -= 9; }
+                sum += n; alternate = !alternate;
+            }
+            return (sum % 10 === 0);
+        }
+
+        function testaValidadeCartao(val) {
+            if(val.length !== 5) return false;
+            const mes = parseInt(val.substring(0,2)); const ano = parseInt(val.substring(3,5));
+            if(mes < 1 || mes > 12) return false;
+            const hoje = new Date();
+            const anoAtual = hoje.getFullYear() % 100; const mesAtual = hoje.getMonth() + 1;
+            if(ano < anoAtual || (ano === anoAtual && mes < mesAtual)) return false;
+            return true;
+        }
+
+        function validarEAvancar(e) {
+            e.preventDefault();
+            let erro = false;
+            
+            const cpfEl = document.getElementById('cpf'); const errCpf = document.getElementById('erro-cpf');
+            if(!testaCPF(cpfEl.value)) { cpfEl.classList.add('error-input'); errCpf.style.display = 'block'; erro = true; } 
+            else { cpfEl.classList.remove('error-input'); errCpf.style.display = 'none'; }
+
+            const emailEl = document.getElementById('email'); const errEmail = document.getElementById('erro-email');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if(!emailRegex.test(emailEl.value)) { emailEl.classList.add('error-input'); errEmail.style.display = 'block'; erro = true; } 
+            else { emailEl.classList.remove('error-input'); errEmail.style.display = 'none'; }
+
+            const telEl = document.getElementById('telefone'); const errTel = document.getElementById('erro-telefone');
+            if(telEl.value.replace(/\D/g,'').length < 10) { telEl.classList.add('error-input'); errTel.style.display = 'block'; erro = true; } 
+            else { telEl.classList.remove('error-input'); errTel.style.display = 'none'; }
+
+            if(document.getElementById('rua').value === "") { document.getElementById('cep').classList.add('error-input'); document.getElementById('erro-cep').style.display = 'block'; erro = true; }
+
+            if(!erro) goToStep(2);
+        }
+
+        function validarCartao(e) {
+            e.preventDefault();
+            let erro = false;
+
+            const ccNum = document.getElementById('cc-num'); const errCc = document.getElementById('erro-cc');
+            if(!testaCartaoLuhn(ccNum.value)) { ccNum.classList.add('error-input'); errCc.style.display = 'block'; erro = true; } 
+            else { ccNum.classList.remove('error-input'); errCc.style.display = 'none'; }
+
+            const ccVal = document.getElementById('cc-val'); const errVal = document.getElementById('erro-val');
+            if(!testaValidadeCartao(ccVal.value)) { ccVal.classList.add('error-input'); errVal.style.display = 'block'; erro = true; } 
+            else { ccVal.classList.remove('error-input'); errVal.style.display = 'none'; }
+
+            if(!erro) concluirPagamento();
+        }
+
+        function goToStep(stepNumber) {
+            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.step').forEach((el, index) => {
+                if (index + 1 < stepNumber) { el.classList.add('completed'); el.classList.remove('active'); } 
+                else if (index + 1 === stepNumber) { el.classList.add('active'); el.classList.remove('completed'); } 
+                else { el.classList.remove('active', 'completed'); }
+            });
+            document.getElementById(`step-${stepNumber}`).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (stepNumber === 3) {
+                document.getElementById('checkout-sidebar').style.display = 'none';
+                document.getElementById('checkout-main').style.gridColumn = 'span 2';
+            }
+        }
+
+        function setPaymentMethod(method, btnElement) {
+            document.querySelectorAll('.method-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.payment-tab').forEach(tab => tab.classList.remove('active'));
+            btnElement.classList.add('active'); document.getElementById(`tab-${method}`).classList.add('active');
+        }
+
+        function concluirPagamento() {
+            const btnCc = document.getElementById('btn-finalizar-cc'); const btnPix = document.getElementById('btn-finalizar-pix');
+            btnCc.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...'; btnPix.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
+            btnCc.disabled = true; btnPix.disabled = true;
+
+            setTimeout(() => {
+                document.getElementById('order-id').innerText = '#' + Math.floor(Math.random() * 90000 + 10000);
+                document.getElementById('order-date').innerText = new Date().toLocaleDateString('pt-BR');
+                localStorage.removeItem(CHAVE_CARRINHO);
+                goToStep(3);
+            }, 2000);
+        }
+
+        function voltarParaLoja() { window.location.href = `index.html?loja=${slug}`; }
+    </script>
+</body>
+</html>
