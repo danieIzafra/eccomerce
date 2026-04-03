@@ -227,11 +227,28 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('link-inicio')?.setAttribute('href', `index.html?loja=${slug}#hero`); document.getElementById('link-lancamentos')?.setAttribute('href', `index.html?loja=${slug}#products`);
         }
 
-        // CARREGA A VITRINE DA TELA INICIAL
+        // =====================================
+        // MUDANÇA: LIBERAR TELA O QUANTO ANTES
+        // =====================================
+        // Assim que as cores e a logo estão setadas, a gente tira o anti-piscar.
+        liberarTela();
+
+        // CARREGA A VITRINE DA TELA INICIAL (COM PARALELISMO)
         const gridIndex = document.getElementById('main-product-grid');
         if (gridIndex && !idProduto && loja) {
-            const { data: produtos } = await supabase.from('produtos').select('*').eq('loja_id', loja.id).order('id', { ascending: false });
-            const { data: colecoesDb } = await supabase.from('colecoes').select('*').eq('loja_id', loja.id).order('ordem', { ascending: true, nullsFirst: false });
+            
+            // Dispara todas as requisições ao mesmo tempo
+            const [
+                { data: produtos },
+                { data: colecoesDb },
+                { data: fotosLookbook },
+                { data: avaliacoesDb }
+            ] = await Promise.all([
+                supabase.from('produtos').select('*').eq('loja_id', loja.id).order('id', { ascending: false }),
+                supabase.from('colecoes').select('*').eq('loja_id', loja.id).order('ordem', { ascending: true, nullsFirst: false }),
+                supabase.from('lookbook').select('*').eq('loja_id', loja.id).order('id', { ascending: false }),
+                supabase.from('avaliacoes').select('*').eq('loja_id', loja.id).eq('aprovado', true)
+            ]);
             
             gridIndex.innerHTML = '';
             
@@ -278,51 +295,41 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             }
-        }
+            
+            // Renderiza Lookbook
+            const lookbookGrid = document.getElementById('lookbook-grid');
+            if (lookbookGrid && fotosLookbook && fotosLookbook.length > 0) {
+                lookbookGrid.innerHTML = '';
+                fotosLookbook.forEach(f => { lookbookGrid.innerHTML += `<div class="lookbook-item"><img src="${f.imagem_url}" alt="Look" loading="lazy"></div>`; });
+            }
 
-        // CARREGA LOOKBOOK
-        const lookbookGrid = document.getElementById('lookbook-grid');
-        if (lookbookGrid && loja) { 
-            const { data: fotos } = await supabase.from('lookbook').select('*').eq('loja_id', loja.id).order('id', { ascending: false });
-            if (fotos && fotos.length > 0) { lookbookGrid.innerHTML = ''; fotos.forEach(f => { lookbookGrid.innerHTML += `<div class="lookbook-item"><img src="${f.imagem_url}" alt="Look" loading="lazy"></div>`; }); }
-        }
-
-        // ==========================================
-        // NOVIDADE: CARREGA AVALIAÇÕES ALEATÓRIAS NA INDEX
-        // ==========================================
-        const reviewsWrapper = document.getElementById('dynamic-reviews-wrapper');
-        if (reviewsWrapper && loja) {
-            const { data: avaliacoesDb } = await supabase
-                .from('avaliacoes')
-                .select('*')
-                .eq('loja_id', loja.id)
-                .eq('aprovado', true);
-
-            if (avaliacoesDb && avaliacoesDb.length > 0) {
-                // Embaralha as avaliações para mostrar comentários diferentes sempre
-                const shuffled = avaliacoesDb.sort(() => 0.5 - Math.random());
-                const selecionadas = shuffled.slice(0, 6); // Pega até 6 avaliações
-                
-                reviewsWrapper.innerHTML = '';
-                selecionadas.forEach(av => {
-                    reviewsWrapper.innerHTML += `
-                        <div class="review-card glass-heavy">
-                            <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                            <p class="review-text">"${av.comentario}"</p>
-                            <p class="reviewer">— ${av.nome}</p>
-                        </div>
-                    `;
-                });
-            } else {
-                // Se não houver avaliações aprovadas, esconde a seção para não ficar vazia
-                const secReviews = document.getElementById('reviews');
-                if(secReviews) secReviews.style.display = 'none';
+            // Renderiza Avaliações
+            const reviewsWrapper = document.getElementById('dynamic-reviews-wrapper');
+            if (reviewsWrapper) {
+                if (avaliacoesDb && avaliacoesDb.length > 0) {
+                    const shuffled = avaliacoesDb.sort(() => 0.5 - Math.random());
+                    const selecionadas = shuffled.slice(0, 6); 
+                    
+                    reviewsWrapper.innerHTML = '';
+                    selecionadas.forEach(av => {
+                        reviewsWrapper.innerHTML += `
+                            <div class="review-card glass-heavy">
+                                <div class="stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                                <p class="review-text">"${av.comentario}"</p>
+                                <p class="reviewer">— ${av.nome}</p>
+                            </div>
+                        `;
+                    });
+                } else {
+                    const secReviews = document.getElementById('reviews');
+                    if(secReviews) secReviews.style.display = 'none';
+                }
             }
         }
 
-
         // CARREGA PÁGINA DE PRODUTO ESPECÍFICO
         if (idProduto) {
+            // Busca o produto principal logo de cara
             const { data: p } = await supabase.from('produtos').select('*').eq('id', idProduto).single();
             if (p) {
                 if (loja) { document.title = `${p.nome} | ${loja.nome_loja}`; injetarSEODinamico(p, loja.nome_loja); }
@@ -388,25 +395,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                const crossSellGrid = document.getElementById('cross-sell-grid');
-                if (crossSellGrid && loja) {
-                    const { data: sugeridos } = await supabase.from('produtos').select('*').eq('loja_id', loja.id).neq('id', idProduto).limit(4); 
-                    crossSellGrid.innerHTML = '';
-                    if (sugeridos && sugeridos.length > 0) {
-                        sugeridos.forEach(s => { crossSellGrid.innerHTML += `<div class="product-card glass-light"><a href="produto.html?loja=${slug}&id=${s.id}" class="card-img" style="display:block;"><img src="${s.imagem_url}" alt="${s.nome}"></a><div class="card-info"><h3><a href="produto.html?loja=${slug}&id=${s.id}">${s.nome}</a></h3><p class="price">R$ ${parseFloat(s.preco).toFixed(2).replace('.', ',')}</p><button class="btn-outline btn-add-cart" data-name="${s.nome}" data-price="${s.preco}">Adicionar <i class="fas fa-plus"></i></button></div></div>`; });
-                    } else { const crossSection = document.getElementById('cross-sell'); if(crossSection) crossSection.style.display = 'none'; }
-                }
-
-                // CARREGA AVALIAÇÕES DO PRODUTO
-                async function carregarAvaliacoes() {
-                    const container = document.getElementById('lista-avaliacoes'); if(!container) return;
-                    const { data: avaliacoes } = await supabase.from('avaliacoes').select('*').eq('produto_id', idProduto).eq('aprovado', true).order('created_at', { ascending: false });
-                    if (!avaliacoes || avaliacoes.length === 0) { container.innerHTML = '<p style="color: var(--text-muted);">Ainda não há avaliações. Seja o primeiro a comentar!</p>'; return; }
-                    container.innerHTML = '';
-                    avaliacoes.forEach(av => { container.innerHTML += `<div style="padding: 1rem; border-radius: 0.8rem; background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border);"><div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; align-items: center;"><strong style="color: var(--text-primary);"><i class="fas fa-user-circle"></i> ${av.nome}</strong><div class="stars" style="color: #fbbf24; font-size: 0.8rem;"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div></div><p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">"${av.comentario}"</p></div>`; });
-                }
-                await carregarAvaliacoes(); 
-
                 const formAval = document.getElementById('form-nova-avaliacao');
                 if(formAval) {
                     formAval.addEventListener('submit', async (e) => {
@@ -416,10 +404,45 @@ document.addEventListener('DOMContentLoaded', () => {
                         btn.innerHTML = originalText; btn.disabled = false;
                     });
                 }
-            } else { const elName = document.getElementById('product-name'); if(elName) elName.textContent = "Produto não encontrado ou indisponível."; }
+
+                // =====================================
+                // MUDANÇA: BUSCA PARALELA NO PRODUTO
+                // =====================================
+                const crossSellGrid = document.getElementById('cross-sell-grid');
+                const containerAvaliacoes = document.getElementById('lista-avaliacoes');
+
+                Promise.all([
+                    supabase.from('produtos').select('*').eq('loja_id', loja?.id).neq('id', idProduto).limit(4),
+                    supabase.from('avaliacoes').select('*').eq('produto_id', idProduto).eq('aprovado', true).order('created_at', { ascending: false })
+                ]).then(([resSugeridos, resAvaliacoes]) => {
+                    const sugeridos = resSugeridos.data;
+                    const avaliacoes = resAvaliacoes.data;
+
+                    // Renderiza Cross-sell (Sugestões)
+                    if (crossSellGrid && loja) {
+                        crossSellGrid.innerHTML = '';
+                        if (sugeridos && sugeridos.length > 0) {
+                            sugeridos.forEach(s => { crossSellGrid.innerHTML += `<div class="product-card glass-light"><a href="produto.html?loja=${slug}&id=${s.id}" class="card-img" style="display:block;"><img src="${s.imagem_url}" alt="${s.nome}"></a><div class="card-info"><h3><a href="produto.html?loja=${slug}&id=${s.id}">${s.nome}</a></h3><p class="price">R$ ${parseFloat(s.preco).toFixed(2).replace('.', ',')}</p><button class="btn-outline btn-add-cart" data-name="${s.nome}" data-price="${s.preco}">Adicionar <i class="fas fa-plus"></i></button></div></div>`; });
+                        } else { 
+                            const crossSection = document.getElementById('cross-sell'); if(crossSection) crossSection.style.display = 'none'; 
+                        }
+                    }
+
+                    // Renderiza Avaliações
+                    if (containerAvaliacoes) {
+                        if (!avaliacoes || avaliacoes.length === 0) { 
+                            containerAvaliacoes.innerHTML = '<p style="color: var(--text-muted);">Ainda não há avaliações. Seja o primeiro a comentar!</p>'; 
+                        } else {
+                            containerAvaliacoes.innerHTML = '';
+                            avaliacoes.forEach(av => { containerAvaliacoes.innerHTML += `<div style="padding: 1rem; border-radius: 0.8rem; background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border);"><div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; align-items: center;"><strong style="color: var(--text-primary);"><i class="fas fa-user-circle"></i> ${av.nome}</strong><div class="stars" style="color: #fbbf24; font-size: 0.8rem;"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div></div><p style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;">"${av.comentario}"</p></div>`; });
+                        }
+                    }
+                });
+                
+            } else { 
+                const elName = document.getElementById('product-name'); if(elName) elName.textContent = "Produto não encontrado ou indisponível."; 
+            }
         }
-        
-        liberarTela();
     }
     init();
 
