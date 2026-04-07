@@ -457,3 +457,11 @@ input[type="color"]::-webkit-color-swatch { border: 2px solid #fff; border-radiu
         max-width: 260px;
     }
 }
+/* MODO DE COR: ORIGINAL (Remove os filtros P/B da logo) */
+.brand-logo-img.original-color {
+    filter: none !important;
+}
+
+[data-theme="light"] .brand-logo-img.original-color {
+    filter: none !important;
+}

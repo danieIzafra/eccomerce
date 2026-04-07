@@ -284,6 +284,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (t.logoUrl && t.logoUrl.trim() !== '') {
                     if (t.logoStyle === 'theme') {
                         logoHtml = `<span class="brand-logo-wrapper"><img src="${t.logoUrl}" alt="${loja.nome_loja}" class="brand-logo-img theme-colored"></span>`;
+                    } else if (t.logoStyle === 'original') {
+                        logoHtml = `<img src="${t.logoUrl}" alt="${loja.nome_loja}" class="brand-logo-img original-color">`;
                     } else {
                         logoHtml = `<img src="${t.logoUrl}" alt="${loja.nome_loja}" class="brand-logo-img">`;
                     }
