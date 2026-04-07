@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle | Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --primary: #ec4899; --bg-body: #f1f5f9; --bg-card: #ffffff; --text-main: #1e293b; --text-muted: #64748b; --border: #e2e8f0; --radius: 12px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Montserrat', sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); padding: 15px; padding-bottom: 100px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 2px solid var(--border); }
+        .header h1 { font-size: 1.4rem; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .btn { padding: 12px 18px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; color: white; background: var(--primary); display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.95rem; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-small { padding: 8px 12px; font-size: 0.85rem; }
+        .btn-secondary { background: #334155; }
+        .btn-danger { background: #ef4444; }
+        .btn-block { width: 100%; }
+
+        .accordion { background: var(--bg-card); border-radius: var(--radius); margin-bottom: 15px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden; }
+        .accordion-header { padding: 18px 20px; font-weight: 600; font-size: 1.05rem; cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; user-select: none; background: var(--bg-card); transition: background 0.2s; }
+        .accordion-header:hover { background: #f8fafc; }
+        .accordion-header::-webkit-details-marker { display: none; }
+        .accordion-header i.icon-left { color: var(--primary); width: 25px; }
+        .accordion-header::after { content: '\f078'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: var(--text-muted); transition: transform 0.3s ease; font-size: 0.9rem; }
+        details[open] .accordion-header::after { transform: rotate(180deg); }
+        .accordion-content { padding: 20px; border-top: 1px solid var(--border); background: #fafafa; }
+
+        .form-group { margin-bottom: 18px; }
+        .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--text-main); }
+        input[type="text"], input[type="number"], textarea { width: 100%; padding: 14px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-size: 0.95rem; transition: border-color 0.2s; background: #fff; }
+        input:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1); }
+        textarea { resize: vertical; min-height: 80px; }
+        
+        .color-picker-wrapper { display: flex; align-items: center; gap: 10px; }
+        input[type="color"] { -webkit-appearance: none; border: none; width: 45px; height: 45px; border-radius: 8px; cursor: pointer; padding: 0; }
+        input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+        input[type="color"]::-webkit-color-swatch { border: 2px solid var(--border); border-radius: 8px; }
+
+        .card-interno { background: #fff; border: 1px solid var(--border); padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .card-interno h4 { margin-bottom: 10px; font-size: 0.9rem; color: var(--primary); display: flex; align-items: center; gap: 6px; }
+
+        .img-preview { width: 100%; height: 150px; border-radius: 8px; object-fit: cover; border: 1px dashed var(--border); margin-bottom: 10px; background: #f8fafc; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
+        .img-preview.avatar { height: 100px; width: 100px; border-radius: 50%; margin: 0 auto 10px; }
+
+        .list-item { background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 15px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02); }
+        .galeria-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 12px; margin-top: 15px; }
+        .galeria-item { position: relative; border-radius: 10px; overflow: hidden; aspect-ratio: 1; border: 1px solid var(--border); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .galeria-item img { width: 100%; height: 100%; object-fit: cover; }
+        .btn-del-foto { position: absolute; top: 6px; right: 6px; background: rgba(239, 68, 68, 0.95); color: white; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+
+        .alert-error { background: #fee2e2; color: #b91c1c; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #fca5a5; display: none; }
+        .floating-save-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--bg-card); padding: 15px; border-top: 1px solid var(--border); box-shadow: 0 -4px 10px rgba(0,0,0,0.05); z-index: 100; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1><i class="fas fa-gem"></i> Admin App</h1>
+        <a href="#" id="link-vitrine" target="_blank" class="btn btn-small btn-secondary" style="display: none;">
+            <i class="fas fa-external-link-alt"></i> Ver Site
+        </a>
+    </div>
+
+    <div id="aviso-erro" class="alert-error"></div>
+
+    <div id="conteudo-principal" style="opacity: 0.5; pointer-events: none; transition: opacity 0.3s;">
+        
+        <details class="accordion" open>
+            <summary class="accordion-header"><div><i class="fas fa-calendar-check icon-left"></i> Agenda de Clientes</div></summary>
+            <div class="accordion-content" id="lista-agendamentos">
+                <div style="text-align: center; color: var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Carregando agendamentos...</div>
+            </div>
+        </details>
+
+        <form id="form-site-completo">
+            <details class="accordion">
+                <summary class="accordion-header"><div><i class="fas fa-palette icon-left"></i> Marca e Cores</div></summary>
+                <div class="accordion-content">
+                    <div class="form-group"><label>Nome Principal (Ex: Amanda)</label><input type="text" id="input-nome-loja" required></div>
+                    <div class="form-group"><label>Link do Instagram</label><input type="text" id="input-instagram" placeholder="Ex: @amanda.nails"></div>
+                    <div class="form-group">
+                        <label>Cor Principal (Tema)</label>
+                        <div class="color-picker-wrapper">
+                            <input type="color" id="input-cor" value="#ec4899">
+                            <span id="hex-val" style="font-size: 0.9rem; color: var(--text-muted);">#ec4899</span>
+                        </div>
+                    </div>
+                </div>
+            </details>
+
+            <details class="accordion">
+                <summary class="accordion-header"><div><i class="fas fa-user-circle icon-left"></i> Topo do Site (Boas-vindas)</div></summary>
+                <div class="accordion-content">
+                    <div class="form-group" style="text-align: center; border-bottom: 1px dashed var(--border); padding-bottom: 20px;">
+                        <label>Sua Foto (Recortada/PNG Opcional)</label>
+                        <img id="preview-img-perfil" class="img-preview avatar" src="" alt="Sem imagem" style="display: none;">
+                        <div id="placeholder-img-perfil" class="img-preview avatar"><i class="fas fa-user" style="font-size: 2rem;"></i></div>
+                        
+                        <input type="file" id="upload-img-perfil" accept="image/*" style="display:none;" onchange="fazerUploadImagemPerfil(event)">
+                        <button type="button" class="btn btn-small btn-secondary" onclick="document.getElementById('upload-img-perfil').click()">
+                            <i class="fas fa-camera"></i> Subir Foto de Perfil
+                        </button>
+                    </div>
+
+                    <div class="form-group"><label>Subtítulo (Ex: Nail Studio)</label><input type="text" id="input-hero-sub"></div>
+                    <div class="form-group"><label>Texto de Boas-vindas</label><textarea id="input-hero-texto" placeholder="Onde a saúde das suas unhas encontra o design de luxo..."></textarea></div>
+                </div>
+            </details>
+
+            <details class="accordion">
+                <summary class="accordion-header"><div><i class="fas fa-address-card icon-left"></i> Seção Sobre Nós</div></summary>
+                <div class="accordion-content">
+                    <div class="form-group"><label>Título (Ex: A Arte em Suas Mãos)</label><input type="text" id="input-sobre-titulo"></div>
+                    <div class="form-group"><label>História / Descrição do Espaço</label><textarea id="input-descricao" style="min-height: 120px;" placeholder="Conte um pouco sobre sua técnica..."></textarea></div>
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label>Imagem da Seção Sobre</label>
+                        <img id="preview-img-sobre" class="img-preview" src="" alt="Sem imagem" style="display: none;">
+                        <div id="placeholder-img-sobre" class="img-preview"><i class="fas fa-image" style="font-size: 2rem;"></i></div>
+                        <input type="file" id="upload-img-sobre" accept="image/*" style="display:none;" onchange="fazerUploadImagemSobre(event)">
+                        <button type="button" class="btn btn-block btn-secondary" onclick="document.getElementById('upload-img-sobre').click()"><i class="fas fa-upload"></i> Trocar Imagem do Sobre</button>
+                    </div>
+                </div>
+            </details>
+
+            <details class="accordion">
+                <summary class="accordion-header"><div><i class="fas fa-star icon-left"></i> Diferenciais (Cards)</div></summary>
+                <div class="accordion-content">
+                    <div class="card-interno"><h4><i class="fas fa-shield-virus"></i> Diferencial 1</h4><input type="text" id="input-dif1-titulo" placeholder="Título" class="form-group" style="margin-bottom: 8px;"><textarea id="input-dif1-texto" placeholder="Texto..."></textarea></div>
+                    <div class="card-interno"><h4><i class="fas fa-gem"></i> Diferencial 2</h4><input type="text" id="input-dif2-titulo" placeholder="Título" class="form-group" style="margin-bottom: 8px;"><textarea id="input-dif2-texto" placeholder="Texto..."></textarea></div>
+                    <div class="card-interno"><h4><i class="fas fa-spa"></i> Diferencial 3</h4><input type="text" id="input-dif3-titulo" placeholder="Título" class="form-group" style="margin-bottom: 8px;"><textarea id="input-dif3-texto" placeholder="Texto..."></textarea></div>
+                </div>
+            </details>
+
+            <div class="floating-save-bar" id="barra-salvar">
+                <button type="submit" class="btn btn-block" id="btn-salvar-tudo"><i class="fas fa-save"></i> Salvar Todas as Edições</button>
+            </div>
+        </form>
+
+        <details class="accordion">
+            <summary class="accordion-header"><div><i class="fas fa-images icon-left"></i> Galeria de Trabalhos</div></summary>
+            <div class="accordion-content">
+                <div class="form-group"><input type="file" id="upload-foto-galeria" accept="image/*" style="display:none;" onchange="fazerUploadGaleria(event)"><button class="btn btn-block btn-secondary" onclick="document.getElementById('upload-foto-galeria').click()"><i class="fas fa-plus"></i> Adicionar Foto na Galeria</button></div>
+                <div class="galeria-grid" id="lista-fotos"></div>
+            </div>
+        </details>
+        
+        <details class="accordion">
+            <summary class="accordion-header"><div><i class="fas fa-list-ul icon-left"></i> Menu de Serviços</div></summary>
+            <div class="accordion-content">
+                <form id="form-servico" style="background: #fff; padding: 15px; border-radius: 10px; border: 1px dashed var(--primary); margin-bottom: 20px;">
+                    <div class="form-group"><label>Novo Serviço</label><input type="text" id="nome-servico" required></div>
+                    <div style="display: flex; gap: 10px;"><div class="form-group" style="flex: 1;"><label>Preço (R$)</label><input type="number" step="0.01" id="preco-servico" required></div><div class="form-group" style="flex: 1;"><label>Tempo (Min)</label><input type="number" id="duracao-servico" required value="60"></div></div>
+                    <button type="submit" class="btn btn-block" id="btn-salvar-servico"><i class="fas fa-plus"></i> Adicionar Serviço</button>
+                </form>
+                <div id="lista-servicos"></div>
+            </div>
+        </details>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://ikkjgtgvohrwurtiustm.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra2pndGd2b2hyd3VydGl1c3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NzE4OTEsImV4cCI6MjA5MDE0Nzg5MX0.HNrSvCmSHWTe2yoQy27GOq5g_ZoZxFdox_eCW14f_nI';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const IMGBB_API_KEY = '351d3ebf4dcd475e4f3522a6198ef849';
+
+        const slug = new URLSearchParams(window.location.search).get('loja');
+        let lojaId = null;
+        let urlImagemSobreAtual = null;
+        let urlImagemPerfilAtual = null; // Nova variável
+
+        document.getElementById('input-cor').addEventListener('input', function(e) { document.getElementById('hex-val').innerText = e.target.value; });
+        document.getElementById('form-site-completo').addEventListener('input', () => { document.getElementById('barra-salvar').style.display = 'block'; });
+
+        async function init() {
+            if(!slug) return document.getElementById('aviso-erro').style.display = 'block';
+            document.getElementById('link-vitrine').href = `index_girl.html?loja=${slug}`;
+            document.getElementById('link-vitrine').style.display = 'inline-flex';
+            
+            const { data: loja } = await supabaseClient.from('lojas').select('*').eq('slug', slug).single();
+            if(!loja) return; lojaId = loja.id;
+            
+            if(loja.nome_loja) document.getElementById('input-nome-loja').value = loja.nome_loja;
+            if(loja.instagram) document.getElementById('input-instagram').value = loja.instagram;
+            if(loja.cor_principal) { document.documentElement.style.setProperty('--primary', loja.cor_principal); document.getElementById('input-cor').value = loja.cor_principal; document.getElementById('hex-val').innerText = loja.cor_principal; }
+            if(loja.hero_subtitulo) document.getElementById('input-hero-sub').value = loja.hero_subtitulo;
+            if(loja.hero_texto) document.getElementById('input-hero-texto').value = loja.hero_texto;
+            if(loja.sobre_titulo) document.getElementById('input-sobre-titulo').value = loja.sobre_titulo;
+            if(loja.descricao) document.getElementById('input-descricao').value = loja.descricao;
+            if(loja.dif1_titulo) document.getElementById('input-dif1-titulo').value = loja.dif1_titulo;
+            if(loja.dif1_texto) document.getElementById('input-dif1-texto').value = loja.dif1_texto;
+            if(loja.dif2_titulo) document.getElementById('input-dif2-titulo').value = loja.dif2_titulo;
+            if(loja.dif2_texto) document.getElementById('input-dif2-texto').value = loja.dif2_texto;
+            if(loja.dif3_titulo) document.getElementById('input-dif3-titulo').value = loja.dif3_titulo;
+            if(loja.dif3_texto) document.getElementById('input-dif3-texto').value = loja.dif3_texto;
+
+            urlImagemSobreAtual = loja.sobre_imagem_url;
+            if(urlImagemSobreAtual) { document.getElementById('preview-img-sobre').src = urlImagemSobreAtual; document.getElementById('preview-img-sobre').style.display = 'block'; document.getElementById('placeholder-img-sobre').style.display = 'none'; }
+            
+            // Carrega foto de perfil se existir
+            urlImagemPerfilAtual = loja.perfil_imagem_url;
+            if(urlImagemPerfilAtual) { document.getElementById('preview-img-perfil').src = urlImagemPerfilAtual; document.getElementById('preview-img-perfil').style.display = 'block'; document.getElementById('placeholder-img-perfil').style.display = 'none'; }
+
+            document.getElementById('conteudo-principal').style.opacity = '1'; document.getElementById('conteudo-principal').style.pointerEvents = 'auto';
+            carregarServicos(); carregarAgendamentos(); carregarFotosGaleria();
+        }
+
+        document.getElementById('form-site-completo').addEventListener('submit', async (e) => {
+            e.preventDefault(); const btn = document.getElementById('btn-salvar-tudo'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando Site...'; btn.disabled = true;
+            let insta = document.getElementById('input-instagram').value.trim(); if(insta && !insta.startsWith('@')) insta = '@' + insta;
+
+            const payload = { 
+                nome_loja: document.getElementById('input-nome-loja').value, instagram: insta, cor_principal: document.getElementById('input-cor').value,
+                hero_subtitulo: document.getElementById('input-hero-sub').value, hero_texto: document.getElementById('input-hero-texto').value,
+                sobre_titulo: document.getElementById('input-sobre-titulo').value, descricao: document.getElementById('input-descricao').value,
+                dif1_titulo: document.getElementById('input-dif1-titulo').value, dif1_texto: document.getElementById('input-dif1-texto').value,
+                dif2_titulo: document.getElementById('input-dif2-titulo').value, dif2_texto: document.getElementById('input-dif2-texto').value,
+                dif3_titulo: document.getElementById('input-dif3-titulo').value, dif3_texto: document.getElementById('input-dif3-texto').value,
+                sobre_imagem_url: urlImagemSobreAtual, perfil_imagem_url: urlImagemPerfilAtual // Salva a nova imagem
+            };
+
+            const { error } = await supabaseClient.from('lojas').update(payload).eq('id', lojaId);
+            if(error) alert("Erro ao salvar: " + error.message); else { alert("Página atualizada com sucesso!"); document.documentElement.style.setProperty('--primary', payload.cor_principal); document.getElementById('barra-salvar').style.display = 'none'; }
+            btn.innerHTML = '<i class="fas fa-save"></i> Salvar Todas as Edições'; btn.disabled = false;
+        });
+
+        // Nova função Upload Perfil
+        async function fazerUploadImagemPerfil(event) {
+            const file = event.target.files[0]; if(!file) return; const btn = event.target.nextElementSibling; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subindo...'; btn.disabled = true;
+            try {
+                const formData = new FormData(); formData.append('image', file); formData.append('key', IMGBB_API_KEY);
+                const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
+                const data = await res.json(); if(!data.success) throw new Error(data.error.message);
+                
+                urlImagemPerfilAtual = data.data.url;
+                document.getElementById('preview-img-perfil').src = urlImagemPerfilAtual; document.getElementById('preview-img-perfil').style.display = 'block'; document.getElementById('placeholder-img-perfil').style.display = 'none';
+                document.getElementById('barra-salvar').style.display = 'block'; 
+            } catch(e) { alert("Erro ao subir imagem: " + e.message); }
+            btn.innerHTML = '<i class="fas fa-camera"></i> Subir Foto de Perfil'; btn.disabled = false; event.target.value = '';
+        }
+
+        async function fazerUploadImagemSobre(event) {
+            const file = event.target.files[0]; if(!file) return; const btn = event.target.nextElementSibling; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subindo foto...'; btn.disabled = true;
+            try {
+                const formData = new FormData(); formData.append('image', file); formData.append('key', IMGBB_API_KEY);
+                const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
+                const data = await res.json(); if(!data.success) throw new Error(data.error.message);
+                urlImagemSobreAtual = data.data.url; document.getElementById('preview-img-sobre').src = urlImagemSobreAtual; document.getElementById('preview-img-sobre').style.display = 'block'; document.getElementById('placeholder-img-sobre').style.display = 'none'; document.getElementById('barra-salvar').style.display = 'block'; 
+            } catch(e) { alert("Erro ao subir imagem: " + e.message); }
+            btn.innerHTML = '<i class="fas fa-upload"></i> Trocar Imagem do Sobre'; btn.disabled = false; event.target.value = '';
+        }
+
+        async function fazerUploadGaleria(event) { const file = event.target.files[0]; if(!file) return; const btn = event.target.nextElementSibling; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...'; btn.disabled = true; try { const formData = new FormData(); formData.append('image', file); formData.append('key', IMGBB_API_KEY); const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData }); const data = await res.json(); if(!data.success) throw new Error(data.error.message); await supabaseClient.from('lookbook').insert([{ loja_id: lojaId, imagem_url: data.data.url }]); carregarFotosGaleria(); } catch(e) { alert("Erro na galeria: " + e.message); } btn.innerHTML = '<i class="fas fa-plus"></i> Adicionar Foto na Galeria'; btn.disabled = false; event.target.value = ''; }
+        async function carregarFotosGaleria() { const { data } = await supabaseClient.from('lookbook').select('*').eq('loja_id', lojaId).order('id', {ascending: false}); const div = document.getElementById('lista-fotos'); div.innerHTML = ''; if(data && data.length > 0) { data.forEach(f => { div.innerHTML += `<div class="galeria-item"><img src="${f.imagem_url}" loading="lazy"><button class="btn-del-foto" onclick="if(confirm('Excluir imagem?')){supabaseClient.from('lookbook').delete().eq('id', '${f.id}').then(()=>carregarFotosGaleria())}"><i class="fas fa-trash-alt"></i></button></div>`; }); } }
+        
+        document.getElementById('form-servico').addEventListener('submit', async (e) => { e.preventDefault(); await supabaseClient.from('servicos').insert([{ loja_id: lojaId, nome: document.getElementById('nome-servico').value, preco: parseFloat(document.getElementById('preco-servico').value), duracao_minutos: parseInt(document.getElementById('duracao-servico').value) }]); document.getElementById('form-servico').reset(); carregarServicos(); });
+        async function carregarServicos() { const { data } = await supabaseClient.from('servicos').select('*').eq('loja_id', lojaId).order('id', {ascending: false}); const div = document.getElementById('lista-servicos'); div.innerHTML = ''; if(data && data.length > 0) { data.forEach(s => { div.innerHTML += `<div class="list-item"><div style="flex:1;"><strong style="display:block;">${s.nome}</strong><small style="color:var(--text-muted);">R$ ${s.preco.toFixed(2)} | ${s.duracao_minutos} min</small></div> <button onclick="supabaseClient.from('servicos').delete().eq('id', '${s.id}').then(()=>carregarServicos())" class="btn btn-small btn-danger"><i class="fas fa-trash-alt"></i></button></div>`; }); } }
+        async function carregarAgendamentos() { const { data } = await supabaseClient.from('agendamentos').select('*, servicos(nome)').eq('loja_id', lojaId).order('data_agendamento', {ascending: true}); const div = document.getElementById('lista-agendamentos'); div.innerHTML = ''; if(data && data.length > 0) { data.forEach(a => { const d = a.data_agendamento.split('-').reverse().join('/'); div.innerHTML += `<div class="list-item" style="flex-direction:column; align-items:flex-start; gap:8px;"><div style="display:flex; justify-content:space-between; width:100%;"><strong style="color:var(--primary);">${d} às ${a.horario_agendamento.substring(0,5)}</strong><span style="font-size:0.7rem; padding:4px 8px; border-radius:10px; background:${a.status==='pendente'?'#fef08a':'#bbf7d0'};">${a.status}</span></div><div><i class="fas fa-user"></i> ${a.nome_cliente}<br><i class="fab fa-whatsapp"></i> ${a.telefone_cliente}<br><small><b>Serviço:</b> ${a.servicos?.nome || 'N/A'}</small></div><div style="display:flex; gap:10px; width:100%; margin-top:5px;">${a.status==='pendente'?`<button onclick="supabaseClient.from('agendamentos').update({status:'confirmado'}).eq('id', '${a.id}').then(()=>carregarAgendamentos())" class="btn btn-small btn-block" style="background:#16a34a;">Confirmar</button>`:''}<button onclick="if(confirm('Cancelar?')){supabaseClient.from('agendamentos').delete().eq('id', '${a.id}').then(()=>carregarAgendamentos())}" class="btn btn-small btn-danger btn-block">Cancelar</button></div></div>`; }); } }
+
+        init();
+    </script>
+</body>
+</html>

@@ -63,11 +63,11 @@
         /* --- SESSÃO DE CRIAR LOJA --- */
         .create-store-card { background: var(--bg-card); padding: 30px; border-radius: 16px; border: 1px dashed var(--accent); margin-bottom: 40px; transition: 0.3s ease; }
         .create-store-card h3 { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr auto; gap: 15px; align-items: end; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 15px; align-items: end; }
         .input-group { display: flex; flex-direction: column; gap: 8px; }
         .input-group label { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
-        .input-group input { padding: 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; }
-        .input-group input:focus { outline: none; border-color: var(--accent); }
+        .input-group input, .input-group select { padding: 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: white; }
+        .input-group input:focus, .input-group select:focus { outline: none; border-color: var(--accent); }
 
         /* --- LISTA DE LOJAS --- */
         .store-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; }
@@ -80,8 +80,8 @@
         
         .store-card.inactive { opacity: 0.7; border-color: rgba(239, 68, 68, 0.3); }
 
-        .store-name { font-size: 1.3rem; font-weight: bold; margin-bottom: 5px; padding-right: 80px; }
-        .store-slug { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; font-family: monospace; background: var(--bg-dark); padding: 5px 10px; border-radius: 6px; display: inline-block; word-break: break-all; }
+        .store-name { font-size: 1.3rem; font-weight: bold; margin-bottom: 5px; padding-right: 80px; line-height: 1.2; }
+        .store-slug { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px; font-family: monospace; background: var(--bg-dark); padding: 5px 10px; border-radius: 6px; display: inline-block; word-break: break-all; margin-top: 10px; }
         
         .store-actions { display: flex; flex-wrap: wrap; gap: 10px; border-top: 1px solid var(--border); padding-top: 20px; margin-top: auto; }
         .store-actions .btn { flex: 1; font-size: 0.85rem; padding: 12px 10px; }
@@ -140,15 +140,22 @@
             
             <div class="form-grid" id="create-form">
                 <div class="input-group">
-                    <label>Nome Fantasia do Cliente</label>
-                    <input type="text" id="new-nome" placeholder="Ex: Aura Store, Barbearia...">
+                    <label>Nome do Cliente</label>
+                    <input type="text" id="new-nome" placeholder="Ex: Aura Store, Studio Beleza...">
                 </div>
                 <div class="input-group">
-                    <label>Slug (Link da Loja)</label>
+                    <label>Slug (Link)</label>
                     <input type="text" id="new-slug" placeholder="ex: aura-store" oninput="formatarSlug(this)">
                 </div>
+                <div class="input-group">
+                    <label>Tipo de Negócio</label>
+                    <select id="new-tipo">
+                        <option value="ecommerce">E-commerce (Produtos)</option>
+                        <option value="salao">Salão/Beleza (Agendamentos)</option>
+                    </select>
+                </div>
                 <button class="btn btn-primary" style="height: 48px;" onclick="criarNovaLoja()" id="btn-create">
-                    <i class="fas fa-plus-circle"></i> Gerar Loja
+                    <i class="fas fa-plus-circle"></i> Gerar Cliente
                 </button>
                 <small style="color: var(--text-muted); grid-column: 1 / -1; margin-top: -5px;">
                     * O Slug será a URL de acesso do cliente. Ex: index.html?loja=<b>slug-aqui</b>
@@ -171,21 +178,17 @@
         // 1. SISTEMA DE SEGURANÇA E LOGIN (SEM EXPOR SENHA)
         // ==========================================
         
-        // Função matemática que transforma a senha em um código hash seguro
         function gerarHashDaSenha(string) {
             let hash = 0;
             for (let i = 0; i < string.length; i++) {
                 hash = (hash << 5) - hash + string.charCodeAt(i);
-                hash |= 0; // Converte para um inteiro de 32 bits
+                hash |= 0; 
             }
             return hash;
         }
 
-        // O número 1515115 é o resultado matemático exato da palavra "1804" processada pela função acima.
-        // Assim, a palavra 1804 NUNCA aparece escrita no código.
         const HASH_CORRETO = 1515115; 
 
-        // Ao abrir a página, verifica se já existe uma sessão salva no aparelho
         window.onload = () => {
             if (localStorage.getItem('grl_auth_session') === 'autenticado') {
                 liberarAcessoAoPainel();
@@ -197,7 +200,6 @@
             const hashDoInput = gerarHashDaSenha(input);
 
             if (hashDoInput === HASH_CORRETO) {
-                // Senha correta: Salva no aparelho para não pedir de novo
                 localStorage.setItem('grl_auth_session', 'autenticado');
                 liberarAcessoAoPainel();
             } else {
@@ -210,11 +212,10 @@
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('admin-content').style.display = 'flex';
             document.getElementById('admin-content').style.flexDirection = 'column';
-            listarLojas(); // Carrega os dados só depois de logar
+            listarLojas(); 
         }
 
         function bloquearPainel() {
-            // Destrói a sessão salva e recarrega a página
             localStorage.removeItem('grl_auth_session');
             location.reload();
         }
@@ -244,11 +245,12 @@
         }
 
         // ==========================================
-        // 4. CRIAR NOVA LOJA
+        // 4. CRIAR NOVA LOJA / SALÃO
         // ==========================================
         async function criarNovaLoja() {
             const nome = document.getElementById('new-nome').value;
             const slug = document.getElementById('new-slug').value;
+            const tipo = document.getElementById('new-tipo').value;
             const btn = document.getElementById('btn-create');
 
             if (!nome || !slug) return alert("⚠️ Preencha o nome e o slug da loja!");
@@ -261,13 +263,14 @@
                 .insert([{ 
                     nome_loja: nome, 
                     slug: slug, 
-                    cor_principal: '#00d2ff',
+                    tipo_loja: tipo,
+                    cor_principal: tipo === 'salao' ? '#ec4899' : '#00d2ff',
                     ativo: true
                 }]);
 
             if (error) {
                 if(error.code === '23505') { 
-                    alert("⛔ Este Slug já está em uso por outra loja! Escolha outro.");
+                    alert("⛔ Este Slug já está em uso! Escolha outro.");
                 } else {
                     alert("Erro ao criar: " + error.message);
                 }
@@ -281,12 +284,12 @@
                 listarLojas();
             }
 
-            btn.innerHTML = '<i class="fas fa-plus-circle"></i> Gerar Loja';
+            btn.innerHTML = '<i class="fas fa-plus-circle"></i> Gerar Cliente';
             btn.disabled = false;
         }
 
         // ==========================================
-        // 5. LISTAR TODAS AS LOJAS
+        // 5. LISTAR TODAS AS LOJAS E SALÕES
         // ==========================================
         async function listarLojas() {
             const container = document.getElementById('lista-todas-lojas');
@@ -316,25 +319,32 @@
                 
                 const toggleBtnClass = isAtiva ? "btn btn-warning btn-full" : "btn btn-success btn-full";
                 const toggleBtnIcon = isAtiva ? "fas fa-pause" : "fas fa-play";
-                const toggleBtnTexto = isAtiva ? "Suspender Loja" : "Reativar Loja";
+                const toggleBtnTexto = isAtiva ? "Suspender Acesso" : "Reativar Acesso";
+
+                // Lógica de URL e Badge para E-commerce vs Salão
+                const urlIndex = loja.tipo_loja === 'salao' ? 'index_girl.html' : 'index.html';
+                const urlAdmin = loja.tipo_loja === 'salao' ? 'admin_girl.html' : 'admin.html';
+                const badgeTipo = loja.tipo_loja === 'salao' 
+                    ? '<span style="color:#ec4899; font-size:0.85rem; margin-top:5px; display:inline-block;"><i class="fas fa-spa"></i> Salão / Agendamentos</span>' 
+                    : '<span style="color:#00d2ff; font-size:0.85rem; margin-top:5px; display:inline-block;"><i class="fas fa-shopping-cart"></i> E-commerce</span>';
 
                 container.innerHTML += `
                     <div class="${cardClass}">
                         <div class="${badgeClass}">${badgeTexto}</div>
-                        <div class="store-name">${loja.nome_loja}</div>
+                        <div class="store-name">${loja.nome_loja} <br>${badgeTipo}</div>
                         <div class="store-slug"><i class="fas fa-link"></i> ?loja=${loja.slug}</div>
                         
                         <div class="store-actions">
-                            <a href="index.html?loja=${loja.slug}" target="_blank" class="btn btn-primary" title="Vitrine do Cliente">
+                            <a href="${urlIndex}?loja=${loja.slug}" target="_blank" class="btn btn-primary" title="Ver Site">
                                 <i class="fas fa-external-link-alt"></i> Vitrine
                             </a>
-                            <a href="admin.html?loja=${loja.slug}" target="_blank" class="btn" style="background:#334155; color:white;" title="Painel interno da loja">
+                            <a href="${urlAdmin}?loja=${loja.slug}" target="_blank" class="btn" style="background:#334155; color:white;" title="Painel interno do cliente">
                                 <i class="fas fa-cog"></i> Admin
                             </a>
                             <button onclick="alternarStatus('${loja.id}', ${isAtiva})" class="${toggleBtnClass}">
                                 <i class="${toggleBtnIcon}"></i> ${toggleBtnTexto}
                             </button>
-                            <button onclick="excluirLoja('${loja.id}', '${loja.nome_loja}')" class="btn btn-danger btn-full" title="Apagar loja e produtos">
+                            <button onclick="excluirLoja('${loja.id}', '${loja.nome_loja}')" class="btn btn-danger btn-full" title="Apagar cliente e todos os dados">
                                 <i class="fas fa-trash"></i> Excluir Cliente
                             </button>
                         </div>
@@ -344,13 +354,13 @@
         }
 
         // ==========================================
-        // 6. ATIVAR / BLOQUEAR LOJA
+        // 6. ATIVAR / BLOQUEAR
         // ==========================================
         async function alternarStatus(id, statusAtual) {
             const novoStatus = !statusAtual; 
             const msg = novoStatus ? 
-                "Tem certeza que deseja reativar esta loja?" : 
-                "Deseja suspender esta loja? Os clientes não poderão ver os produtos.";
+                "Tem certeza que deseja reativar o acesso deste cliente?" : 
+                "Deseja suspender este cliente? Os links pararão de funcionar para o público.";
                 
             if(confirm(msg)) {
                 const { error } = await supabaseClient
@@ -367,14 +377,17 @@
         }
 
         // ==========================================
-        // 7. EXCLUIR LOJA E DADOS
+        // 7. EXCLUIR CLIENTE E DADOS
         // ==========================================
         async function excluirLoja(id, nome) {
-            const confirmar = confirm(`⚠️ ALERTA VERMELHO!\n\nTem certeza absoluta que deseja DELETAR a loja "${nome}" e TODOS os seus dados?\n\nEsta ação é irreversível.`);
+            const confirmar = confirm(`⚠️ ALERTA VERMELHO!\n\nTem certeza absoluta que deseja DELETAR o cliente "${nome}" e TODOS os seus dados (Produtos, Agendamentos, etc)?\n\nEsta ação é irreversível.`);
             
             if (confirmar) {
+                // Apaga dependências de e-commerce e salão, tudo junto.
                 await supabaseClient.from('avaliacoes').delete().eq('loja_id', id);
                 await supabaseClient.from('produtos').delete().eq('loja_id', id);
+                await supabaseClient.from('agendamentos').delete().eq('loja_id', id);
+                await supabaseClient.from('servicos').delete().eq('loja_id', id);
 
                 const { error } = await supabaseClient
                     .from('lojas')

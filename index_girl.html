@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studio | Nail Art & Cuidados</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --bg-color: #1a1014; --text-color: #fcf5f7;
+            --accent: #f472b6; --accent-hover: #ec4899;
+            --glass-bg: rgba(35, 20, 28, 0.55); --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4); --glass-highlight: rgba(255, 255, 255, 0.05);
+            --font-heading: 'Playfair Display', serif; --font-body: 'Montserrat', sans-serif;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #fdf2f8; --text-color: #4c1d95;
+            --accent: #db2777; --accent-hover: #be185d;
+            --glass-bg: rgba(255, 255, 255, 0.6); --glass-border: rgba(236, 72, 153, 0.2);
+            --glass-shadow: 0 8px 32px 0 rgba(236, 72, 153, 0.1); --glass-highlight: rgba(255, 255, 255, 0.8);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: var(--bg-color); color: var(--text-color); font-family: var(--font-body); line-height: 1.6; position: relative; overflow-x: hidden; min-height: 100vh; transition: background-color 0.4s, color 0.4s; }
+
+        body::before, body::after { content: ''; position: fixed; border-radius: 50%; filter: blur(100px); z-index: -1; opacity: 0.5; animation: float 14s infinite alternate ease-in-out; }
+        body::before { width: 400px; height: 400px; background: var(--accent); top: 0; left: -10%; }
+        body::after { width: 500px; height: 500px; background: #6b21a8; bottom: -10%; right: -10%; animation-delay: -7s; }
+        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(40px, 60px) scale(1.15); } }
+        h1, h2, h3 { font-family: var(--font-heading); font-weight: 400; }
+
+        .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+        .btn-primary { display: inline-flex; justify-content: center; align-items: center; gap: 10px; padding: 14px 35px; background: var(--glass-bg); color: var(--accent); border: 1px solid var(--accent); text-transform: uppercase; letter-spacing: 1.5px; font-size: 0.9rem; font-weight: 600; text-decoration: none; cursor: pointer; border-radius: 40px; backdrop-filter: blur(8px); transition: all 0.3s ease; }
+        .btn-primary:hover { background: var(--accent); color: var(--bg-color); box-shadow: 0 0 20px rgba(244, 114, 182, 0.4); }
+        
+        .glass-card { background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 20px; padding: 35px; box-shadow: var(--glass-shadow); }
+
+        nav { position: fixed; top: 0; width: 100%; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; z-index: 1000; background: transparent; }
+        .theme-btn { background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-color); width: 45px; height: 45px; border-radius: 50%; cursor: pointer; backdrop-filter: blur(10px); font-size: 1.2rem; transition: 0.3s; }
+        .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 80px 20px 40px; text-align: center; }
+        .hero-content { max-width: 800px; display: flex; flex-direction: column; align-items: center; position: relative;}
+        
+        /* CSS da Foto de Perfil Opcional */
+        .hero-profile-holder { margin-top: -85px; margin-bottom: 20px; display: none; }
+        .profile-frame { width: 150px; height: 150px; border-radius: 50%; background: var(--glass-highlight); border: 3px solid var(--accent); box-shadow: 0 8px 25px rgba(0,0,0,0.3); overflow: hidden; display: flex; justify-content: center; align-items: center; }
+        .profile-frame img { width: 100%; height: 100%; object-fit: cover; }
+
+        .hero h1 { font-size: clamp(3rem, 6vw, 5rem); color: var(--accent); line-height: 1.1; margin-bottom: 20px; }
+        .hero h1 span { color: var(--text-color); font-size: clamp(1.8rem, 4vw, 3rem); font-family: var(--font-body); font-weight: 300; }
+        .hero p { font-size: 1.1rem; opacity: 0.9; margin-bottom: 40px; max-width: 600px; white-space: pre-wrap; }
+
+        section { padding: 80px 20px; max-width: 1000px; margin: 0 auto; }
+        .section-title { text-align: center; font-size: 2.5rem; color: var(--accent); margin-bottom: 50px; }
+
+        .trust-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; }
+        .trust-badge { display: flex; align-items: flex-start; gap: 15px; transition: transform 0.3s; }
+        .trust-badge:hover { transform: translateY(-5px); }
+        .trust-badge i { font-size: 2.5rem; color: var(--accent); }
+        .trust-badge h3 { font-size: 1.2rem; color: var(--accent); margin-bottom: 8px; }
+        .trust-badge p { font-size: 0.9rem; opacity: 0.8; white-space: pre-wrap; }
+
+        .about-flex { display: flex; gap: 40px; align-items: center; flex-wrap: wrap; }
+        .about-text { flex: 1; min-width: 300px; }
+        .about-text h2 { font-size: 2rem; color: var(--accent); margin-bottom: 20px; }
+        .about-text p { white-space: pre-wrap; margin-bottom: 15px; }
+        .about-image { flex: 1; min-width: 300px; border-radius: 20px; overflow: hidden; border: 2px solid var(--glass-border); }
+        .about-image img { width: 100%; height: auto; display: block; filter: grayscale(20%) sepia(10%); transition: 0.5s; }
+        .about-image:hover img { filter: none; transform: scale(1.05); }
+
+        .luxury-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .luxury-table th, .luxury-table td { padding: 18px 15px; border-bottom: 1px solid var(--glass-border); }
+        .luxury-table th { font-family: var(--font-heading); color: var(--accent); font-size: 1.2rem; font-weight: 600; }
+        .luxury-table tr:hover { background-color: var(--glass-highlight); }
+        .loading-text { text-align: center; opacity: 0.7; padding: 20px; }
+
+        .gallery-scroll { display: flex; gap: 20px; overflow-x: auto; padding-bottom: 20px; scrollbar-width: thin; scrollbar-color: var(--accent) transparent; }
+        .gallery-scroll::-webkit-scrollbar { height: 8px; }
+        .gallery-scroll::-webkit-scrollbar-thumb { background-color: var(--accent); border-radius: 10px; }
+        .gallery-item { flex: 0 0 200px; border-radius: 15px; overflow: hidden; border: 1px solid var(--glass-border); aspect-ratio: 4/5; box-shadow: var(--glass-shadow); }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+        .gallery-item:hover img { transform: scale(1.1); }
+
+        .form-grid { display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 768px) { .form-grid { grid-template-columns: 1fr 1fr; } .full-col { grid-column: 1 / -1; } }
+        
+        .form-group label { display: block; margin-bottom: 10px; font-size: 0.9rem; text-transform: uppercase; color: var(--accent); font-weight: 600; letter-spacing: 1px; }
+        input[type="text"], input[type="tel"], input[type="date"], select { width: 100%; padding: 15px; background: var(--glass-highlight); border: 1px solid var(--glass-border); color: var(--text-color); font-family: var(--font-body); border-radius: 12px; font-size: 1rem; outline: none; transition: 0.3s; }
+        input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 15px rgba(244, 114, 182, 0.2); }
+        select option { background: var(--bg-color); color: var(--text-color); }
+
+        .horarios-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 12px; }
+        .btn-horario { padding: 12px; border: 1px solid var(--glass-border); background: var(--glass-highlight); color: var(--text-color); border-radius: 10px; cursor: pointer; font-family: var(--font-body); transition: 0.3s; font-size: 0.95rem; text-align: center; }
+        .btn-horario:hover { border-color: var(--accent); }
+        .btn-horario.active { background: var(--accent); color: var(--bg-color); font-weight: 600; border-color: var(--accent); box-shadow: 0 4px 15px rgba(244, 114, 182, 0.4); }
+
+        footer { text-align: center; padding: 40px; border-top: 1px solid var(--glass-border); font-size: 0.9rem; opacity: 0.7; margin-top: 50px; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div id="container-insta"></div>
+        <button class="theme-btn" onclick="toggleTheme()" aria-label="Alternar Tema"><i class="fas fa-moon"></i></button>
+    </nav>
+
+    <header class="hero fade-in">
+        <div class="glass-card hero-content">
+            <div class="hero-profile-holder" id="holder-perfil">
+                <div class="profile-frame">
+                    <img id="img-perfil" src="" alt="Foto de Perfil">
+                </div>
+            </div>
+
+            <h1 id="titulo-hero">Carregando... <br><span id="hero-subtitulo">Nail Studio</span></h1>
+            <p id="hero-texto">Onde a saúde das suas unhas encontra o design de luxo. Uma experiência exclusiva de autocuidado e sofisticação.</p>
+            <a href="#agendamento" class="btn-primary">Agendar Experiência <i class="fa-solid fa-arrow-right"></i></a>
+        </div>
+    </header>
+
+    <section id="diferenciais" class="fade-in">
+        <div class="glass-card trust-grid">
+            <div class="trust-badge"><i class="fa-solid fa-shield-virus"></i><div><h3 id="dif1-titulo">Biossegurança</h3><p id="dif1-texto">Materiais 100% descartáveis e alicates esterilizados em autoclave após cada uso.</p></div></div>
+            <div class="trust-badge"><i class="fa-solid fa-gem"></i><div><h3 id="dif2-titulo">Esmaltaria Premium</h3><p id="dif2-texto">Trabalhamos apenas com as melhores marcas nacionais e importadas.</p></div></div>
+            <div class="trust-badge"><i class="fa-solid fa-spa"></i><div><h3 id="dif3-titulo">Ambiente Climatizado</h3><p id="dif3-texto">Um espaço planejado para o seu relaxamento.</p></div></div>
+        </div>
+    </section>
+
+    <section id="sobre" class="fade-in">
+        <div class="glass-card about-flex">
+            <div class="about-text">
+                <h2 id="sobre-titulo">A Arte em Suas Mãos</h2>
+                <div id="sobre-texto">
+                    <p>Nascemos com o propósito de elevar o padrão do design de unhas.</p>
+                </div>
+            </div>
+            <div class="about-image"><img id="sobre-imagem" src="https://images.unsplash.com/photo-1604654894610-df63bc536371?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"></div>
+        </div>
+    </section>
+
+    <section id="servicos" class="fade-in">
+        <h2 class="section-title">Menu de Serviços</h2>
+        <div class="glass-card" style="overflow-x: auto;">
+            <table class="luxury-table">
+                <thead><tr><th>Tratamento</th><th>Duração</th><th>Investimento</th></tr></thead>
+                <tbody id="lista-servicos"><tr><td colspan="3" class="loading-text"><i class="fas fa-spinner fa-spin"></i> Preparando o menu...</td></tr></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="galeria" class="fade-in" style="display: none;">
+        <h2 class="section-title">Nosso Portfólio</h2>
+        <div class="gallery-scroll" id="galeria-fotos"></div>
+    </section>
+
+    <section id="agendamento" class="fade-in">
+        <h2 class="section-title">Reserve seu Horário</h2>
+        <div class="glass-card">
+            <form id="form-agendamento">
+                <div class="form-grid">
+                    <div class="form-group full-col"><label>1. Selecione o Serviço</label><select id="select-servico" required><option value="" disabled selected>Aguarde o carregamento...</option></select></div>
+                    <div class="form-group"><label>2. Seu Nome Completo</label><input type="text" id="input-nome" placeholder="Como deseja ser chamada?" required></div>
+                    <div class="form-group"><label>3. Seu WhatsApp</label><input type="tel" id="input-tel" placeholder="(00) 00000-0000" required oninput="this.value = this.value.replace(/[^0-9() -]/g, '')"></div>
+                    <div class="form-group"><label>4. Data de Preferência</label><input type="date" id="input-data" required></div>
+                    <div class="form-group full-col"><label>5. Horários Disponíveis</label><div class="horarios-grid" id="grid-horarios"></div><input type="hidden" id="horario-selecionado" required></div>
+                    <div class="form-group full-col" style="margin-top: 15px;"><button type="submit" class="btn-primary" style="width: 100%;" id="btn-agendar"><i class="fa-brands fa-whatsapp" style="font-size: 1.3rem;"></i> Confirmar Solicitação</button></div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <footer><p>&copy; 2026 Nail Studio. Desenvolvido com excelência.</p></footer>
+
+    <script>
+        const observer = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }); }, { threshold: 0.1 });
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+        function toggleTheme() {
+            const body = document.documentElement; const icon = document.querySelector('.theme-btn i');
+            if (body.getAttribute('data-theme') === 'light') { body.removeAttribute('data-theme'); icon.className = 'fas fa-moon'; } 
+            else { body.setAttribute('data-theme', 'light'); icon.className = 'fas fa-sun'; }
+        }
+
+        const SUPABASE_URL = 'https://ikkjgtgvohrwurtiustm.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra2pndGd2b2hyd3VydGl1c3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NzE4OTEsImV4cCI6MjA5MDE0Nzg5MX0.HNrSvCmSHWTe2yoQy27GOq5g_ZoZxFdox_eCW14f_nI';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const slug = new URLSearchParams(window.location.search).get('loja');
+        let lojaId = null;
+
+        const hoje = new Date().toISOString().split('T')[0]; document.getElementById('input-data').min = hoje;
+        const gridHorarios = document.getElementById('grid-horarios');
+        for(let h = 9; h <= 18; h++) { let hora = h < 10 ? `0${h}:00` : `${h}:00`; gridHorarios.innerHTML += `<div class="btn-horario" onclick="selecionarHorario(this, '${hora}')">${hora}</div>`; }
+        function selecionarHorario(btn, hora) { document.querySelectorAll('.btn-horario').forEach(b => b.classList.remove('active')); btn.classList.add('active'); document.getElementById('horario-selecionado').value = hora; }
+
+        async function init() {
+            if(!slug) { document.getElementById('titulo-hero').innerHTML = "Demonstração<br><span id='hero-subtitulo'>Nail Studio</span>"; document.getElementById('lista-servicos').innerHTML = '<tr><td colspan="3" class="loading-text">Nenhuma loja especificada na URL.</td></tr>'; return; }
+            
+            const { data: loja } = await supabaseClient.from('lojas').select('*').eq('slug', slug).single();
+            if(!loja) return; lojaId = loja.id; document.title = `${loja.nome_loja} | Alto Padrão`;
+            
+            if(loja.cor_principal) document.documentElement.style.setProperty('--accent', loja.cor_principal);
+            if(loja.instagram) { const userInsta = loja.instagram.replace('@', ''); document.getElementById('container-insta').innerHTML = `<a href="https://instagram.com/${userInsta}" target="_blank" style="color:var(--text-color); text-decoration:none; font-weight:600; display:flex; align-items:center; gap:8px;"><i class="fab fa-instagram" style="color:var(--accent); font-size:1.5rem;"></i> ${loja.instagram}</a>`; }
+
+            // Verifica e exibe a Foto de Perfil Opcional
+            if(loja.perfil_imagem_url) {
+                document.getElementById('img-perfil').src = loja.perfil_imagem_url;
+                document.getElementById('holder-perfil').style.display = 'block';
+            }
+
+            let subHeroStr = loja.hero_subtitulo ? loja.hero_subtitulo : 'Nail Studio';
+            document.getElementById('titulo-hero').innerHTML = `${loja.nome_loja}<br><span id="hero-subtitulo">${subHeroStr}</span>`;
+            if(loja.hero_texto) document.getElementById('hero-texto').innerText = loja.hero_texto;
+
+            if(loja.dif1_titulo) document.getElementById('dif1-titulo').innerText = loja.dif1_titulo;
+            if(loja.dif1_texto) document.getElementById('dif1-texto').innerText = loja.dif1_texto;
+            if(loja.dif2_titulo) document.getElementById('dif2-titulo').innerText = loja.dif2_titulo;
+            if(loja.dif2_texto) document.getElementById('dif2-texto').innerText = loja.dif2_texto;
+            if(loja.dif3_titulo) document.getElementById('dif3-titulo').innerText = loja.dif3_titulo;
+            if(loja.dif3_texto) document.getElementById('dif3-texto').innerText = loja.dif3_texto;
+
+            if(loja.sobre_titulo) document.getElementById('sobre-titulo').innerText = loja.sobre_titulo;
+            if(loja.descricao) document.getElementById('sobre-texto').innerText = loja.descricao;
+            if(loja.sobre_imagem_url) document.getElementById('sobre-imagem').src = loja.sobre_imagem_url;
+
+            const { data: fotos } = await supabaseClient.from('lookbook').select('*').eq('loja_id', lojaId).order('id', {ascending: false});
+            if(fotos && fotos.length > 0) { document.getElementById('galeria').style.display = 'block'; const div = document.getElementById('galeria-fotos'); div.innerHTML = ''; fotos.forEach(f => { div.innerHTML += `<div class="gallery-item"><img src="${f.imagem_url}" loading="lazy"></div>`; }); }
+
+            const { data: servicos } = await supabaseClient.from('servicos').select('*').eq('loja_id', lojaId);
+            const listaServicos = document.getElementById('lista-servicos'); const selectServico = document.getElementById('select-servico');
+            listaServicos.innerHTML = ''; selectServico.innerHTML = '<option value="" disabled selected>Escolha um serviço...</option>';
+            
+            if(servicos && servicos.length > 0) { servicos.forEach(s => { listaServicos.innerHTML += `<tr><td><strong>${s.nome}</strong></td><td style="opacity: 0.8;">⏳ ${s.duracao_minutos} min</td><td style="font-weight: 600; color: var(--accent);">R$ ${s.preco.toFixed(2).replace('.', ',')}</td></tr>`; selectServico.innerHTML += `<option value="${s.id}">${s.nome}</option>`; }); } 
+            else { listaServicos.innerHTML = '<tr><td colspan="3" class="loading-text">Nenhum serviço cadastrado no momento.</td></tr>'; }
+        }
+
+        document.getElementById('form-agendamento').addEventListener('submit', async (e) => {
+            e.preventDefault(); const horario = document.getElementById('horario-selecionado').value;
+            if(!horario) return alert("Por favor, selecione um horário na grade acima!");
+            const btn = document.getElementById('btn-agendar'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...'; btn.disabled = true;
+
+            const { error } = await supabaseClient.from('agendamentos').insert([{ loja_id: lojaId, servico_id: document.getElementById('select-servico').value, data_agendamento: document.getElementById('input-data').value, horario_agendamento: horario, nome_cliente: document.getElementById('input-nome').value, telefone_cliente: document.getElementById('input-tel').value }]);
+            if(error) { alert("Erro ao agendar: " + error.message); } 
+            else { alert("✨ Solicitação enviada com sucesso! Entraremos em contato via WhatsApp para confirmar."); document.getElementById('form-agendamento').reset(); document.querySelectorAll('.btn-horario').forEach(b => b.classList.remove('active')); document.getElementById('horario-selecionado').value = ''; }
+            btn.innerHTML = '<i class="fa-brands fa-whatsapp" style="font-size: 1.3rem;"></i> Confirmar Solicitação'; btn.disabled = false;
+        });
+
+        init();
+    </script>
+</body>
+</html>
