@@ -86,6 +86,11 @@
         .store-actions { display: flex; flex-wrap: wrap; gap: 10px; border-top: 1px solid var(--border); padding-top: 20px; margin-top: auto; }
         .store-actions .btn { flex: 1; font-size: 0.85rem; padding: 12px 10px; }
 
+        /* QUICK EDIT STYLES */
+        .quick-edit-panel { display: none; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 15px; margin-top: 15px; border: 1px dashed var(--accent); animation: slideDown 0.3s ease; }
+        .quick-edit-panel .input-group input { padding: 10px; font-size: 0.9rem; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
         /* Ícone de Toggle exclusivo para mobile */
         .mobile-toggle-icon { display: none; transition: transform 0.3s ease; }
         .mobile-toggle-icon.open { transform: rotate(180deg); }
@@ -174,6 +179,8 @@
     </div>
 
     <script>
+        let lojasHospedadas = [];
+
         // ==========================================
         // 1. SISTEMA DE SEGURANÇA E LOGIN (SEM EXPOR SENHA)
         // ==========================================
@@ -220,9 +227,6 @@
             location.reload();
         }
 
-        // ==========================================
-        // 2. LÓGICA DE UI MOBILE (ACORDEÃO)
-        // ==========================================
         function toggleCreateForm() {
             if (window.innerWidth <= 768) {
                 const form = document.getElementById('create-form');
@@ -289,7 +293,7 @@
         }
 
         // ==========================================
-        // 5. LISTAR TODAS AS LOJAS E SALÕES
+        // 5. LISTAR TODAS AS LOJAS E SALÕES COM QUICK EDIT E VSCODE
         // ==========================================
         async function listarLojas() {
             const container = document.getElementById('lista-todas-lojas');
@@ -305,6 +309,7 @@
             }
 
             container.innerHTML = ""; 
+            lojasHospedadas = lojas || []; 
 
             if (lojas.length === 0) {
                 container.innerHTML = "<p style='color:var(--text-muted)'>Nenhum cliente cadastrado ainda. Crie a sua primeira loja acima!</p>";
@@ -319,28 +324,45 @@
                 
                 const toggleBtnClass = isAtiva ? "btn btn-warning btn-full" : "btn btn-success btn-full";
                 const toggleBtnIcon = isAtiva ? "fas fa-pause" : "fas fa-play";
-                const toggleBtnTexto = isAtiva ? "Suspender Acesso" : "Reativar Acesso";
+                const toggleBtnTexto = isAtiva ? "Suspender" : "Reativar";
 
-                // Lógica de URL e Badge para E-commerce vs Salão
                 const urlIndex = loja.tipo_loja === 'salao' ? 'index_girl.html' : 'index.html';
                 const urlAdmin = loja.tipo_loja === 'salao' ? 'admin_girl.html' : 'admin.html';
                 const badgeTipo = loja.tipo_loja === 'salao' 
                     ? '<span style="color:#ec4899; font-size:0.85rem; margin-top:5px; display:inline-block;"><i class="fas fa-spa"></i> Salão / Agendamentos</span>' 
                     : '<span style="color:#00d2ff; font-size:0.85rem; margin-top:5px; display:inline-block;"><i class="fas fa-shopping-cart"></i> E-commerce</span>';
 
+                // Buscar configurações atuais da loja para o Quick Edit
+                let configs = {};
+                if (loja.textos) {
+                    configs = typeof loja.textos === 'string' ? JSON.parse(loja.textos) : loja.textos;
+                }
+                const supaUrl = configs.api_supabase_url || SUPABASE_URL;
+                const supaKey = configs.api_supabase_key || SUPABASE_KEY;
+                const imgbbKey = configs.api_imgbb_key || '351d3ebf4dcd475e4f3522a6198ef849';
+
                 container.innerHTML += `
-                    <div class="${cardClass}">
+                    <div class="${cardClass}" id="card-${loja.id}">
                         <div class="${badgeClass}">${badgeTexto}</div>
                         <div class="store-name">${loja.nome_loja} <br>${badgeTipo}</div>
                         <div class="store-slug"><i class="fas fa-link"></i> ?loja=${loja.slug}</div>
                         
                         <div class="store-actions">
+                            <button onclick="toggleQuickEdit('${loja.id}')" class="btn btn-full" style="background:var(--accent); color:white; grid-column: span 2; margin-bottom: 5px;">
+                                <i class="fas fa-bolt"></i> Quick Edit (APIs & Nome)
+                            </button>
+
                             <a href="${urlIndex}?loja=${loja.slug}" target="_blank" class="btn btn-primary" title="Ver Site">
                                 <i class="fas fa-external-link-alt"></i> Vitrine
                             </a>
                             <a href="${urlAdmin}?loja=${loja.slug}" target="_blank" class="btn" style="background:#334155; color:white;" title="Painel interno do cliente">
                                 <i class="fas fa-cog"></i> Admin
                             </a>
+
+                            <a href="vscode.html?id=${loja.id}" target="_blank" class="btn btn-full" style="background:#007acc; color:white; grid-column: span 2; margin-top: 5px; margin-bottom: 5px;" title="Editar o código HTML/CSS/JS desta loja especificamente">
+                                <i class="fas fa-code"></i> Editar Código Fonte
+                            </a>
+
                             <button onclick="alternarStatus('${loja.id}', ${isAtiva})" class="${toggleBtnClass}">
                                 <i class="${toggleBtnIcon}"></i> ${toggleBtnTexto}
                             </button>
@@ -348,6 +370,36 @@
                                 <i class="fas fa-trash"></i> Excluir Cliente
                             </button>
                         </div>
+
+                        <div class="quick-edit-panel" id="qe-panel-${loja.id}">
+                            <h4 style="margin-bottom: 10px; color: var(--accent); font-size: 0.9rem; text-transform: uppercase;">Edição Rápida</h4>
+                            <div class="input-group" style="margin-bottom: 10px;">
+                                <label>Nome da Loja</label>
+                                <input type="text" id="qe-nome-${loja.id}" value="${loja.nome_loja}">
+                            </div>
+                            <div class="input-group" style="margin-bottom: 10px;">
+                                <label>Supabase URL</label>
+                                <input type="text" id="qe-supa-url-${loja.id}" value="${supaUrl}">
+                            </div>
+                            <div class="input-group" style="margin-bottom: 10px;">
+                                <label>Supabase API Key</label>
+                                <input type="text" id="qe-supa-key-${loja.id}" value="${supaKey}">
+                            </div>
+                            <div class="input-group" style="margin-bottom: 15px;">
+                                <label>ImgBB API Key</label>
+                                <input type="text" id="qe-imgbb-key-${loja.id}" value="${imgbbKey}">
+                            </div>
+                            
+                            <div style="display: flex; gap: 10px;">
+                                <button class="btn btn-primary" style="flex:1;" id="btn-save-qe-${loja.id}" onclick="salvarQuickEdit('${loja.id}')">
+                                    <i class="fas fa-save"></i> Salvar
+                                </button>
+                                <button class="btn" style="flex:1; background: #334155; color: white;" onclick="toggleQuickEdit('${loja.id}')">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
                 `;
             });
@@ -368,11 +420,8 @@
                     .update({ ativo: novoStatus })
                     .eq('id', id);
 
-                if (error) {
-                    alert("Erro ao alterar o status: " + error.message);
-                } else {
-                    listarLojas(); 
-                }
+                if (error) alert("Erro ao alterar o status: " + error.message);
+                else listarLojas(); 
             }
         }
 
@@ -383,22 +432,67 @@
             const confirmar = confirm(`⚠️ ALERTA VERMELHO!\n\nTem certeza absoluta que deseja DELETAR o cliente "${nome}" e TODOS os seus dados (Produtos, Agendamentos, etc)?\n\nEsta ação é irreversível.`);
             
             if (confirmar) {
-                // Apaga dependências de e-commerce e salão, tudo junto.
                 await supabaseClient.from('avaliacoes').delete().eq('loja_id', id);
                 await supabaseClient.from('produtos').delete().eq('loja_id', id);
                 await supabaseClient.from('agendamentos').delete().eq('loja_id', id);
                 await supabaseClient.from('servicos').delete().eq('loja_id', id);
 
-                const { error } = await supabaseClient
-                    .from('lojas')
-                    .delete()
-                    .eq('id', id);
+                const { error } = await supabaseClient.from('lojas').delete().eq('id', id);
 
-                if (error) {
-                    alert("Erro ao excluir: " + error.message);
-                } else {
-                    listarLojas(); 
-                }
+                if (error) alert("Erro ao excluir: " + error.message);
+                else listarLojas(); 
+            }
+        }
+
+        // ==========================================
+        // 8. FUNÇÕES DO QUICK EDIT
+        // ==========================================
+        function toggleQuickEdit(id) {
+            const panel = document.getElementById(`qe-panel-${id}`);
+            if (panel.style.display === 'none' || panel.style.display === '') {
+                panel.style.display = 'block';
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+        async function salvarQuickEdit(id) {
+            const btn = document.getElementById(`btn-save-qe-${id}`);
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            const novoNome = document.getElementById(`qe-nome-${id}`).value;
+            const supaUrl = document.getElementById(`qe-supa-url-${id}`).value;
+            const supaKey = document.getElementById(`qe-supa-key-${id}`).value;
+            const imgbbKey = document.getElementById(`qe-imgbb-key-${id}`).value;
+
+            const loja = lojasHospedadas.find(l => l.id === id);
+            let configs = {};
+            
+            if (loja && loja.textos) {
+                configs = typeof loja.textos === 'string' ? JSON.parse(loja.textos) : loja.textos;
+            }
+
+            // Atualiza chaves no JSON
+            configs.api_supabase_url = supaUrl;
+            configs.api_supabase_key = supaKey;
+            configs.api_imgbb_key = imgbbKey;
+
+            const { error } = await supabaseClient
+                .from('lojas')
+                .update({
+                    nome_loja: novoNome,
+                    textos: configs
+                })
+                .eq('id', id);
+
+            if (error) {
+                alert("Erro ao salvar: " + error.message);
+                btn.innerHTML = '<i class="fas fa-save"></i> Salvar';
+                btn.disabled = false;
+            } else {
+                alert("Configurações atualizadas com sucesso!");
+                listarLojas(); // Atualiza a tela para exibir o novo nome (se alterado) e fechar o painel
             }
         }
     </script>

@@ -2,6 +2,74 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <style id="cortina-saas">body { opacity: 0 !important; visibility: hidden !important; }</style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // ESCUDO ANTI-LOOP E ANTI-SINTAXE
+        if (!window.__SaaS_Intercepted__) {
+            window.__SaaS_Intercepted__ = true;
+            (async function() {
+                try {
+                    const params = new URLSearchParams(window.location.search);
+                    const slug = params.get('loja');
+                    
+                    // Se não tiver loja na URL, abre a cortina e cancela
+                    if (!slug) {
+                        document.getElementById('cortina-saas')?.remove();
+                        return;
+                    }
+
+                    const SUPABASE_URL = 'https://ikkjgtgvohrwurtiustm.supabase.co'; 
+                    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra2pndGd2b2hyd3VydGl1c3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NzE4OTEsImV4cCI6MjA5MDE0Nzg5MX0.HNrSvCmSHWTe2yoQy27GOq5g_ZoZxFdox_eCW14f_nI';
+                    const supaClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+                    const { data } = await supaClient.from('lojas').select('codigo_customizado').eq('slug', slug).single();
+                    
+                    let usouCodigoNovo = false;
+
+                    if (data && data.codigo_customizado) {
+                        const codigos = typeof data.codigo_customizado === 'string' ? JSON.parse(data.codigo_customizado) : data.codigo_customizado;
+                        
+                        let paginaAtual = window.location.pathname.split('/').pop().replace('.html', '');
+                        if (!paginaAtual || paginaAtual === '') paginaAtual = 'index'; 
+                        
+                        if (codigos[paginaAtual] && codigos[paginaAtual].length > 50) {
+                            usouCodigoNovo = true;
+                            
+                            // 1. Reescreve apenas o HTML limpo (Isso destrói a cortina automaticamente)
+                            document.open();
+                            document.write(codigos[paginaAtual]);
+                            document.close();
+                            
+                            // 2. Injeta o CSS nativamente
+                            if (codigos.style) {
+                                const tagCss = document.createElement('style');
+                                tagCss.textContent = codigos.style;
+                                document.head.appendChild(tagCss);
+                            }
+                            
+                            // 3. Injeta o JS nativamente
+                            if (codigos.script) {
+                                const tagJs = document.createElement('script');
+                                tagJs.textContent = codigos.script;
+                                document.body.appendChild(tagJs);
+                            }
+                        }
+                    }
+
+                    // Se não encontrou código no Supabase, abre a cortina para mostrar o site original
+                    if (!usouCodigoNovo) {
+                        document.getElementById('cortina-saas')?.remove();
+                    }
+
+                } catch (err) {
+                    console.error("Erro no interceptador:", err);
+                    // Se der qualquer erro de rede, abre a cortina para não quebrar a loja
+                    document.getElementById('cortina-saas')?.remove();
+                }
+            })();
+        }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SaaS Admin Dashboard</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">

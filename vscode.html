@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SaaS Master | Editor de Código (VS Code)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --bg-vscode: #1e1e1e;
+            --bg-sidebar: #252526;
+            --bg-header: #333333;
+            --text-main: #cccccc;
+            --accent: #007acc;
+            --border-color: #3e3e42;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-vscode); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+        
+        /* HEADER ATUALIZADO (FLEX BOX PARA BOTÕES) */
+        .header { background: var(--bg-header); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+        .header-left { display: flex; align-items: center; gap: 10px; }
+        .header h1 { font-size: 1rem; font-weight: normal; color: #fff; display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        .header-actions { display: flex; align-items: center; gap: 8px; }
+        .btn-action { color: white; border: none; padding: 6px 15px; cursor: pointer; font-size: 0.9rem; border-radius: 2px; display: flex; align-items: center; gap: 6px; transition: 0.2s; }
+        .btn-save { background: var(--accent); }
+        .btn-save:hover { background: #005f9e; }
+        .btn-download { background: #4b5563; }
+        .btn-download:hover { background: #374151; }
+        
+        .mobile-toggle { display: none; background: transparent; color: white; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px; }
+
+        .main-container { display: flex; flex: 1; height: calc(100vh - 40px); position: relative; }
+        
+        /* SIDEBAR (EXPLORER) */
+        .sidebar { width: 250px; background: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 100; transition: transform 0.3s ease; }
+        .sidebar-title { padding: 10px 15px; font-size: 0.7rem; text-transform: uppercase; font-weight: bold; letter-spacing: 1px; color: #999; display: flex; justify-content: space-between; align-items: center; }
+        .close-sidebar { display: none; background: none; border: none; color: #999; cursor: pointer; font-size: 1rem; }
+        
+        .file-list { list-style: none; flex: 1; overflow-y: auto; }
+        .file-item { padding: 8px 15px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 0.9rem; transition: background 0.1s; border-left: 3px solid transparent; }
+        .file-item:hover { background: #2a2d2e; }
+        .file-item.active { background: #37373d; color: #fff; border-left-color: var(--accent); }
+        .file-item i.html { color: #e34c26; }
+        .file-item i.css { color: #264de4; }
+        .file-item i.js { color: #f1e05a; }
+
+        .editor-container { flex: 1; display: flex; flex-direction: column; position: relative; min-width: 0; }
+        .tabs { display: flex; background: var(--bg-sidebar); overflow-x: auto; }
+        .tab { padding: 8px 15px; background: var(--bg-vscode); border-right: 1px solid var(--border-color); border-top: 1px solid var(--accent); font-size: 0.9rem; color: #fff; white-space: nowrap; }
+        #monaco-editor { flex: 1; width: 100%; height: 100%; }
+        
+        #loading-overlay { position: absolute; inset: 0; background: var(--bg-vscode); display: flex; justify-content: center; align-items: center; z-index: 10; font-size: 1.2rem; flex-direction: column; gap: 10px; }
+        #error-msg { color: #ef4444; font-size: 0.9rem; display: none; }
+
+        /* MASCARÁ ESCURA PARA O MOBILE QUANDO A SIDEBAR ESTIVER ABERTA */
+        .sidebar-overlay { display: none; position: absolute; inset: 0; background: rgba(0,0,0,0.5); z-index: 90; }
+
+        /* ==============================================
+           OTIMIZAÇÕES PARA DISPOSITIVOS MÓVEIS
+           ============================================== */
+        @media (max-width: 768px) {
+            .header { padding: 8px 12px; }
+            .header h1 { font-size: 0.85rem; }
+            .hide-mobile { display: none; } /* Esconde o texto dos botões no celular */
+            .btn-action { padding: 8px 12px; font-size: 1rem; } /* Botões maiores para o dedo */
+            
+            .mobile-toggle { display: block; }
+            .close-sidebar { display: block; }
+            
+            /* Sidebar vira uma gaveta por cima da tela */
+            .sidebar { position: absolute; height: 100%; top: 0; left: 0; transform: translateX(-100%); box-shadow: 2px 0 10px rgba(0,0,0,0.5); }
+            .sidebar.active { transform: translateX(0); }
+            .sidebar-overlay.active { display: block; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <div class="header-left">
+            <button class="mobile-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <h1 id="loja-title"><i class="fas fa-code"></i> VS Code | Carregando...</h1>
+        </div>
+        <div class="header-actions">
+            <button class="btn-action btn-download" onclick="baixarArquivo()" title="Baixar arquivo atual">
+                <i class="fas fa-download"></i> <span class="hide-mobile">Baixar</span>
+            </button>
+            <button class="btn-action btn-save" onclick="salvarCodigo()" title="Salvar no banco (Ctrl+S)">
+                <i class="fas fa-save"></i> <span class="hide-mobile">Salvar</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-title">
+                Explorer 
+                <button class="close-sidebar" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+            </div>
+            <ul class="file-list">
+                </ul>
+        </div>
+        
+        <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+        <div class="editor-container">
+            <div class="tabs">
+                <div class="tab" id="current-tab-name">Carregando...</div>
+            </div>
+            <div id="monaco-editor"></div>
+            <div id="loading-overlay">
+                <div><i class="fas fa-spinner fa-spin"></i>&nbsp; Lendo arquivos...</div>
+                <div id="error-msg"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/loader.min.js"></script>
+    <script>
+        const SUPABASE_URL = 'https://ikkjgtgvohrwurtiustm.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra2pndGd2b2hyd3VydGl1c3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NzE4OTEsImV4cCI6MjA5MDE0Nzg5MX0.HNrSvCmSHWTe2yoQy27GOq5g_ZoZxFdox_eCW14f_nI';
+        
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const params = new URLSearchParams(window.location.search);
+        const lojaId = params.get('id');
+
+        let editor;
+        let lojaData;
+        let arquivos = {};
+        let arquivoAtual = "";
+        let listaArquivos = [];
+
+        window.MonacoEnvironment = {
+            getWorkerUrl: function(workerId, label) {
+                return `data:text/javascript;charset=utf-8,${encodeURIComponent(`
+                    self.MonacoEnvironment = { baseUrl: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/' };
+                    importScripts('https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs/base/worker/workerMain.js');
+                `)}`;
+            }
+        };
+
+        require.config({ paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.44.0/min/vs' }});
+        require(['vs/editor/editor.main'], async function () {
+            try {
+                editor = monaco.editor.create(document.getElementById('monaco-editor'), {
+                    value: "",
+                    language: "html",
+                    theme: "vs-dark",
+                    automaticLayout: true, // Isso faz o editor se adaptar na tela do celular
+                    fontSize: window.innerWidth < 768 ? 12 : 14, // Fonte menor no celular
+                    minimap: { enabled: false },
+                    wordWrap: "on" // Quebra de linha automática no celular
+                });
+
+                editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, function() { salvarCodigo(); });
+
+                await carregarDados();
+                document.getElementById('loading-overlay').style.display = 'none';
+
+            } catch (err) {
+                console.error(err);
+                const errorDiv = document.getElementById('error-msg');
+                errorDiv.style.display = 'block';
+                errorDiv.innerText = "Erro: " + err.message;
+                document.querySelector('#loading-overlay div:first-child').style.display = 'none';
+            }
+        });
+
+        async function carregarDados() {
+            if (!lojaId) throw new Error("ID não fornecido. Abra esta tela através do painel GRL.");
+            
+            const { data: loja, error } = await supabaseClient.from('lojas').select('*').eq('id', lojaId).single();
+            if (error) throw new Error("Erro banco de dados: " + error.message);
+            if (!loja) throw new Error("Loja não encontrada.");
+
+            lojaData = loja;
+            document.getElementById('loja-title').innerHTML = `<i class="fas fa-code"></i> Editando: ${loja.nome_loja}`;
+
+            if (loja.tipo_loja === 'salao') {
+                listaArquivos = [
+                    { nome: 'index_girl', ext: 'html', lang: 'html', icon: 'fab fa-html5 html' },
+                    { nome: 'admin_girl', ext: 'html', lang: 'html', icon: 'fab fa-html5 html' },
+                    { nome: 'style', ext: 'css', lang: 'css', icon: 'fab fa-css3-alt css' },
+                    { nome: 'script', ext: 'js', lang: 'javascript', icon: 'fab fa-js js' }
+                ];
+            } else {
+                listaArquivos = [
+                    { nome: 'index', ext: 'html', lang: 'html', icon: 'fab fa-html5 html' },
+                    { nome: 'admin', ext: 'html', lang: 'html', icon: 'fab fa-html5 html' },
+                    { nome: 'produto', ext: 'html', lang: 'html', icon: 'fab fa-html5 html' },
+                    { nome: 'pay', ext: 'html', lang: 'html', icon: 'fab fa-html5 html' },
+                    { nome: 'style', ext: 'css', lang: 'css', icon: 'fab fa-css3-alt css' },
+                    { nome: 'script', ext: 'js', lang: 'javascript', icon: 'fab fa-js js' }
+                ];
+            }
+
+            let codigosSalvos = loja.codigo_customizado ? 
+                (typeof loja.codigo_customizado === 'string' ? JSON.parse(loja.codigo_customizado) : loja.codigo_customizado) 
+                : {};
+
+            const fileListEl = document.querySelector('.file-list');
+            fileListEl.innerHTML = '';
+
+            for (let i = 0; i < listaArquivos.length; i++) {
+                let arq = listaArquivos[i];
+                let nomeCompleto = `${arq.nome}.${arq.ext}`;
+                let activeClass = (i === 0) ? 'active' : '';
+
+                fileListEl.innerHTML += `
+                    <li class="file-item ${activeClass}" onclick="trocarArquivo('${arq.nome}', '${arq.lang}', '${arq.ext}')">
+                        <i class="${arq.icon}"></i> ${nomeCompleto}
+                    </li>
+                `;
+
+                if (codigosSalvos[arq.nome]) {
+                    arquivos[arq.nome] = codigosSalvos[arq.nome];
+                } else {
+                    try {
+                        let res = await fetch(nomeCompleto);
+                        if (res.ok) {
+                            arquivos[arq.nome] = await res.text();
+                        } else {
+                            arquivos[arq.nome] = ``;
+                        }
+                    } catch(e) {
+                        arquivos[arq.nome] = ``;
+                    }
+                }
+
+                if (i === 0) {
+                    arquivoAtual = arq.nome;
+                    document.getElementById('current-tab-name').innerText = nomeCompleto;
+                    editor.setValue(arquivos[arquivoAtual]);
+                    monaco.editor.setModelLanguage(editor.getModel(), arq.lang);
+                }
+            }
+        }
+
+        // ==========================================
+        // FUNÇÕES DE UI E CONTROLE
+        // ==========================================
+
+        function trocarArquivo(nomeArquivo, linguagem, extensao) {
+            arquivos[arquivoAtual] = editor.getValue();
+            
+            document.querySelectorAll('.file-item').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            document.getElementById('current-tab-name').innerText = `${nomeArquivo}.${extensao}`;
+
+            arquivoAtual = nomeArquivo;
+            editor.setValue(arquivos[arquivoAtual] || "");
+            monaco.editor.setModelLanguage(editor.getModel(), linguagem);
+
+            // Esconde a sidebar no celular depois de clicar em um arquivo
+            if(window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('active');
+            document.getElementById('sidebar-overlay').classList.toggle('active');
+        }
+
+        // ==========================================
+        // FUNÇÕES DE AÇÃO (SALVAR E BAIXAR)
+        // ==========================================
+
+        async function salvarCodigo() {
+            arquivos[arquivoAtual] = editor.getValue();
+
+            const btn = document.querySelector('.btn-save');
+            const textoOriginal = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            const { error } = await supabaseClient
+                .from('lojas')
+                .update({ codigo_customizado: arquivos })
+                .eq('id', lojaId);
+
+            if (error) {
+                alert("Erro ao salvar: " + error.message);
+            } else {
+                btn.style.background = "#10b981";
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+            }
+
+            setTimeout(() => {
+                btn.style.background = "var(--accent)";
+                btn.innerHTML = textoOriginal;
+                btn.disabled = false;
+            }, 2000);
+        }
+
+        function baixarArquivo() {
+            if(!arquivoAtual) return;
+            
+            // Pega o código mais recente que está na tela
+            const conteudo = editor.getValue();
+            
+            // Descobre qual é a extensão correta (.html, .css, .js)
+            const arqInfo = listaArquivos.find(a => a.nome === arquivoAtual);
+            const extensao = arqInfo ? arqInfo.ext : 'txt';
+            const nomeArquivo = `${arquivoAtual}.${extensao}`;
+
+            // Cria um "Blob" (um arquivo na memória do navegador) e faz o download
+            const blob = new Blob([conteudo], { type: "text/plain;charset=utf-8" });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = nomeArquivo;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
