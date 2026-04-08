@@ -32,6 +32,10 @@
         .btn-download { background: #4b5563; }
         .btn-download:hover { background: #374151; }
         
+        /* ESTILO DO NOVO BOTÃO COLAR */
+        .btn-paste { background: #8b5cf6; } 
+        .btn-paste:hover { background: #7c3aed; }
+        
         .mobile-toggle { display: none; background: transparent; color: white; border: none; font-size: 1.2rem; cursor: pointer; padding: 5px; }
 
         .main-container { display: flex; flex: 1; height: calc(100vh - 40px); position: relative; }
@@ -87,6 +91,10 @@
             <h1 id="loja-title"><i class="fas fa-code"></i> VS Code | Carregando...</h1>
         </div>
         <div class="header-actions">
+            <button class="btn-action btn-paste" onclick="colarCodigo()" title="Substituir código atual pelo que está copiado">
+                <i class="fas fa-paste"></i> <span class="hide-mobile">Colar</span>
+            </button>
+            
             <button class="btn-action btn-download" onclick="baixarArquivo()" title="Baixar arquivo atual">
                 <i class="fas fa-download"></i> <span class="hide-mobile">Baixar</span>
             </button>
@@ -270,8 +278,41 @@
         }
 
         // ==========================================
-        // FUNÇÕES DE AÇÃO (SALVAR E BAIXAR)
+        // FUNÇÕES DE AÇÃO (COLAR, SALVAR E BAIXAR)
         // ==========================================
+
+        // NOVA FUNÇÃO: Colar Código
+        async function colarCodigo() {
+            try {
+                // Lê o texto da área de transferência
+                const textoCopiado = await navigator.clipboard.readText();
+                
+                if (!textoCopiado) {
+                    alert('A área de transferência está vazia.');
+                    return;
+                }
+
+                // Confirmação para evitar perdas
+                const confirmacao = confirm('Isso vai apagar o código atual desta aba e colar o novo. Deseja continuar?');
+                if (!confirmacao) return;
+
+                // Aplica no Monaco Editor
+                editor.setValue(textoCopiado);
+                
+                // Animação visual do botão
+                const btn = document.querySelector('.btn-paste');
+                const textoOriginal = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> <span class="hide-mobile">Colado</span>';
+                
+                setTimeout(() => {
+                    btn.innerHTML = textoOriginal;
+                }, 2000);
+
+            } catch (err) {
+                console.error('Falha ao colar o código: ', err);
+                alert('Não foi possível colar. Seu navegador pode estar bloqueando o acesso à área de transferência.');
+            }
+        }
 
         async function salvarCodigo() {
             arquivos[arquivoAtual] = editor.getValue();
