@@ -293,7 +293,7 @@
         }
 
         // ==========================================
-        // 5. LISTAR TODAS AS LOJAS E SALÕES COM QUICK EDIT E VSCODE
+        // 5. LISTAR TODAS AS LOJAS E SALÕES COM QUICK EDIT, VSCODE E TAGS DE VERSÃO
         // ==========================================
         async function listarLojas() {
             const container = document.getElementById('lista-todas-lojas');
@@ -332,6 +332,29 @@
                     ? '<span style="color:#ec4899; font-size:0.85rem; margin-top:5px; display:inline-block;"><i class="fas fa-spa"></i> Salão / Agendamentos</span>' 
                     : '<span style="color:#00d2ff; font-size:0.85rem; margin-top:5px; display:inline-block;"><i class="fas fa-shopping-cart"></i> E-commerce</span>';
 
+                // ==========================================
+                // LÓGICA DA TAG: GLOBAL vs FIXA
+                // ==========================================
+                let isFixa = false;
+                if (loja.codigo_customizado) {
+                    try {
+                        const codigos = typeof loja.codigo_customizado === 'string' ? JSON.parse(loja.codigo_customizado) : loja.codigo_customizado;
+                        // Verifica se existe algum código salvo com mais de 50 caracteres
+                        for (let arquivo in codigos) {
+                            if (codigos[arquivo] && codigos[arquivo].length > 50) {
+                                isFixa = true;
+                                break;
+                            }
+                        }
+                    } catch(e) {}
+                }
+
+                // Cria o visual da Tag
+                const tagVersao = isFixa 
+                    ? `<span style="background: rgba(139, 92, 246, 0.1); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.3); padding: 3px 8px; border-radius: 12px; font-size: 0.65rem; font-weight: bold; margin-left: 10px; vertical-align: middle; letter-spacing: 1px;"><i class="fas fa-code"></i> FIXA</span>`
+                    : `<span style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 3px 8px; border-radius: 12px; font-size: 0.65rem; font-weight: bold; margin-left: 10px; vertical-align: middle; letter-spacing: 1px;"><i class="fas fa-globe"></i> GLOBAL</span>`;
+
+
                 // Buscar configurações atuais da loja para o Quick Edit
                 let configs = {};
                 if (loja.textos) {
@@ -344,7 +367,9 @@
                 container.innerHTML += `
                     <div class="${cardClass}" id="card-${loja.id}">
                         <div class="${badgeClass}">${badgeTexto}</div>
-                        <div class="store-name">${loja.nome_loja} <br>${badgeTipo}</div>
+                        
+                        <div class="store-name">${loja.nome_loja} ${tagVersao} <br>${badgeTipo}</div>
+                        
                         <div class="store-slug"><i class="fas fa-link"></i> ?loja=${loja.slug}</div>
                         
                         <div class="store-actions">
@@ -404,6 +429,7 @@
                 `;
             });
         }
+
 
         // ==========================================
         // 6. ATIVAR / BLOQUEAR

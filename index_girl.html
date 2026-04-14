@@ -2,10 +2,10 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <style id="cortina-saas">body { opacity: 0 !important; visibility: hidden !important; }</style>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style id="cortina-saas">body { opacity: 0 !important; visibility: hidden !important; }</style>
     <script>
-        // ESCUDO ANTI-LOOP E ANTI-SINTAXE
+        // ESCUDO ANTI-LOOP E ANTI-SINTAXE DEFINITIVO
         if (!window.__SaaS_Intercepted__) {
             window.__SaaS_Intercepted__ = true;
             (async function() {
@@ -13,7 +13,6 @@
                     const params = new URLSearchParams(window.location.search);
                     const slug = params.get('loja');
                     
-                    // Se não tiver loja na URL, abre a cortina e cancela
                     if (!slug) {
                         document.getElementById('cortina-saas')?.remove();
                         return;
@@ -36,19 +35,21 @@
                         if (codigos[paginaAtual] && codigos[paginaAtual].length > 50) {
                             usouCodigoNovo = true;
                             
-                            // 1. Reescreve apenas o HTML limpo (Isso destrói a cortina automaticamente)
+                            // A MÁGICA AQUI: Construir o Regex dinamicamente evita que o navegador quebre o document.write
+                            let tagFechamento = '</' + 'style>';
+                            let cortinaRegex = new RegExp('<style id="cortina-saas">[\\s\\S]*?' + tagFechamento, 'ig');
+                            let htmlLimpo = codigos[paginaAtual].replace(cortinaRegex, '');
+
                             document.open();
-                            document.write(codigos[paginaAtual]);
+                            document.write(htmlLimpo);
                             document.close();
                             
-                            // 2. Injeta o CSS nativamente
                             if (codigos.style) {
                                 const tagCss = document.createElement('style');
                                 tagCss.textContent = codigos.style;
                                 document.head.appendChild(tagCss);
                             }
                             
-                            // 3. Injeta o JS nativamente
                             if (codigos.script) {
                                 const tagJs = document.createElement('script');
                                 tagJs.textContent = codigos.script;
@@ -57,17 +58,23 @@
                         }
                     }
 
-                    // Se não encontrou código no Supabase, abre a cortina para mostrar o site original
                     if (!usouCodigoNovo) {
                         document.getElementById('cortina-saas')?.remove();
                     }
 
                 } catch (err) {
                     console.error("Erro no interceptador:", err);
-                    // Se der qualquer erro de rede, abre a cortina para não quebrar a loja
                     document.getElementById('cortina-saas')?.remove();
                 }
             })();
+        } else {
+            // PLANO B: Se o código já foi injetado, garante que a tela vai aparecer
+            setTimeout(function() {
+                var cortina = document.getElementById('cortina-saas');
+                if (cortina) cortina.remove();
+                document.body.style.opacity = '1';
+                document.body.style.visibility = 'visible';
+            }, 100);
         }
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -336,6 +343,8 @@
             .btn-primary { width: auto; }
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.1/dist/browser-image-compression.js"></script>
 </head>
 <body>
 
@@ -439,24 +448,25 @@
     </div>
 
     <script>
-        const observer = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }); }, { threshold: 0.1 });
+        var observer = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }); }, { threshold: 0.1 });
         document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
         function toggleTheme() {
+            // Pode deixar const aqui dentro da função, não tem problema
             const body = document.documentElement; const icon = document.querySelector('.theme-btn i');
             if (body.getAttribute('data-theme') === 'light') { body.removeAttribute('data-theme'); icon.className = 'fas fa-moon'; } 
             else { body.setAttribute('data-theme', 'light'); icon.className = 'fas fa-sun'; }
         }
 
-        const SUPABASE_URL = 'https://ikkjgtgvohrwurtiustm.supabase.co'; 
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra2pndGd2b2hyd3VydGl1c3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NzE4OTEsImV4cCI6MjA5MDE0Nzg5MX0.HNrSvCmSHWTe2yoQy27GOq5g_ZoZxFdox_eCW14f_nI';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        var SUPABASE_URL = 'https://ikkjgtgvohrwurtiustm.supabase.co'; 
+        var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra2pndGd2b2hyd3VydGl1c3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NzE4OTEsImV4cCI6MjA5MDE0Nzg5MX0.HNrSvCmSHWTe2yoQy27GOq5g_ZoZxFdox_eCW14f_nI';
+        var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const slug = new URLSearchParams(window.location.search).get('loja');
-        let lojaId = null;
+        var slug = new URLSearchParams(window.location.search).get('loja');
+        var lojaId = null;
 
-        const hoje = new Date().toISOString().split('T')[0]; document.getElementById('input-data').min = hoje;
-        const gridHorarios = document.getElementById('grid-horarios');
+        var hoje = new Date().toISOString().split('T')[0]; document.getElementById('input-data').min = hoje;
+        var gridHorarios = document.getElementById('grid-horarios');
         for(let h = 9; h <= 18; h++) { let hora = h < 10 ? `0${h}:00` : `${h}:00`; gridHorarios.innerHTML += `<div class="btn-horario" onclick="selecionarHorario(this, '${hora}')">${hora}</div>`; }
         function selecionarHorario(btn, hora) { document.querySelectorAll('.btn-horario').forEach(b => b.classList.remove('active')); btn.classList.add('active'); document.getElementById('horario-selecionado').value = hora; }
 

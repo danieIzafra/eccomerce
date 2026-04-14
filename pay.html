@@ -37,9 +37,13 @@
                         if (codigos[paginaAtual] && codigos[paginaAtual].length > 50) {
                             usouCodigoNovo = true;
                             
-                            // 1. Reescreve apenas o HTML limpo (Isso destrói a cortina automaticamente)
+                            // A MÁGICA AQUI: Construir o Regex dinamicamente evita que o navegador quebre o document.write
+                            let tagFechamento = '</' + 'style>';
+                            let cortinaRegex = new RegExp('<style id="cortina-saas">[\\s\\S]*?' + tagFechamento, 'ig');
+                            let htmlLimpo = codigos[paginaAtual].replace(cortinaRegex, '');
+
                             document.open();
-                            document.write(codigos[paginaAtual]);
+                            document.write(htmlLimpo);
                             document.close();
                             
                             // 2. Injeta o CSS nativamente
