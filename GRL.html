@@ -20,6 +20,7 @@
             --warning: #f59e0b;
             --danger: #ef4444;
             --border: #334155;
+            --accent-neon: #8b5cf6;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -387,6 +388,10 @@
 
                             <a href="vscode.html?id=${loja.id}" target="_blank" class="btn btn-full" style="background:#007acc; color:white; grid-column: span 2; margin-top: 5px; margin-bottom: 5px;" title="Editar o código HTML/CSS/JS desta loja especificamente">
                                 <i class="fas fa-code"></i> Editar Código Fonte
+                            </a>
+                            
+                            <a href="inject.html?loja=${loja.slug}" target="_blank" class="btn btn-full" style="background:var(--accent-neon); color:white; grid-column: span 2; margin-bottom: 5px; border: 1px solid rgba(139, 92, 246, 0.5);" title="Catalogação inteligente em massa com IA">
+                                <i class="fas fa-brain"></i> IA Injector Pro
                             </a>
 
                             <button onclick="alternarStatus('${loja.id}', ${isAtiva})" class="${toggleBtnClass}">
