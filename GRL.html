@@ -101,7 +101,8 @@
             #admin-content { padding: 20px 15px; }
             .header { flex-direction: column; align-items: flex-start; gap: 15px; margin-bottom: 25px; padding-bottom: 15px; }
             .header h1 { font-size: 1.4rem; }
-            .header button { width: 100%; } 
+            .header-actions { width: 100%; flex-direction: column; }
+            .header-actions a, .header-actions button { width: 100%; justify-content: center; }
             .create-store-card { padding: 20px; margin-bottom: 25px; }
             .create-store-card h3 { font-size: 1.1rem; margin-bottom: 0; cursor: pointer; user-select: none; }
             .mobile-toggle-icon { display: block; color: var(--accent); }
@@ -133,9 +134,14 @@
     <div id="admin-content">
         <div class="header">
             <h1><i class="fas fa-network-wired"></i> GRL Master Dashboard</h1>
-            <button class="btn btn-danger" onclick="bloquearPainel()">
-                <i class="fas fa-lock"></i> Bloquear Painel
-            </button>
+            <div class="header-actions" style="display: flex; gap: 10px;">
+                <a href="remove.html" target="_blank" class="btn" style="background: rgba(139, 92, 246, 0.1); color: var(--accent-neon); border: 1px solid rgba(139, 92, 246, 0.3); text-decoration: none;">
+                    <i class="fas fa-eraser"></i> Remover Fundo
+                </a>
+                <button class="btn btn-danger" onclick="bloquearPainel()">
+                    <i class="fas fa-lock"></i> Bloquear Painel
+                </button>
+            </div>
         </div>
 
         <div class="create-store-card">
