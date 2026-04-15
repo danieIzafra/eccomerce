@@ -239,12 +239,14 @@
         const SUPABASE_URL = 'https://ikkjgtgvohrwurtiustm.supabase.co'; 
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra2pndGd2b2hyd3VydGl1c3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NzE4OTEsImV4cCI6MjA5MDE0Nzg5MX0.HNrSvCmSHWTe2yoQy27GOq5g_ZoZxFdox_eCW14f_nI';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        const IMGBB_API_KEY = '351d3ebf4dcd475e4f3522a6198ef849';
+        
+        // Alterado de 'const' para 'let' para permitir a injecção dinâmica
+        let IMGBB_API_KEY = '351d3ebf4dcd475e4f3522a6198ef849';
 
         const slug = new URLSearchParams(window.location.search).get('loja');
         let lojaId = null;
         let urlImagemSobreAtual = null;
-        let urlImagemPerfilAtual = null; // Nova variável
+        let urlImagemPerfilAtual = null;
 
         document.getElementById('input-cor').addEventListener('input', function(e) { document.getElementById('hex-val').innerText = e.target.value; });
         document.getElementById('form-site-completo').addEventListener('input', () => { document.getElementById('barra-salvar').style.display = 'block'; });
@@ -256,6 +258,12 @@
             
             const { data: loja } = await supabaseClient.from('lojas').select('*').eq('slug', slug).single();
             if(!loja) return; lojaId = loja.id;
+
+            // Carregamento da API KEY Dinâmica a partir das configurações guardadas no GRL.html
+            if (loja.textos) {
+                const t = typeof loja.textos === 'string' ? JSON.parse(loja.textos) : loja.textos;
+                if (t.api_imgbb_key) IMGBB_API_KEY = t.api_imgbb_key;
+            }
             
             if(loja.nome_loja) document.getElementById('input-nome-loja').value = loja.nome_loja;
             if(loja.instagram) document.getElementById('input-instagram').value = loja.instagram;
@@ -274,7 +282,6 @@
             urlImagemSobreAtual = loja.sobre_imagem_url;
             if(urlImagemSobreAtual) { document.getElementById('preview-img-sobre').src = urlImagemSobreAtual; document.getElementById('preview-img-sobre').style.display = 'block'; document.getElementById('placeholder-img-sobre').style.display = 'none'; }
             
-            // Carrega foto de perfil se existir
             urlImagemPerfilAtual = loja.perfil_imagem_url;
             if(urlImagemPerfilAtual) { document.getElementById('preview-img-perfil').src = urlImagemPerfilAtual; document.getElementById('preview-img-perfil').style.display = 'block'; document.getElementById('placeholder-img-perfil').style.display = 'none'; }
 
@@ -293,7 +300,7 @@
                 dif1_titulo: document.getElementById('input-dif1-titulo').value, dif1_texto: document.getElementById('input-dif1-texto').value,
                 dif2_titulo: document.getElementById('input-dif2-titulo').value, dif2_texto: document.getElementById('input-dif2-texto').value,
                 dif3_titulo: document.getElementById('input-dif3-titulo').value, dif3_texto: document.getElementById('input-dif3-texto').value,
-                sobre_imagem_url: urlImagemSobreAtual, perfil_imagem_url: urlImagemPerfilAtual // Salva a nova imagem
+                sobre_imagem_url: urlImagemSobreAtual, perfil_imagem_url: urlImagemPerfilAtual
             };
 
             const { error } = await supabaseClient.from('lojas').update(payload).eq('id', lojaId);
@@ -301,7 +308,6 @@
             btn.innerHTML = '<i class="fas fa-save"></i> Salvar Todas as Edições'; btn.disabled = false;
         });
 
-        // Nova função Upload Perfil
         async function fazerUploadImagemPerfil(event) {
             const file = event.target.files[0]; if(!file) return; const btn = event.target.nextElementSibling; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Subindo...'; btn.disabled = true;
             try {

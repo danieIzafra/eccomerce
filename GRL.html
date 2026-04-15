@@ -363,6 +363,7 @@
                 const supaUrl = configs.api_supabase_url || SUPABASE_URL;
                 const supaKey = configs.api_supabase_key || SUPABASE_KEY;
                 const imgbbKey = configs.api_imgbb_key || '351d3ebf4dcd475e4f3522a6198ef849';
+                const geminiKey = configs.api_gemini_key || ''; // Nova chave do Gemini
 
                 container.innerHTML += `
                     <div class="${cardClass}" id="card-${loja.id}">
@@ -410,9 +411,13 @@
                                 <label>Supabase API Key</label>
                                 <input type="text" id="qe-supa-key-${loja.id}" value="${supaKey}">
                             </div>
-                            <div class="input-group" style="margin-bottom: 15px;">
+                            <div class="input-group" style="margin-bottom: 10px;">
                                 <label>ImgBB API Key</label>
                                 <input type="text" id="qe-imgbb-key-${loja.id}" value="${imgbbKey}">
+                            </div>
+                            <div class="input-group" style="margin-bottom: 15px;">
+                                <label>Gemini API Key</label>
+                                <input type="text" id="qe-gemini-key-${loja.id}" value="${geminiKey}" placeholder="AIzaSy...">
                             </div>
                             
                             <div style="display: flex; gap: 10px;">
@@ -491,6 +496,7 @@
             const supaUrl = document.getElementById(`qe-supa-url-${id}`).value;
             const supaKey = document.getElementById(`qe-supa-key-${id}`).value;
             const imgbbKey = document.getElementById(`qe-imgbb-key-${id}`).value;
+            const geminiKey = document.getElementById(`qe-gemini-key-${id}`).value; // Nova captação
 
             const loja = lojasHospedadas.find(l => l.id === id);
             let configs = {};
@@ -503,6 +509,7 @@
             configs.api_supabase_url = supaUrl;
             configs.api_supabase_key = supaKey;
             configs.api_imgbb_key = imgbbKey;
+            configs.api_gemini_key = geminiKey; // Grava a chave Gemini
 
             const { error } = await supabaseClient
                 .from('lojas')
