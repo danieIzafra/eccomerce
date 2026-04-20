@@ -152,7 +152,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 nome = `${nome} (Tam: ${btnTamanhoAtivo.innerText})`;
             }
 
-            if (!nome || isNaN(preco)) return;
+            // CORREÇÃO: Alerta visual se o produto ainda estiver carregando
+            if (!nome || isNaN(preco) || preco <= 0) {
+                mostrarToast("Aguarde o produto carregar completamente antes de comprar.");
+                return;
+            }
             
             const originalHtml = btnBuyNow.innerHTML; 
             btnBuyNow.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Aguarde...'; 
@@ -164,7 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
             
             setTimeout(() => { window.location.href = `pay.html?loja=${slug}`; }, 300);
         }
-
         // 3. Botão "Finalizar Compra" da aba lateral
         const btnCheckout = e.target.closest('.cart-footer .btn-primary') || e.target.closest('.btn-checkout');
         if (btnCheckout && !e.target.closest('.action-area') && !e.target.closest('.sticky-cart-bar')) {

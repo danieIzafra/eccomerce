@@ -216,6 +216,9 @@
             }
         })();
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    
 </head>
 <body>
 
@@ -409,39 +412,53 @@
         let carrinho = JSON.parse(localStorage.getItem(CHAVE_CARRINHO)) || [];
         let totalCarrinho = 0;
         let valorFrete = 0;
-        
-        // Se pelo menos 1 item no carrinho possui frete grátis, consideramos que o pedido todo isenta o frete.
+        let gatewayConfig = { provider: 'mock', publicKey: '', enableCC: 'true', enablePix: 'true' };
         let isPedidoFreteGratis = carrinho.some(item => item.frete_gratis === true || item.frete_gratis === 'true');
+        let pixGerado = false; // Controle para não gerar o mesmo PIX duas vezes
 
-        window.onload = () => {
+        const SUPABASE_URL = 'https://ikkjgtgvohrwurtiustm.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra2pndGd2b2hyd3VydGl1c3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NzE4OTEsImV4cCI6MjA5MDE0Nzg5MX0.HNrSvCmSHWTe2yoQy27GOq5g_ZoZxFdox_eCW14f_nI';
+        const clienteSupa = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        window.onload = async () => {
             const antiPiscar = document.getElementById('anti-piscar');
             if(antiPiscar) antiPiscar.remove();
             document.body.style.opacity = '1';
-            
+
+            // 1. CALCULA O CARRINHO
             carrinho.forEach(item => { totalCarrinho += (item.preco * item.quantidade); });
-            
-            if (carrinho.length === 0) {
-                document.getElementById('summary-items').innerHTML = '<p style="color: var(--text-secondary); text-align: center;">Seu carrinho está vazio.</p>';
+
+            if (carrinho.length === 0 || totalCarrinho <= 0) {
+                document.getElementById('summary-items').innerHTML = '<p style="color: #ef4444; text-align: center; font-weight: bold; margin-top: 20px;">O carrinho está vazio. Voltando para a loja...</p>';
                 setTimeout(voltarParaLoja, 3000);
                 return;
             }
-            
+
             carregarResumo();
+
+            // 2. BUSCA AS CONFIGURAÇÕES E APLICA
+            if (slug) {
+                const { data: lojaConfig } = await clienteSupa.from('lojas').select('textos').eq('slug', slug).single();
+                if (lojaConfig && lojaConfig.textos) {
+                    const t = typeof lojaConfig.textos === 'string' ? JSON.parse(lojaConfig.textos) : lojaConfig.textos;
+                    gatewayConfig.provider = t.gatewayProvider || 'mercadopago';
+                    gatewayConfig.publicKey = t.gatewayPublicKey || '';
+                    // Transforma para string para evitar erros de leitura booleana
+                    gatewayConfig.enableCC = t.enableCC !== undefined ? String(t.enableCC) : 'true';
+                    gatewayConfig.enablePix = t.enablePix !== undefined ? String(t.enablePix) : 'true';
+                    
+                    aplicarRegrasDePagamento();
+                }
+            }
         };
 
         function carregarResumo() {
             const container = document.getElementById('summary-items');
             container.innerHTML = '';
-            
             carrinho.forEach(item => {
                 const badgePromo = (item.frete_gratis === true || item.frete_gratis === 'true') ? `<span style="font-size: 0.7rem; color: #10b981;">(Frete Grátis)</span>` : '';
-                container.innerHTML += `
-                    <div class="cart-item">
-                        <div class="item-info"><h4>${item.nome}</h4><span>Qtd: ${item.quantidade} ${badgePromo}</span></div>
-                        <div class="item-price">R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}</div>
-                    </div>`;
+                container.innerHTML += `<div class="cart-item"><div class="item-info"><h4>${item.nome}</h4><span>Qtd: ${item.quantidade} ${badgePromo}</span></div><div class="item-price">R$ ${(item.preco * item.quantidade).toFixed(2).replace('.', ',')}</div></div>`;
             });
-
             atualizarTotaisDom();
         }
 
@@ -452,13 +469,9 @@
             const selectParcelas = document.getElementById('select-parcelas');
 
             let freteGratisGeral = totalCarrinho >= 300 || isPedidoFreteGratis;
-            
-            if (freteGratisGeral) {
-                valorFrete = 0;
-            }
+            if (freteGratisGeral) { valorFrete = 0; }
 
             const totalGeral = totalCarrinho + valorFrete;
-
             subtotalEl.innerText = `R$ ${totalCarrinho.toFixed(2).replace('.', ',')}`;
             
             if (freteGratisGeral) {
@@ -472,13 +485,14 @@
             const formatTotal = `R$ ${totalGeral.toFixed(2).replace('.', ',')}`;
             totalEl.innerText = formatTotal;
 
-            selectParcelas.innerHTML = `<option value="1">1x de ${formatTotal} sem juros</option>`;
-            for(let i = 2; i <= 12; i++) {
-                selectParcelas.innerHTML += `<option value="${i}">${i}x de R$ ${(totalGeral / i).toFixed(2).replace('.', ',')} sem juros</option>`;
+            if(selectParcelas) {
+                selectParcelas.innerHTML = `<option value="1">1x de ${formatTotal} sem juros</option>`;
+                for(let i = 2; i <= 12; i++) {
+                    selectParcelas.innerHTML += `<option value="${i}">${i}x de R$ ${(totalGeral / i).toFixed(2).replace('.', ',')} sem juros</option>`;
+                }
             }
         }
 
-        // ====== MÁSCARAS ======
         function mascaraCEP(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{5})(\d)/, "$1-$2"); i.value = v; }
         function mascaraCPF(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d)/, "$1.$2"); v = v.replace(/(\d{3})(\d{1,2})$/, "$1-$2"); i.value = v; }
         function mascaraTelefone(i) { let v = i.value.replace(/\D/g, ""); v = v.replace(/^(\d{2})(\d)/g, "($1) $2"); v = v.replace(/(\d)(\d{4})$/, "$1-$2"); i.value = v; }
@@ -489,7 +503,6 @@
             cep = cep.replace(/\D/g, '');
             const inputCep = document.getElementById('cep');
             const errCep = document.getElementById('erro-cep');
-            
             if (cep.length === 8) {
                 try {
                     const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
@@ -500,7 +513,6 @@
                         document.getElementById('bairro').value = data.bairro;
                         document.getElementById('cidade_estado').value = `${data.localidade} - ${data.uf}`;
                         document.getElementById('numero').focus();
-                        
                         calcularFrete(data.uf);
                     } else { throw new Error('CEP Inexistente'); }
                 } catch(e) {
@@ -513,14 +525,10 @@
 
         function calcularFrete(uf) {
             let freteGratisGeral = totalCarrinho >= 300 || isPedidoFreteGratis;
-            if (freteGratisGeral) {
-                valorFrete = 0;
-            } else {
-                const sudeste = ['SP', 'RJ', 'MG', 'ES'];
-                const sul = ['PR', 'SC', 'RS'];
-                if (sudeste.includes(uf)) { valorFrete = 15.90; } 
-                else if (sul.includes(uf)) { valorFrete = 19.90; } 
-                else { valorFrete = 29.90; }
+            if (freteGratisGeral) { valorFrete = 0; } 
+            else {
+                const sudeste = ['SP', 'RJ', 'MG', 'ES']; const sul = ['PR', 'SC', 'RS'];
+                if (sudeste.includes(uf)) { valorFrete = 15.90; } else if (sul.includes(uf)) { valorFrete = 19.90; } else { valorFrete = 29.90; }
             }
             atualizarTotaisDom();
         }
@@ -528,23 +536,19 @@
         function testaCPF(cpf) {
             cpf = cpf.replace(/[^\d]+/g,'');
             if(cpf == '' || cpf.length != 11 || /^(\d)\1{10}$/.test(cpf)) return false;
-            let add = 0;
-            for (let i=0; i < 9; i ++) add += parseInt(cpf.charAt(i)) * (10 - i);
+            let add = 0; for (let i=0; i < 9; i ++) add += parseInt(cpf.charAt(i)) * (10 - i);
             let rev = 11 - (add % 11); if(rev == 10 || rev == 11) rev = 0; if(rev != parseInt(cpf.charAt(9))) return false;
-            add = 0;
-            for (let i = 0; i < 10; i ++) add += parseInt(cpf.charAt(i)) * (11 - i);
+            add = 0; for (let i = 0; i < 10; i ++) add += parseInt(cpf.charAt(i)) * (11 - i);
             rev = 11 - (add % 11); if(rev == 10 || rev == 11) rev = 0; if(rev != parseInt(cpf.charAt(10))) return false;
             return true;
         }
 
         function testaCartaoLuhn(numero) {
-            numero = numero.replace(/\D/g, '');
-            if(numero.length < 13) return false;
+            numero = numero.replace(/\D/g, ''); if(numero.length < 13) return false;
             let sum = 0, alternate = false;
             for (let i = numero.length - 1; i >= 0; i--) {
                 let n = parseInt(numero.charAt(i), 10);
-                if (alternate) { n *= 2; if (n > 9) n -= 9; }
-                sum += n; alternate = !alternate;
+                if (alternate) { n *= 2; if (n > 9) n -= 9; } sum += n; alternate = !alternate;
             }
             return (sum % 10 === 0);
         }
@@ -553,28 +557,23 @@
             if(val.length !== 5) return false;
             const mes = parseInt(val.substring(0,2)); const ano = parseInt(val.substring(3,5));
             if(mes < 1 || mes > 12) return false;
-            const hoje = new Date();
-            const anoAtual = hoje.getFullYear() % 100; const mesAtual = hoje.getMonth() + 1;
+            const hoje = new Date(); const anoAtual = hoje.getFullYear() % 100; const mesAtual = hoje.getMonth() + 1;
             if(ano < anoAtual || (ano === anoAtual && mes < mesAtual)) return false;
             return true;
         }
 
         function validarEAvancar(e) {
-            e.preventDefault();
-            let erro = false;
+            e.preventDefault(); let erro = false;
             
             const cpfEl = document.getElementById('cpf'); const errCpf = document.getElementById('erro-cpf');
-            if(!testaCPF(cpfEl.value)) { cpfEl.classList.add('error-input'); errCpf.style.display = 'block'; erro = true; } 
-            else { cpfEl.classList.remove('error-input'); errCpf.style.display = 'none'; }
+            if(!testaCPF(cpfEl.value)) { cpfEl.classList.add('error-input'); errCpf.style.display = 'block'; erro = true; } else { cpfEl.classList.remove('error-input'); errCpf.style.display = 'none'; }
 
             const emailEl = document.getElementById('email'); const errEmail = document.getElementById('erro-email');
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if(!emailRegex.test(emailEl.value)) { emailEl.classList.add('error-input'); errEmail.style.display = 'block'; erro = true; } 
-            else { emailEl.classList.remove('error-input'); errEmail.style.display = 'none'; }
+            if(!emailRegex.test(emailEl.value)) { emailEl.classList.add('error-input'); errEmail.style.display = 'block'; erro = true; } else { emailEl.classList.remove('error-input'); errEmail.style.display = 'none'; }
 
             const telEl = document.getElementById('telefone'); const errTel = document.getElementById('erro-telefone');
-            if(telEl.value.replace(/\D/g,'').length < 10) { telEl.classList.add('error-input'); errTel.style.display = 'block'; erro = true; } 
-            else { telEl.classList.remove('error-input'); errTel.style.display = 'none'; }
+            if(telEl.value.replace(/\D/g,'').length < 10) { telEl.classList.add('error-input'); errTel.style.display = 'block'; erro = true; } else { telEl.classList.remove('error-input'); errTel.style.display = 'none'; }
 
             if(document.getElementById('rua').value === "") { document.getElementById('cep').classList.add('error-input'); document.getElementById('erro-cep').style.display = 'block'; erro = true; }
 
@@ -582,18 +581,12 @@
         }
 
         function validarCartao(e) {
-            e.preventDefault();
-            let erro = false;
-
+            e.preventDefault(); let erro = false;
             const ccNum = document.getElementById('cc-num'); const errCc = document.getElementById('erro-cc');
-            if(!testaCartaoLuhn(ccNum.value)) { ccNum.classList.add('error-input'); errCc.style.display = 'block'; erro = true; } 
-            else { ccNum.classList.remove('error-input'); errCc.style.display = 'none'; }
-
+            if(!testaCartaoLuhn(ccNum.value)) { ccNum.classList.add('error-input'); errCc.style.display = 'block'; erro = true; } else { ccNum.classList.remove('error-input'); errCc.style.display = 'none'; }
             const ccVal = document.getElementById('cc-val'); const errVal = document.getElementById('erro-val');
-            if(!testaValidadeCartao(ccVal.value)) { ccVal.classList.add('error-input'); errVal.style.display = 'block'; erro = true; } 
-            else { ccVal.classList.remove('error-input'); errVal.style.display = 'none'; }
-
-            if(!erro) concluirPagamento();
+            if(!testaValidadeCartao(ccVal.value)) { ccVal.classList.add('error-input'); errVal.style.display = 'block'; erro = true; } else { ccVal.classList.remove('error-input'); errVal.style.display = 'none'; }
+            if(!erro) concluirPagamentoCartao();
         }
 
         function goToStep(stepNumber) {
@@ -606,29 +599,152 @@
             document.getElementById(`step-${stepNumber}`).classList.add('active');
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
+            // GATILHO DO PIX AUTOMÁTICO AO CHEGAR NO PASSO 2
+            if (stepNumber === 2) {
+                const isPixActive = document.getElementById('tab-pix').classList.contains('active');
+                if (isPixActive && !pixGerado) gerarPixAutomatico();
+            }
+
             if (stepNumber === 3) {
                 document.getElementById('checkout-sidebar').style.display = 'none';
                 document.getElementById('checkout-main').style.gridColumn = 'span 2';
             }
         }
 
+        function aplicarRegrasDePagamento() {
+            const btnCcMethod = document.querySelector('button[onclick="setPaymentMethod(\'cc\', this)"]');
+            const btnPixMethod = document.querySelector('button[onclick="setPaymentMethod(\'pix\', this)"]');
+            
+            // Esconde os botões dependendo das regras do lojista
+            if (gatewayConfig.enableCC === 'false') {
+                if(btnCcMethod) btnCcMethod.style.display = 'none';
+                if(btnPixMethod) setPaymentMethod('pix', btnPixMethod); 
+            }
+            if (gatewayConfig.enablePix === 'false') {
+                if(btnPixMethod) btnPixMethod.style.display = 'none';
+                if (gatewayConfig.enableCC !== 'false' && btnCcMethod) setPaymentMethod('cc', btnCcMethod); 
+            }
+            if (gatewayConfig.enableCC === 'false' && gatewayConfig.enablePix === 'false') {
+                alert("Nenhum método de pagamento configurado nesta loja.");
+            }
+        }
+
         function setPaymentMethod(method, btnElement) {
             document.querySelectorAll('.method-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.payment-tab').forEach(tab => tab.classList.remove('active'));
-            btnElement.classList.add('active'); document.getElementById(`tab-${method}`).classList.add('active');
+            if(btnElement) btnElement.classList.add('active'); 
+            document.getElementById(`tab-${method}`).classList.add('active');
+
+            // Se o cliente trocar para a aba PIX e ele não foi gerado, gera na hora
+            if (method === 'pix' && !pixGerado) {
+                const step2Active = document.getElementById('step-2').classList.contains('active');
+                if(step2Active) gerarPixAutomatico();
+            }
         }
 
-        function concluirPagamento() {
-            const btnCc = document.getElementById('btn-finalizar-cc'); const btnPix = document.getElementById('btn-finalizar-pix');
-            btnCc.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...'; btnPix.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
-            btnCc.disabled = true; btnPix.disabled = true;
+        async function gerarPixAutomatico() {
+            const btnPix = document.getElementById('btn-finalizar-pix');
+            if (totalCarrinho <= 0) return;
 
-            setTimeout(() => {
-                document.getElementById('order-id').innerText = '#' + Math.floor(Math.random() * 90000 + 10000);
-                document.getElementById('order-date').innerText = new Date().toLocaleDateString('pt-BR');
-                localStorage.removeItem(CHAVE_CARRINHO);
-                goToStep(3);
-            }, 2000);
+            pixGerado = true; // Impede que o sistema fique gerando em loop
+            if(btnPix) { btnPix.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Gerando PIX...'; btnPix.disabled = true; }
+            
+            const payloadPagamento = {
+                loja_slug: slug, metodo: 'pix',
+                dados_cliente: { nome: document.getElementById('nome').value, cpf: document.getElementById('cpf').value, email: document.getElementById('email').value },
+                total: totalCarrinho + valorFrete
+            };
+
+            try {
+                const { data, error } = await clienteSupa.functions.invoke('processar-pagamento', { body: payloadPagamento });
+                if (error) throw new Error("Falha na conexão com o servidor de pagamentos.");
+
+                if (data && data.sucesso && data.tipo === 'pix') {
+                    document.querySelector('.pix-code img').src = data.qr_code;
+                    const inputCopiaCola = document.querySelector('.pix-container input');
+                    if(inputCopiaCola) inputCopiaCola.value = data.copia_cola;
+                    
+                    // Transforma o botão antigo em um botão de copiar prático
+                    if(btnPix) {
+                        btnPix.innerHTML = '<i class="fas fa-copy"></i> Copiar Código PIX'; 
+                        btnPix.disabled = false;
+                        btnPix.onclick = function() {
+                            inputCopiaCola.select();
+                            document.execCommand("copy");
+                            btnPix.innerHTML = '<i class="fas fa-check"></i> Copiado!';
+                            setTimeout(() => { btnPix.innerHTML = '<i class="fas fa-copy"></i> Copiar Código PIX'; }, 3000);
+                        };
+                    }
+                } else {
+                    throw new Error(data.erro || "Transação recusada pelo banco.");
+                }
+            } catch (err) {
+                console.error(err);
+                if(btnPix) { 
+                    btnPix.innerHTML = '<i class="fas fa-sync"></i> Tentar Novamente'; 
+                    btnPix.disabled = false; 
+                    btnPix.onclick = gerarPixAutomatico; 
+                }
+                pixGerado = false; 
+            }
+        }
+
+        async function concluirPagamentoCartao() {
+            const btnCc = document.getElementById('btn-finalizar-cc'); 
+            if (totalCarrinho <= 0) { alert("Carrinho vazio!"); window.location.href = `index.html?loja=${slug}`; return; }
+
+            if(btnCc) { btnCc.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...'; btnCc.disabled = true; }
+
+            try {
+                const publicKey = gatewayConfig.publicKey;
+                if (!publicKey) throw new Error("A loja não configurou a chave pública de pagamentos.");
+                if (typeof MercadoPago === 'undefined') throw new Error("A biblioteca do Mercado Pago não foi carregada.");
+                
+                const mp = new MercadoPago(publicKey);
+                const numCartao = document.getElementById('cc-num').value.replace(/\s/g, '');
+                const validade = document.getElementById('cc-val').value.split('/'); 
+                const cvv = document.getElementById('cc-cvv').value;
+                const nomeTitular = document.querySelector('input[placeholder="NOME DO TITULAR"]').value;
+                const cpf = document.getElementById('cpf').value.replace(/\D/g, '');
+                const parcelas = document.getElementById('select-parcelas').value;
+
+                const bin = numCartao.substring(0, 6);
+                const paymentMethods = await mp.getPaymentMethods({ bin: bin });
+                if (!paymentMethods.results || paymentMethods.results.length === 0) throw new Error("Bandeira do cartão não reconhecida.");
+                const paymentMethodId = paymentMethods.results[0].id;
+
+                const tokenResponse = await mp.createCardToken({
+                    cardNumber: numCartao, cardholderName: nomeTitular, cardExpirationMonth: validade[0],
+                    cardExpirationYear: "20" + validade[1], securityCode: cvv, identificationType: 'CPF', identificationNumber: cpf
+                });
+
+                if (tokenResponse.error) throw new Error("Dados do cartão inválidos pelo banco.");
+                const tokenCartao = tokenResponse.id;
+
+                const payloadPagamento = {
+                    loja_slug: slug, metodo: 'credit_card',
+                    dados_cliente: { nome: document.getElementById('nome').value, cpf: document.getElementById('cpf').value, email: document.getElementById('email').value },
+                    total: totalCarrinho + valorFrete, token: tokenCartao, payment_method_id: paymentMethodId, installments: Number(parcelas)
+                };
+
+                const { data, error } = await clienteSupa.functions.invoke('processar-pagamento', { body: payloadPagamento });
+                if (error) throw new Error("Falha na conexão com o servidor.");
+
+                if (data && data.sucesso) {
+                    document.getElementById('order-id').innerText = '#' + (data.id_transacao || Math.floor(Math.random() * 90000 + 10000));
+                    document.getElementById('order-date').innerText = new Date().toLocaleDateString('pt-BR');
+                    localStorage.removeItem(CHAVE_CARRINHO);
+                    goToStep(3);
+                } else {
+                    throw new Error(data.erro || "Transação recusada.");
+                }
+            } catch (err) {
+                let msgAmigavel = err.message;
+                if (Array.isArray(err) && err.length > 0) msgAmigavel = "Erro na validação do Cartão.";
+                alert(msgAmigavel || "Transação recusada.");
+            } finally {
+                if(btnCc) { btnCc.innerHTML = '<i class="fas fa-lock"></i> Finalizar Compra'; btnCc.disabled = false; }
+            }
         }
 
         function voltarParaLoja() { window.location.href = `index.html?loja=${slug}`; }

@@ -31,8 +31,17 @@
         .header h1 i { color: var(--accent-neon); }
         .header p { color: var(--text-muted); font-size: 0.9rem; margin-top: 5px; }
 
-        .panel { background: var(--bg-glass); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .panel { background: var(--bg-glass); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); margin-bottom: 20px; }
         
+        /* Estilos dos Accordions */
+        .accordion { background: var(--bg-glass); border: 1px solid var(--border-color); border-radius: 16px; margin-bottom: 15px; overflow: hidden; transition: 0.3s; }
+        .accordion-header { padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; user-select: none; font-weight: 600; font-size: 1rem; }
+        .accordion-header i.toggle-icon { transition: transform 0.3s ease; color: var(--text-muted); }
+        .accordion.active { border-color: var(--accent-neon); box-shadow: 0 5px 20px rgba(139, 92, 246, 0.1); }
+        .accordion.active .accordion-header i.toggle-icon { transform: rotate(180deg); color: var(--accent-neon); }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; padding: 0 20px; }
+        .accordion.active .accordion-content { max-height: 2000px; padding: 0 20px 20px; border-top: 1px solid var(--border-color); margin-top: 10px; padding-top: 20px; }
+
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 8px; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
         .form-control { width: 100%; padding: 14px 15px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-main); outline: none; font-size: 0.95rem; transition: 0.2s; }
@@ -42,9 +51,13 @@
         .upload-dropzone:hover { border-color: var(--accent-neon); color: var(--accent-neon); background: rgba(139, 92, 246, 0.05); }
         .upload-dropzone i { font-size: 2.5rem; }
         
-        .btn-submit { width: 100%; padding: 16px; background: var(--accent-neon); color: #fff; border: none; border-radius: var(--radius-md); font-weight: 800; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.2s; }
-        .btn-submit:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3); }
+        .btn-submit { width: 100%; padding: 16px; color: #fff; border: none; border-radius: var(--radius-md); font-weight: 800; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.2s; }
+        .btn-submit:hover { filter: brightness(1.1); transform: translateY(-2px); }
         .btn-submit:disabled { opacity: 0.6; pointer-events: none; }
+        
+        .btn-primary { background: var(--accent-neon); box-shadow: 0 5px 15px rgba(139, 92, 246, 0.2); }
+        .btn-lookbook { background: #10b981; box-shadow: 0 5px 15px rgba(16, 185, 129, 0.2); }
+        .btn-design { background: #3b82f6; box-shadow: 0 5px 15px rgba(59, 130, 246, 0.2); }
 
         .log-container { margin-top: 25px; background: #000; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 15px; font-family: monospace; font-size: 0.85rem; color: #a3e635; max-height: 350px; overflow-y: auto; display: none; }
         .log-item { margin-bottom: 5px; border-bottom: 1px dashed #333; padding-bottom: 5px; }
@@ -52,6 +65,8 @@
         .log-item.success { color: #3b82f6; }
         .log-item.warning { color: #f59e0b; }
         .log-item.ai-data { color: #d946ef; padding-left: 10px; border-left: 2px solid #d946ef; margin: 5px 0; }
+        
+        .file-count { font-size: 0.75rem; font-weight: bold; margin-top: 5px; }
     </style>
 </head>
 <body>
@@ -59,35 +74,112 @@
     <div class="container">
         <div class="header">
             <h1><i class="fas fa-brain"></i> IA Injector Pro</h1>
-            <p>Classificação inteligente, coleções e cadastro em massa</p>
+            <p>Configuração e catalogação em massa</p>
         </div>
 
         <div class="panel">
-            <form id="inject-form">
-                <div class="form-group">
-                    <label>Slug da Loja Alvo</label>
-                    <input type="text" id="slug-loja" class="form-control" placeholder="ex: minha-loja-top" required>
-                </div>
-                
-                <div class="form-group">
-                    <label>Chave API do Google Gemini</label>
-                    <input type="password" id="gemini-key" class="form-control" placeholder="AIzaSy..." required>
-                </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Slug da Loja Alvo <span style="color:#ef4444">*</span></label>
+                <input type="text" id="slug-loja" class="form-control" placeholder="ex: minha-loja-top" required>
+            </div>
+        </div>
 
-                <div class="form-group">
-                    <label>Fotos dos Produtos</label>
-                    <div class="upload-dropzone" onclick="document.getElementById('file-upload').click()">
-                        <i class="fas fa-images"></i>
-                        <span>Clique para selecionar várias imagens</span>
-                        <span id="file-count" style="font-size: 0.75rem; color: var(--accent-neon); font-weight: bold;"></span>
+        <div class="accordion active" id="acc-produtos">
+            <div class="accordion-header" onclick="toggleAccordion('acc-produtos')">
+                <span><i class="fas fa-box-open" style="color: var(--accent-neon); margin-right: 10px;"></i> Injetar Produtos (IA)</span>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="accordion-content">
+                <form id="form-produtos">
+                    <div class="form-group">
+                        <label>Chave API do Google Gemini</label>
+                        <input type="password" id="gemini-key" class="form-control" placeholder="AIzaSy..." required>
                     </div>
-                    <input type="file" id="file-upload" accept="image/*" multiple style="display: none;" onchange="updateFileCount()">
-                </div>
 
-                <button type="submit" class="btn-submit" id="btn-injetar">
-                    <i class="fas fa-rocket"></i> Iniciar Injeção Inteligente
-                </button>
-            </form>
+                    <div class="form-group">
+                        <label>Fotos dos Produtos</label>
+                        <div class="upload-dropzone" onclick="document.getElementById('file-upload-prod').click()">
+                            <i class="fas fa-images"></i>
+                            <span>Selecionar várias imagens</span>
+                            <span id="count-prod" class="file-count" style="color: var(--accent-neon);"></span>
+                        </div>
+                        <input type="file" id="file-upload-prod" accept="image/*" multiple style="display: none;" onchange="updateFileCount('file-upload-prod', 'count-prod')">
+                    </div>
+
+                    <button type="submit" class="btn-submit btn-primary" id="btn-inj-prod">
+                        <i class="fas fa-rocket"></i> Iniciar Injeção Inteligente
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="accordion" id="acc-lookbook">
+            <div class="accordion-header" onclick="toggleAccordion('acc-lookbook')">
+                <span><i class="fas fa-camera-retro" style="color: #10b981; margin-right: 10px;"></i> Injetar Lookbook</span>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="accordion-content">
+                <form id="form-lookbook">
+                    <div class="form-group">
+                        <label>Fotos do Lookbook/Galeria</label>
+                        <div class="upload-dropzone" onclick="document.getElementById('file-upload-lookbook').click()">
+                            <i class="fas fa-photo-video"></i>
+                            <span>Selecionar imagens para galeria</span>
+                            <span id="count-lookbook" class="file-count" style="color: #10b981;"></span>
+                        </div>
+                        <input type="file" id="file-upload-lookbook" accept="image/*" multiple style="display: none;" onchange="updateFileCount('file-upload-lookbook', 'count-lookbook')">
+                    </div>
+                    <button type="submit" class="btn-submit btn-lookbook" id="btn-inj-lookbook">
+                        <i class="fas fa-paper-plane"></i> Enviar para o Mural
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="accordion" id="acc-logo">
+            <div class="accordion-header" onclick="toggleAccordion('acc-logo')">
+                <span><i class="fas fa-image" style="color: #3b82f6; margin-right: 10px;"></i> Injetar Logo da Loja</span>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="accordion-content">
+                <form id="form-logo">
+                    <div class="form-group">
+                        <label>Imagem da Logo (PNG ou JPEG)</label>
+                        <div class="upload-dropzone" onclick="document.getElementById('file-upload-logo').click()">
+                            <i class="fas fa-stamp"></i>
+                            <span>Selecionar Logotipo</span>
+                            <span id="count-logo" class="file-count" style="color: #3b82f6;"></span>
+                        </div>
+                        <input type="file" id="file-upload-logo" accept="image/png, image/jpeg" style="display: none;" onchange="updateFileCount('file-upload-logo', 'count-logo')">
+                    </div>
+                    <button type="submit" class="btn-submit btn-design" id="btn-inj-logo">
+                        <i class="fas fa-upload"></i> Atualizar Logotipo
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="accordion" id="acc-hero">
+            <div class="accordion-header" onclick="toggleAccordion('acc-hero')">
+                <span><i class="fas fa-desktop" style="color: #f59e0b; margin-right: 10px;"></i> Injetar Capa (Hero)</span>
+                <i class="fas fa-chevron-down toggle-icon"></i>
+            </div>
+            <div class="accordion-content">
+                <form id="form-hero">
+                    <div class="form-group">
+                        <label>Imagem de Capa (Hero Section)</label>
+                        <div class="upload-dropzone" onclick="document.getElementById('file-upload-hero').click()">
+                            <i class="fas fa-panorama"></i>
+                            <span>Selecionar Imagem de Fundo</span>
+                            <span id="count-hero" class="file-count" style="color: #f59e0b;"></span>
+                        </div>
+                        <input type="file" id="file-upload-hero" accept="image/*" style="display: none;" onchange="updateFileCount('file-upload-hero', 'count-hero')">
+                    </div>
+                    <button type="submit" class="btn-submit" style="background: #f59e0b; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.2);" id="btn-inj-hero">
+                        <i class="fas fa-upload"></i> Atualizar Capa
+                    </button>
+                </form>
+            </div>
         </div>
 
         <div class="log-container" id="log-console"></div>
@@ -100,15 +192,23 @@
         
         const DEFAULT_IMGBB_KEY = '351d3ebf4dcd475e4f3522a6198ef849';
 
-        // ADICIONE ESTE BLOCO PARA LER O URL
+        // LER URL
         const params = new URLSearchParams(window.location.search);
         if (params.get('loja')) {
             document.getElementById('slug-loja').value = params.get('loja');
         }
 
-        function updateFileCount() {
-            const files = document.getElementById('file-upload').files;
-            document.getElementById('file-count').innerText = files.length > 0 ? `${files.length} arquivo(s) selecionado(s)` : '';
+        // UI FUNÇÕES
+        function toggleAccordion(id) {
+            document.querySelectorAll('.accordion').forEach(acc => {
+                if(acc.id !== id) acc.classList.remove('active');
+            });
+            document.getElementById(id).classList.toggle('active');
+        }
+
+        function updateFileCount(inputId, countId) {
+            const files = document.getElementById(inputId).files;
+            document.getElementById(countId).innerText = files.length > 0 ? `${files.length} arquivo(s) selecionado(s)` : '';
         }
 
         function writeLog(msg, type = 'info') {
@@ -119,6 +219,7 @@
             consoleEl.scrollTop = consoleEl.scrollHeight;
         }
 
+        // UTILITÁRIOS
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -136,6 +237,25 @@
             const data = await res.json();
             if (!data.success) throw new Error(data.error.message);
             return data.data.url;
+        }
+
+        async function validarConexaoLoja() {
+            const slug = document.getElementById('slug-loja').value.trim();
+            if (!slug) throw new Error("Preencha o Slug da Loja Alvo no topo da tela!");
+            
+            writeLog(`Buscando dados da loja: ${slug}...`);
+            const { data: loja, error } = await supabaseClient.from('lojas').select('*').eq('slug', slug).single();
+            if (error || !loja) throw new Error("Loja não encontrada no banco de dados.");
+            return loja;
+        }
+
+        function getChaveImgBB(loja) {
+            let imgbbKey = DEFAULT_IMGBB_KEY;
+            if (loja.textos) {
+                const textos = typeof loja.textos === 'string' ? JSON.parse(loja.textos) : loja.textos;
+                if (textos.api_imgbb_key) imgbbKey = textos.api_imgbb_key;
+            }
+            return imgbbKey;
         }
 
         function capitalizarPrimeiraLetra(string) {
@@ -178,32 +298,25 @@
             return JSON.parse(rawText);
         }
 
-        document.getElementById('inject-form').addEventListener('submit', async (e) => {
+        // =====================================
+        // 1. INJEÇÃO DE PRODUTOS (COM IA)
+        // =====================================
+        document.getElementById('form-produtos').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const slug = document.getElementById('slug-loja').value.trim();
             const geminiKey = document.getElementById('gemini-key').value.trim();
-            const files = document.getElementById('file-upload').files;
-            const btn = document.getElementById('btn-injetar');
+            const files = document.getElementById('file-upload-prod').files;
+            const btn = document.getElementById('btn-inj-prod');
 
-            if (files.length === 0) return alert("Selecione pelo menos uma imagem para injetar.");
+            if (files.length === 0) return alert("Selecione pelo menos uma imagem.");
 
             btn.disabled = true;
+            const textoOriginal = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando Injeção...';
             document.getElementById('log-console').innerHTML = '';
 
             try {
-                writeLog(`Conectando à loja: ${slug}`);
-                const { data: loja, error } = await supabaseClient.from('lojas').select('*').eq('slug', slug).single();
-                
-                if (error || !loja) throw new Error("Loja não encontrada no banco de dados.");
-                writeLog(`Loja validada com sucesso! ID: ${loja.id}`, 'success');
-
-                let imgbbKey = DEFAULT_IMGBB_KEY;
-                if (loja.textos) {
-                    const textos = typeof loja.textos === 'string' ? JSON.parse(loja.textos) : loja.textos;
-                    if (textos.api_imgbb_key) imgbbKey = textos.api_imgbb_key;
-                }
+                const loja = await validarConexaoLoja();
+                const imgbbKey = getChaveImgBB(loja);
 
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
@@ -217,61 +330,38 @@
                         writeLog(`>> Analisando imagem com Gemini Vision...`);
                         const iaData = await callGemini(b64Data, file.type, geminiKey);
                         
-                        // Validação agressiva para evitar erros da IA
                         const tamanhosValidos = ['letras', 'numeros_roupa', 'numeros_calcado', 'unico'];
                         const tipoTamanho = tamanhosValidos.includes(iaData.tipo_tamanho) ? iaData.tipo_tamanho : 'unico';
                         const nomeColecao = capitalizarPrimeiraLetra(iaData.colecao);
 
-                        writeLog(`IA Retornou:`, 'ai-data');
                         writeLog(`Nome: ${iaData.nome}`, 'ai-data');
                         writeLog(`Coleção: ${nomeColecao}`, 'ai-data');
-                        writeLog(`Grade: ${tipoTamanho}`, 'ai-data');
 
-                        // 1. VERIFICAR SE A COLEÇÃO EXISTE COM MAYBESINGLE()
-                        const { data: colExistente, error: colErr } = await supabaseClient
-                            .from('colecoes')
-                            .select('id, nome')
-                            .eq('loja_id', loja.id)
-                            .ilike('nome', nomeColecao)
-                            .maybeSingle();
+                        const { data: colExistente } = await supabaseClient.from('colecoes').select('id, nome').eq('loja_id', loja.id).ilike('nome', nomeColecao).maybeSingle();
 
                         if (!colExistente) {
-                            writeLog(`>> Coleção '${nomeColecao}' não encontrada. Criando nova...`, 'warning');
-                            const { error: insertColErr } = await supabaseClient.from('colecoes').insert([{ loja_id: loja.id, nome: nomeColecao }]);
-                            if (insertColErr) writeLog(`Erro ao criar coleção: ${insertColErr.message}`, 'error');
+                            writeLog(`>> Criando coleção '${nomeColecao}'...`, 'warning');
+                            await supabaseClient.from('colecoes').insert([{ loja_id: loja.id, nome: nomeColecao }]);
                         }
 
-                        // 2. FAZER UPLOAD DA IMAGEM
                         writeLog(`>> Hospedando imagem no ImgBB...`);
                         const imgUrl = await uploadToImgBB(file, imgbbKey);
 
-                        // 3. INJETAR PRODUTO
-                        writeLog(`>> Salvando dados na tabela Produtos...`);
+                        writeLog(`>> Salvando Produto...`);
                         const payloadProduto = {
-                            loja_id: loja.id,
-                            nome: iaData.nome,
-                            preco: parseFloat(iaData.preco),
-                            descricao: iaData.descricao,
-                            imagem_url: imgUrl,
-                            imagens: [imgUrl],
-                            tipo_tamanho: tipoTamanho,
-                            colecao: nomeColecao,
-                            frete_gratis: false
+                            loja_id: loja.id, nome: iaData.nome, preco: parseFloat(iaData.preco),
+                            descricao: iaData.descricao, imagem_url: imgUrl, imagens: [imgUrl],
+                            tipo_tamanho: tipoTamanho, colecao: nomeColecao, frete_gratis: false
                         };
 
                         const { data: newProd, error: errProd } = await supabaseClient.from('produtos').insert([payloadProduto]).select();
                         if (errProd) throw errProd;
-                        const produtoId = newProd[0].id;
-
-                        // 4. INJETAR AVALIAÇÕES
+                        
                         if (iaData.comentarios && iaData.comentarios.length > 0) {
-                            writeLog(`>> Injetando avaliações fictícias...`);
+                            writeLog(`>> Injetando avaliações...`);
                             const avaliacoes = iaData.comentarios.map(c => ({
-                                loja_id: loja.id,
-                                produto_id: produtoId,
-                                nome: c.nome,
-                                comentario: c.texto,
-                                aprovado: true
+                                loja_id: loja.id, produto_id: newProd[0].id,
+                                nome: c.nome, comentario: c.texto, aprovado: true
                             }));
                             await supabaseClient.from('avaliacoes').insert(avaliacoes);
                         }
@@ -279,22 +369,115 @@
                         writeLog(`V Produto injetado com sucesso!`, 'success');
 
                     } catch (itemErr) {
-                        writeLog(`X Falha ao processar ${file.name}: ${itemErr.message}`, 'error');
+                        writeLog(`X Falha: ${itemErr.message}`, 'error');
                     }
                 }
+                writeLog(`Lote finalizado!`, 'success');
+
+            } catch (err) { writeLog(err.message, 'error'); }
+
+            btn.disabled = false; btn.innerHTML = textoOriginal;
+            document.getElementById('file-upload-prod').value = '';
+            document.getElementById('count-prod').innerText = '';
+        });
+
+        // =====================================
+        // 2. INJEÇÃO DE LOOKBOOK
+        // =====================================
+        document.getElementById('form-lookbook').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const files = document.getElementById('file-upload-lookbook').files;
+            const btn = document.getElementById('btn-inj-lookbook');
+
+            if (files.length === 0) return alert("Selecione fotos para o Lookbook.");
+
+            btn.disabled = true;
+            const textoOriginal = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Injetando Lookbook...';
+            document.getElementById('log-console').innerHTML = '';
+
+            try {
+                const loja = await validarConexaoLoja();
+                const imgbbKey = getChaveImgBB(loja);
+
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    writeLog(`=============================`);
+                    writeLog(`Hospedando imagem Lookbook ${i + 1}/${files.length}...`);
+                    
+                    try {
+                        const imgUrl = await uploadToImgBB(file, imgbbKey);
+                        writeLog(`>> Inserindo no banco de dados...`);
+                        await supabaseClient.from('lookbook').insert([{ loja_id: loja.id, imagem_url: imgUrl }]);
+                        writeLog(`V Imagem salva com sucesso!`, 'success');
+                    } catch(itemErr) {
+                        writeLog(`X Erro: ${itemErr.message}`, 'error');
+                    }
+                }
+                writeLog(`Mural do Lookbook atualizado!`, 'success');
+
+            } catch (err) { writeLog(err.message, 'error'); }
+
+            btn.disabled = false; btn.innerHTML = textoOriginal;
+            document.getElementById('file-upload-lookbook').value = '';
+            document.getElementById('count-lookbook').innerText = '';
+        });
+
+        // =====================================
+        // 3. INJEÇÃO DE DESIGN (LOGO & HERO)
+        // =====================================
+        async function injetarImagemDesign(inputId, btnId, chaveJsonTexto, logMensagem) {
+            const files = document.getElementById(inputId).files;
+            const btn = document.getElementById(btnId);
+
+            if (files.length === 0) return alert("Selecione uma imagem primeiro.");
+
+            btn.disabled = true;
+            const textoOriginal = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Atualizando...';
+            document.getElementById('log-console').innerHTML = '';
+
+            try {
+                const loja = await validarConexaoLoja();
+                const imgbbKey = getChaveImgBB(loja);
 
                 writeLog(`=============================`);
-                writeLog(`Lote finalizado! Atualize a loja para ver os produtos.`, 'success');
+                writeLog(logMensagem);
+                
+                const imgUrl = await uploadToImgBB(files[0], imgbbKey);
+                writeLog(`>> Imagem hospedada: ${imgUrl}`);
 
-            } catch (err) {
-                writeLog(err.message, 'error');
-            }
+                // Atualizar o JSON de textos
+                let textos = {};
+                if (loja.textos) {
+                    textos = typeof loja.textos === 'string' ? JSON.parse(loja.textos) : loja.textos;
+                }
+                
+                textos[chaveJsonTexto] = imgUrl;
 
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-rocket"></i> Iniciar Injeção Inteligente';
-            document.getElementById('file-upload').value = '';
-            document.getElementById('file-count').innerText = '';
+                writeLog(`>> Atualizando banco de dados...`);
+                const { error } = await supabaseClient.from('lojas').update({ textos: textos }).eq('id', loja.id);
+                
+                if (error) throw error;
+                writeLog(`V Design atualizado com sucesso!`, 'success');
+
+            } catch (err) { writeLog(err.message, 'error'); }
+
+            btn.disabled = false; btn.innerHTML = textoOriginal;
+            document.getElementById(inputId).value = '';
+            document.getElementById(inputId.replace('file-upload-', 'count-')).innerText = '';
+        }
+
+        document.getElementById('form-logo').addEventListener('submit', (e) => {
+            e.preventDefault();
+            injetarImagemDesign('file-upload-logo', 'btn-inj-logo', 'logoUrl', 'Enviando Logotipo para a loja...');
         });
+
+        document.getElementById('form-hero').addEventListener('submit', (e) => {
+            e.preventDefault();
+            injetarImagemDesign('file-upload-hero', 'btn-inj-hero', 'heroImage', 'Enviando Imagem de Capa para a loja...');
+        });
+
     </script>
 </body>
 </html>

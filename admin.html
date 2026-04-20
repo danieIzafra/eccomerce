@@ -35,7 +35,6 @@
                         if (codigos[paginaAtual] && codigos[paginaAtual].length > 50) {
                             usouCodigoNovo = true;
                             
-                            // A MÁGICA AQUI: Construir o Regex dinamicamente evita que o navegador quebre o document.write
                             let tagFechamento = '</' + 'style>';
                             let cortinaRegex = new RegExp('<style id="cortina-saas">[\\s\\S]*?' + tagFechamento, 'ig');
                             let htmlLimpo = codigos[paginaAtual].replace(cortinaRegex, '');
@@ -435,8 +434,53 @@
                     </div>
                 </div>
 
+                <div class="glass-accordion">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <h2><i class="fas fa-money-check-alt"></i> Gateway de Pagamento</h2>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Provedor de Pagamento</label>
+                                <select id="gateway-provider" class="form-control">
+                                    <option value="mercadopago">Mercado Pago</option>
+                                    <option value="stripe">Stripe</option>
+                                    <option value="mock">Modo Teste (Simulação)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Public Key (Frontend)</label>
+                                <input type="text" id="gateway-public-key" class="form-control" placeholder="Ex: APP_USR-...">
+                            </div>
+                            <div class="form-group">
+                                <label>Access Token (Backend/Privada)</label>
+                                <input type="password" id="gateway-access-token" class="form-control" placeholder="Ex: APP_USR-..." title="Seguro: Usado apenas na Edge Function">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Aceitar Cartão de Crédito?</label>
+                                <select id="enable-cc" class="form-control">
+                                    <option value="true">Sim</option>
+                                    <option value="false">Não</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Aceitar PIX?</label>
+                                <select id="enable-pix" class="form-control">
+                                    <option value="true">Sim</option>
+                                    <option value="false">Não</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div style="margin-top: 15px;">
-                    <button type="button" onclick="saveSettings()" class="btn-submit"><i class="fas fa-save"></i> Salvar Alterações de Design</button>
+                    <button type="button" onclick="saveSettings()" class="btn-submit"><i class="fas fa-save"></i> Salvar Alterações de Design e Sistema</button>
                 </div>
             </form>
         </div>
@@ -557,6 +601,13 @@
                 if(t.faq) document.getElementById('txt-faq').value = t.faq;
                 if(t.devolucao) document.getElementById('txt-devolucao').value = t.devolucao;
                 if(t.contato) document.getElementById('txt-contato').value = t.contato;
+
+                // Aqui carregamos as configurações de pagamento
+                if (t.gatewayProvider) document.getElementById('gateway-provider').value = t.gatewayProvider;
+                if (t.gatewayPublicKey) document.getElementById('gateway-public-key').value = t.gatewayPublicKey;
+                if (t.gatewayAccessToken) document.getElementById('gateway-access-token').value = t.gatewayAccessToken;
+                if (t.enableCC) document.getElementById('enable-cc').value = t.enableCC;
+                if (t.enablePix) document.getElementById('enable-pix').value = t.enablePix;
             }
             loadColecoes(); loadProducts(); loadLookbook(); loadReviews(); liberarTelaAdmin();
         }
@@ -564,26 +615,66 @@
 
     async function saveSettings() {
         if(!lojaIdAtual) return;
-        const btn = document.querySelector('button[onclick="saveSettings()"]'); const textOrig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A guardar...'; btn.disabled = true;
+        const btn = document.querySelector('button[onclick="saveSettings()"]'); 
+        const textOrig = btn.innerHTML; 
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A guardar...'; 
+        btn.disabled = true;
 
-        const novaCor = document.getElementById('color-accent').value; const novaCorSecundaria = document.getElementById('color-secundary').value; const novaCorTextoBtn = document.getElementById('color-text-btn').value; const novoEstiloLogo = document.getElementById('logo-style').value;
-        
-        let finalHeroUrl = heroImgUrlAtual; if (heroImgFile) { try { finalHeroUrl = await uploadToImgBB(heroImgFile); heroImgUrlAtual = finalHeroUrl; heroImgFile = null; } catch(e) { alert("Erro ao salvar foto de capa: " + e.message); } }
-        let finalLogoUrl = logoImgUrlAtual; if (logoImgFile) { try { finalLogoUrl = await uploadToImgBB(logoImgFile); logoImgUrlAtual = finalLogoUrl; logoImgFile = null; } catch(e) { alert("Erro ao salvar logo: " + e.message); } }
+        try {
+            const novaCor = document.getElementById('color-accent').value; 
+            const novaCorSecundaria = document.getElementById('color-secundary').value; 
+            const novaCorTextoBtn = document.getElementById('color-text-btn').value; 
+            const novoEstiloLogo = document.getElementById('logo-style').value;
+            
+            let finalHeroUrl = heroImgUrlAtual; if (heroImgFile) { try { finalHeroUrl = await uploadToImgBB(heroImgFile); heroImgUrlAtual = finalHeroUrl; heroImgFile = null; } catch(e) { alert("Erro ao salvar foto de capa: " + e.message); } }
+            let finalLogoUrl = logoImgUrlAtual; if (logoImgFile) { try { finalLogoUrl = await uploadToImgBB(logoImgFile); logoImgUrlAtual = finalLogoUrl; logoImgFile = null; } catch(e) { alert("Erro ao salvar logo: " + e.message); } }
 
-        const textosCustomizados = {
-            heroTitle: document.getElementById('txt-hero-title').value, heroSubtitle: document.getElementById('txt-hero-subtitle').value, heroBtn: document.getElementById('txt-hero-btn').value, productsTitle: document.getElementById('txt-products-title').value, trust1: document.getElementById('txt-trust-1').value, trust2: document.getElementById('txt-trust-2').value, trust3: document.getElementById('txt-trust-3').value, footerSlogan: document.getElementById('txt-footer-slogan').value, corSecundaria: novaCorSecundaria, corTextoBotao: novaCorTextoBtn, logoStyle: novoEstiloLogo, heroImage: finalHeroUrl, logoUrl: finalLogoUrl, rastreio: document.getElementById('txt-rastreio').value, faq: document.getElementById('txt-faq').value, devolucao: document.getElementById('txt-devolucao').value, contato: document.getElementById('txt-contato').value, api_imgbb_key: IMGBB_API_KEY, api_gemini_key: GEMINI_API_KEY
-        };
+            const textosCustomizados = {
+                heroTitle: document.getElementById('txt-hero-title').value, 
+                heroSubtitle: document.getElementById('txt-hero-subtitle').value, 
+                heroBtn: document.getElementById('txt-hero-btn').value, 
+                productsTitle: document.getElementById('txt-products-title').value, 
+                trust1: document.getElementById('txt-trust-1').value, 
+                trust2: document.getElementById('txt-trust-2').value, 
+                trust3: document.getElementById('txt-trust-3').value, 
+                footerSlogan: document.getElementById('txt-footer-slogan').value, 
+                corSecundaria: novaCorSecundaria, 
+                corTextoBotao: novaCorTextoBtn, 
+                logoStyle: novoEstiloLogo, 
+                heroImage: finalHeroUrl, 
+                logoUrl: finalLogoUrl, 
+                rastreio: document.getElementById('txt-rastreio').value, 
+                faq: document.getElementById('txt-faq').value, 
+                devolucao: document.getElementById('txt-devolucao').value, 
+                contato: document.getElementById('txt-contato').value, 
+                api_imgbb_key: IMGBB_API_KEY, 
+                api_gemini_key: GEMINI_API_KEY,
+                
+                gatewayProvider: document.getElementById('gateway-provider').value,
+                gatewayPublicKey: document.getElementById('gateway-public-key').value,
+                gatewayAccessToken: document.getElementById('gateway-access-token').value,
+                enableCC: document.getElementById('enable-cc').value,
+                enablePix: document.getElementById('enable-pix').value
+            };
 
-        const slug = new URLSearchParams(window.location.search).get('loja'); if(slug) localStorage.setItem('theme_color_' + slug, novaCor); 
+            const slug = new URLSearchParams(window.location.search).get('loja'); 
+            if(slug) localStorage.setItem('theme_color_' + slug, novaCor); 
 
-        const textColor = novaCorTextoBtn === 'auto' ? getContrastYIQ(novaCor) : novaCorTextoBtn;
-        document.documentElement.style.setProperty('--accent-neon', novaCor); document.documentElement.style.setProperty('--text-on-accent', textColor);
-        
-        await supabaseClient.from('lojas').update({ cor_principal: novaCor, textos: textosCustomizados }).eq('id', lojaIdAtual);
-        
-        btn.innerHTML = '<i class="fas fa-check"></i> Sucesso!'; btn.disabled = false; setTimeout(() => btn.innerHTML = textOrig, 2000);
+            const textColor = novaCorTextoBtn === 'auto' ? getContrastYIQ(novaCor) : novaCorTextoBtn;
+            document.documentElement.style.setProperty('--accent-neon', novaCor); 
+            document.documentElement.style.setProperty('--text-on-accent', textColor);
+            
+            const { error } = await supabaseClient.from('lojas').update({ cor_principal: novaCor, textos: textosCustomizados }).eq('id', lojaIdAtual);
+            if (error) throw error;
+
+            btn.innerHTML = '<i class="fas fa-check"></i> Sucesso!'; 
+        } catch (error) {
+            alert("Erro ao salvar: " + error.message);
+        } finally {
+            setTimeout(() => { btn.innerHTML = textOrig; btn.disabled = false; }, 2000);
+        }
     }
+    
 
     async function loadColecoes() {
         const list = document.getElementById('collections-list'); const select = document.getElementById('prod-collection');
