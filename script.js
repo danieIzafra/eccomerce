@@ -125,6 +125,12 @@ document.addEventListener('DOMContentLoaded', () => {
             if (btnTamanhoAtivo && document.getElementById('size-options-container')?.style.display !== 'none') {
                 nome = `${nome} (Tam: ${btnTamanhoAtivo.innerText})`;
             }
+            
+            // Pega a variação caso tenha sido selecionada na página de produto
+            const variacaoAtiva = btnAdd.getAttribute('data-variacao');
+            if (variacaoAtiva) {
+                nome = `${nome} - ${variacaoAtiva}`;
+            }
 
             if (!nome || isNaN(preco)) return;
             const originalHtml = btnAdd.innerHTML; btnAdd.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A processar...'; btnAdd.style.pointerEvents = 'none';
@@ -150,6 +156,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnTamanhoAtivo = document.querySelector('.size-btn.active');
             if (btnTamanhoAtivo && document.getElementById('size-options-container')?.style.display !== 'none') {
                 nome = `${nome} (Tam: ${btnTamanhoAtivo.innerText})`;
+            }
+
+            // Pega a variação caso tenha sido selecionada
+            const variacaoAtiva = mainAddBtn.getAttribute('data-variacao');
+            if (variacaoAtiva) {
+                nome = `${nome} - ${variacaoAtiva}`;
             }
 
             // CORREÇÃO: Alerta visual se o produto ainda estiver carregando
@@ -187,7 +199,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const sizeBtns = document.querySelectorAll('.size-btn'); 
         sizeBtns.forEach(btn => { 
             btn.addEventListener('click', function() { 
-                sizeBtns.forEach(b => b.classList.remove('active')); 
+                // Evita tirar o active se for um botão de variação
+                if(this.classList.contains('var-btn')) return;
+                
+                // Limpa apenas os botões de tamanho (não os de variação)
+                const parentGroup = this.closest('.flex-options');
+                if (parentGroup) {
+                    parentGroup.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+                }
                 this.classList.add('active'); 
             }); 
         });
@@ -483,6 +502,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
+                // 👇 INÍCIO DA CORREÇÃO APLICADA 👇
+                if (typeof renderizarVariacoes === 'function') {
+                    renderizarVariacoes(p.variacoes);
+                }
+                // 👆 FIM DA CORREÇÃO APLICADA 👆
+
                 const formAval = document.getElementById('form-nova-avaliacao');
                 if(formAval) {
                     formAval.addEventListener('submit', async (e) => {
@@ -577,3 +602,67 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
 });
+
+// Função para exibir os botões de Variações
+function renderizarVariacoes(variacoes) {
+    const container = document.getElementById('variacoes-options-container');
+    const flexBox = document.getElementById('dynamic-variacoes');
+    
+    if (!variacoes || variacoes.length === 0) {
+        container.style.display = 'none';
+        return;
+    }
+
+    container.style.display = 'block';
+    flexBox.innerHTML = '';
+
+    variacoes.forEach((v, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'size-btn var-btn'; // Reaproveitando sua classe glassmorphism
+        btn.innerText = v.nome;
+        
+        btn.onclick = () => {
+            // Remove ativo dos outros
+            document.querySelectorAll('.var-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Salva a variação escolhida no botão principal para mandar pro carrinho
+            const mainAddBtn = document.getElementById('main-add-btn');
+            if (mainAddBtn) {
+                mainAddBtn.setAttribute('data-variacao', v.nome);
+            }
+
+            // Troca a imagem no carrossel
+            const carrossel = document.getElementById('main-carousel');
+            if (!carrossel) return;
+            const imagensCarrossel = carrossel.querySelectorAll('img');
+            
+            // Verifica se a imagem já faz parte do carrossel para rolar até ela
+            let indexEncontrado = -1;
+            imagensCarrossel.forEach((img, i) => {
+                if (img.src === v.imagem_url) indexEncontrado = i;
+            });
+
+            if (indexEncontrado !== -1) {
+                // Se existe no carrossel, apenas desliza
+                const item = carrossel.children[indexEncontrado];
+                carrossel.scrollTo({ left: item.offsetLeft, behavior: 'smooth' });
+                
+                document.querySelectorAll('.thumb-img').forEach(t => t.classList.remove('active'));
+                const thumbAtual = document.querySelectorAll('.thumb-img')[indexEncontrado];
+                if(thumbAtual) thumbAtual.classList.add('active');
+            } else {
+                // Se a imagem for exclusiva da variação e não estiver na galeria global, 
+                // substitui a primeira imagem temporariamente para dar o feedback visual
+                if (imagensCarrossel.length > 0) {
+                    imagensCarrossel[0].src = v.imagem_url;
+                    carrossel.scrollTo({ left: 0, behavior: 'smooth' });
+                    
+                    const primeiraThumb = document.querySelector('.thumb-img img');
+                    if(primeiraThumb) primeiraThumb.src = v.imagem_url;
+                }
+            }
+        };
+        flexBox.appendChild(btn);
+    });
+}
