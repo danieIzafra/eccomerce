@@ -82,6 +82,16 @@
         .gallery-item .overlay-actions { position: absolute; inset: 0; background: rgba(0,0,0,0.6); opacity: 0; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
         .gallery-item:hover .overlay-actions { opacity: 1; }
 
+        /* Estilos da Matriz de Estoque */
+        .estoque-matrix { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 10px; border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border-color); }
+        .estoque-matrix th { background: rgba(0,0,0,0.4); padding: 10px; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; border-bottom: 1px solid var(--border-color); }
+        .estoque-matrix td { padding: 10px; background: var(--bg-input); text-align: center; border-bottom: 1px solid var(--border-color); }
+        .estoque-matrix tr:last-child td { border-bottom: none; }
+        .var-label { font-weight: 600; color: var(--text-main); font-size: 0.85rem; text-align: left !important; }
+        .estoque-toggle { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: var(--text-muted); cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: 0.3s; width: 100%; display: flex; align-items: center; justify-content: center; }
+        .estoque-toggle.ativo { background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #10b981; }
+        .estoque-toggle:hover { filter: brightness(1.2); }
+
         .mobile-bottom-nav { display: none; }
         .badge-notification { background: #ef4444; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.65rem; font-weight: 800; position: absolute; z-index: 10; }
 
@@ -192,6 +202,14 @@
                                 <i class="fas fa-plus"></i> Adicionar Variação
                             </button>
                         </div>
+                        
+                        <div class="form-group" style="border: 1px solid var(--border-color); padding: 15px; border-radius: var(--radius-md); background: rgba(0,0,0,0.1); margin-top: 15px;">
+                            <label><i class="fas fa-boxes"></i> Disponibilidade de Estoque (Grade)</label>
+                            <div id="grade-estoque-container">
+                                <p style="font-size: 0.8rem; color: var(--text-muted); text-align: center;">Adicione variações e escolha a grade para configurar o estoque.</p>
+                            </div>
+                        </div>
+
                         <div class="form-group">
                             <label>Descrição</label>
                             <textarea id="prod-desc" class="form-control" rows="3"></textarea>
@@ -377,6 +395,10 @@
                             <label>Fale Conosco</label>
                             <textarea id="txt-contato" class="form-control" rows="2" placeholder="Email: suporte@suamarca.com"></textarea>
                         </div>
+                        <div class="form-group" style="margin-top: 15px; border-top: 1px dashed var(--border-color); padding-top: 15px;">
+                            <label><i class="fab fa-whatsapp" style="color:#10b981;"></i> WhatsApp para Receber Pedidos</label>
+                            <input type="text" id="whatsapp-pedidos" class="form-control" placeholder="Ex: 5511999999999 (Apenas números com DDD)">
+                        </div>
                     </div>
                 </div>
 
@@ -466,6 +488,7 @@
 
     var comentariosPendentes = [];
     var variacoesProduto = [];
+    var estoqueTemporario = {}; // Novo: Controle de estoque
 
     Sortable.create(document.getElementById('product-previews'), { animation: 150 });
     Sortable.create(document.getElementById('lookbook-previews'), { animation: 150 });
@@ -548,6 +571,7 @@
                 if(t.faq) document.getElementById('txt-faq').value = t.faq;
                 if(t.devolucao) document.getElementById('txt-devolucao').value = t.devolucao;
                 if(t.contato) document.getElementById('txt-contato').value = t.contato;
+                if(t.whatsappPedidos) document.getElementById('whatsapp-pedidos').value = t.whatsappPedidos; // NOVO
 
                 if (t.gatewayProvider) document.getElementById('gateway-provider').value = t.gatewayProvider;
                 if (t.gatewayPublicKey) document.getElementById('gateway-public-key').value = t.gatewayPublicKey;
@@ -592,7 +616,8 @@
                 rastreio: document.getElementById('txt-rastreio').value, 
                 faq: document.getElementById('txt-faq').value, 
                 devolucao: document.getElementById('txt-devolucao').value, 
-                contato: document.getElementById('txt-contato').value, 
+                contato: document.getElementById('txt-contato').value,
+                whatsappPedidos: document.getElementById('whatsapp-pedidos').value, // NOVO
                 api_imgbb_key: IMGBB_API_KEY, 
                 api_gemini_key: GEMINI_API_KEY,
                 
@@ -641,7 +666,54 @@
     function handleProductFiles(e) { Array.from(e.target.files).forEach(file => { const r = new FileReader(); r.onload = (evt) => { productImages.push({ id: gerarIdUnico(), file: file, base64: evt.target.result }); renderizarPreviewsProduto(); }; r.readAsDataURL(file); }); e.target.value = ''; }
     function renderizarPreviewsProduto() { const c = document.getElementById('product-previews'); c.innerHTML = ''; productImages.forEach(img => { c.innerHTML += `<div class="preview-item" data-id="${img.id}"><button type="button" class="remove-btn" onclick="productImages=productImages.filter(x=>x.id!=='${img.id}');renderizarPreviewsProduto()"><i class="fas fa-times"></i></button><img src="${img.base64 || img.url}"></div>`; }); }
     
+    // ==========================================
+    // LÓGICA DE ESTOQUE (GRADE X VARIAÇÃO)
+    // ==========================================
+    function atualizarPainelEstoque() {
+        const tipoTamanho = document.getElementById('prod-size-type').value;
+        const container = document.getElementById('grade-estoque-container');
+        
+        let tamanhos = [];
+        if (tipoTamanho === 'letras') tamanhos = ['P', 'M', 'G', 'GG'];
+        else if (tipoTamanho === 'numeros_roupa') tamanhos = ['36', '38', '40', '42', '44', '46'];
+        else if (tipoTamanho === 'numeros_calcado') tamanhos = ['38', '39', '40', '41', '42', '43'];
+        else { 
+            container.innerHTML = '<p style="font-size: 0.8rem; color: var(--text-muted); text-align: center;">O estoque manual não se aplica a Tamanho Único.</p>'; 
+            return; 
+        }
+
+        const varsAtuais = variacoesProduto.filter(v => v.nome && v.nome.trim() !== '').map(v => v.nome);
+        if (varsAtuais.length === 0) varsAtuais.push('Padrão');
+
+        let html = '<table class="estoque-matrix"><thead><tr><th style="text-align: left;">Variação</th>';
+        tamanhos.forEach(t => html += `<th>${t}</th>`);
+        html += '</tr></thead><tbody>';
+
+        varsAtuais.forEach(v => {
+            html += `<tr><td class="var-label">${v}</td>`;
+            tamanhos.forEach(t => {
+                const isDisponivel = (estoqueTemporario[v] && estoqueTemporario[v][t] === false) ? false : true;
+                const btnClass = isDisponivel ? 'estoque-toggle ativo' : 'estoque-toggle';
+                const icon = isDisponivel ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>';
+                html += `<td><button type="button" class="${btnClass}" data-var="${v}" data-tam="${t}" onclick="toggleEstoqueBtn(this)">${icon}</button></td>`;
+            });
+            html += '</tr>';
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+    }
+
+    function toggleEstoqueBtn(btn) {
+        btn.classList.toggle('ativo');
+        const isAtivo = btn.classList.contains('ativo');
+        btn.innerHTML = isAtivo ? '<i class="fas fa-check"></i>' : '<i class="fas fa-times"></i>';
+    }
+
+    document.getElementById('prod-size-type').addEventListener('change', atualizarPainelEstoque);
+
+    // ==========================================
     // Funções de Variação
+    // ==========================================
     function adicionarCampoVariacao(dados = null) {
         const id = dados ? dados.id : gerarIdUnico();
         const nome = dados ? dados.nome : '';
@@ -654,7 +726,7 @@
         div.id = `var-${id}`;
         div.style.display = 'flex'; div.style.gap = '10px'; div.style.alignItems = 'center'; div.style.background = 'var(--bg-input)'; div.style.padding = '10px'; div.style.borderRadius = '8px'; div.style.border = '1px solid var(--border-color)';
         div.innerHTML = `
-            <input type="text" class="form-control" placeholder="Ex: Preto, Azul..." value="${nome}" onchange="atualizarNomeVariacao('${id}', this.value)" style="flex: 1;">
+            <input type="text" class="form-control" placeholder="Ex: Preto, Azul..." value="${nome}" oninput="atualizarNomeVariacao('${id}', this.value)" style="flex: 1;">
             <label class="btn-icon" style="cursor: pointer; position: relative;" title="Anexar Imagem">
                 <i class="fas fa-image"></i>
                 <input type="file" style="display:none;" accept="image/*" onchange="handleImagemVariacao(event, '${id}')">
@@ -663,10 +735,13 @@
             <button type="button" class="btn-icon danger" onclick="removerVariacao('${id}')"><i class="fas fa-trash"></i></button>
         `;
         document.getElementById('variacoes-lista').appendChild(div);
+        atualizarPainelEstoque();
     }
 
     function atualizarNomeVariacao(id, nome) {
         const v = variacoesProduto.find(x => x.id === id); if(v) v.nome = nome;
+        clearTimeout(window.tmEstoque);
+        window.tmEstoque = setTimeout(atualizarPainelEstoque, 500);
     }
 
     function handleImagemVariacao(e, id) {
@@ -686,6 +761,7 @@
     function removerVariacao(id) {
         variacoesProduto = variacoesProduto.filter(x => x.id !== id);
         document.getElementById(`var-${id}`).remove();
+        atualizarPainelEstoque();
     }
 
     async function loadProducts() {
@@ -711,11 +787,16 @@
         document.getElementById('prod-size-type').value = p.tipo_tamanho || 'numeros_calcado'; 
         document.getElementById('prod-frete').value = p.frete_gratis ? 'true' : 'false';
         
+        // Carrega estoque salvo
+        estoqueTemporario = p.estoque || {};
+
         document.getElementById('variacoes-lista').innerHTML = '';
         variacoesProduto = [];
         if (p.variacoes && p.variacoes.length > 0) {
             p.variacoes.forEach(v => adicionarCampoVariacao({ id: gerarIdUnico(), nome: v.nome, imagem_url: v.imagem_url }));
         }
+
+        atualizarPainelEstoque();
 
         productImages = []; (p.imagens && p.imagens.length ? p.imagens : [p.imagem_url]).forEach(url => { if(url) productImages.push({ id: gerarIdUnico(), url: url }); }); renderizarPreviewsProduto();
         document.getElementById('titulo-form-produto').innerHTML = '<i class="fas fa-pen"></i> Editando'; document.getElementById('btn-cancel-edit').style.display = 'block'; document.getElementById('accordion-produto').classList.add('active'); window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -727,6 +808,8 @@
         productImages = []; comentariosPendentes = []; 
         document.getElementById('variacoes-lista').innerHTML = '';
         variacoesProduto = [];
+        estoqueTemporario = {};
+        atualizarPainelEstoque();
         renderizarPreviewsProduto(); 
         document.getElementById('titulo-form-produto').innerHTML = '<i class="fas fa-plus-circle"></i> Lançar'; document.getElementById('btn-cancel-edit').style.display = 'none'; document.getElementById('accordion-produto').classList.remove('active'); 
     }
@@ -737,6 +820,15 @@
         e.preventDefault(); const domEls = document.querySelectorAll('#product-previews .preview-item'); if(domEls.length===0) return alert("Adicione foto.");
         const btn = document.getElementById('btn-save-product'); const textOrig = btn.innerHTML; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; btn.disabled = true;
         try {
+            // Captura a Grade de Estoque
+            let estoqueFinal = {};
+            document.querySelectorAll('.estoque-toggle').forEach(btnToggle => {
+                const vNome = btnToggle.getAttribute('data-var');
+                const vTam = btnToggle.getAttribute('data-tam');
+                if (!estoqueFinal[vNome]) estoqueFinal[vNome] = {};
+                estoqueFinal[vNome][vTam] = btnToggle.classList.contains('ativo');
+            });
+
             let finalUrls = [];
             for (let el of domEls) {
                 const img = productImages.find(x => x.id === el.getAttribute('data-id'));
@@ -763,7 +855,8 @@
                 colecao: document.getElementById('prod-collection').value || null, 
                 tipo_tamanho: document.getElementById('prod-size-type').value,
                 frete_gratis: document.getElementById('prod-frete').value === 'true',
-                variacoes: variacoesFinais
+                variacoes: variacoesFinais,
+                estoque: estoqueFinal // NOVO: Matriz adicionada aqui
             };
             
             let currentProdId = isEdit;

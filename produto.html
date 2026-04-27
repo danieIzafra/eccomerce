@@ -84,6 +84,15 @@
         .size-btn { padding: 0.5rem 1rem; border: 1px solid var(--glass-border); border-radius: 0.5rem; background: transparent; color: var(--text-primary); cursor: pointer; font-weight: 500; transition: 0.3s; flex: 1 1 auto; text-align: center; }
         .size-btn.active, .size-btn:hover { border-color: var(--accent-color); background: var(--accent-color); color: #000; }
 
+        /* NOVA CLASSE DE ESTOQUE ESGOTADO */
+        .size-btn.esgotado {
+            opacity: 0.3;
+            pointer-events: none;
+            text-decoration: line-through;
+            border-color: rgba(255, 255, 255, 0.1);
+            background: repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,0.05) 5px, rgba(255,255,255,0.05) 10px);
+        }
+
         .action-area { display: flex; gap: 1rem; flex-direction: column; margin-bottom: 2rem; }
         .cta-btn { background: var(--btn-gradient, var(--accent-color)); color: var(--text-on-accent, #000); border: none; padding: 1.2rem; border-radius: 0.5rem; font-size: 1.2rem; font-weight: 700; text-transform: uppercase; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 0.5rem; transition: 0.3s; width: 100%; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .cta-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); filter: brightness(1.1); }
@@ -382,7 +391,6 @@
             else { contentBox.classList.add('expanded'); btn.innerHTML = 'Ocultar descrição <i class="fas fa-chevron-up"></i>'; }
         }
 
-        // Lógica consistente do cálculo de frete
         document.getElementById('cep-input').addEventListener('input', function(e) {
             let v = e.target.value.replace(/\D/g, ""); v = v.replace(/^(\d{5})(\d)/, "$1-$2"); e.target.value = v.substring(0, 9);
         });
@@ -406,7 +414,7 @@
                 if(data.erro) throw new Error();
                 
                 let freteExpresso = 29.90;
-                let fretePadrao = 19.90; // Default: Sul / Etc
+                let fretePadrao = 19.90; 
                 
                 const sudeste = ['SP', 'RJ', 'MG', 'ES'];
                 const norteNordeste = ['BA','CE','PE','MA','RN','PB','AL','SE','PI','AM','PA','AC','RR','RO','AP','TO','MT','GO','MS','DF'];
@@ -432,10 +440,48 @@
             });
         }
 
-        // NOVA LÓGICA DE VARIAÇÕES 
+        // ==========================================
+        // NOVA LÓGICA DE VARIAÇÕES X ESTOQUE
+        // ==========================================
+        function atualizarTamanhosVisuais(nomeVariacao) {
+            const sizeBtns = document.querySelectorAll('#dynamic-sizes .size-btn');
+            const estoqueDaVariacao = window.estoqueProduto ? window.estoqueProduto[nomeVariacao] : null;
+
+            sizeBtns.forEach(btn => {
+                const tam = btn.innerText;
+                // Se a matriz existe e diz que é false, está esgotado. Se não existir, assume true (para compatibilidade retroativa)
+                const temEstoque = (estoqueDaVariacao && estoqueDaVariacao[tam] === false) ? false : true;
+                
+                if (!temEstoque) {
+                    btn.classList.add('esgotado');
+                    btn.classList.remove('active'); // Tira a seleção se estiver esgotado
+                } else {
+                    btn.classList.remove('esgotado');
+                }
+            });
+        }
+
         function renderizarVariacoes(variacoes) {
             const container = document.getElementById('variacoes-options-container');
             const flexBox = document.getElementById('dynamic-variacoes');
+
+            // Captura o estoque de forma independente para não mexer no script.js
+            const paramsProd = new URLSearchParams(window.location.search);
+            const idProdutoLocal = paramsProd.get('id');
+            if (!window.estoqueProduto && idProdutoLocal) {
+                // Instancia o cliente supabase para a chamada local rápida (usando tuas chaves)
+                const SUPABASE_URL = 'https://ikkjgtgvohrwurtiustm.supabase.co'; 
+                const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra2pndGd2b2hyd3VydGl1c3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NzE4OTEsImV4cCI6MjA5MDE0Nzg5MX0.HNrSvCmSHWTe2yoQy27GOq5g_ZoZxFdox_eCW14f_nI';
+                const s = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                
+                s.from('produtos').select('estoque').eq('id', idProdutoLocal).single().then(({data}) => {
+                    window.estoqueProduto = data?.estoque || {};
+                    // Se não existirem variações, atualiza a grade "Padrão"
+                    if (!variacoes || variacoes.length === 0) {
+                        atualizarTamanhosVisuais('Padrão');
+                    }
+                });
+            }
 
             if (!variacoes || variacoes.length === 0) {
                 container.style.display = 'none';
@@ -451,15 +497,16 @@
                 btn.innerText = v.nome;
 
                 btn.onclick = () => {
-                    // Remove ativo dos outros
                     document.querySelectorAll('.var-btn').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
 
-                    // Salva a variação escolhida no botão principal (para o script.js puxar pro carrinho)
                     const mainAddBtn = document.getElementById('main-add-btn');
                     if (mainAddBtn) {
                         mainAddBtn.setAttribute('data-variacao', v.nome);
                     }
+
+                    // Atualiza a grade de tamanhos consoante a disponibilidade desta variação
+                    atualizarTamanhosVisuais(v.nome);
 
                     // Lógica para trocar/deslizar a imagem do carrossel
                     const carrossel = document.getElementById('main-carousel');
@@ -490,6 +537,13 @@
                 };
                 flexBox.appendChild(btn);
             });
+
+            // Força o clique no primeiro botão para acionar a grade inicial
+            setTimeout(() => {
+                if (flexBox.children.length > 0) {
+                    flexBox.children[0].click();
+                }
+            }, 150);
         }
     </script>
 </body>
