@@ -299,7 +299,7 @@
                         
                         <div style="display: flex; gap: 10px; margin-top: 1rem;">
                             <button type="button" class="btn-primary" style="background: var(--glass-input); color: var(--text-primary); border: 1px solid var(--glass-border); flex: 0.4;" onclick="goToStep(1)">Voltar</button>
-                            <button type="button" class="btn-primary" id="btn-finalizar-pix" style="flex: 1;" onclick="concluirPagamento()"><i class="fas fa-copy"></i> Copiar e Finalizar</button>
+                            <button type="button" class="btn-primary" id="btn-finalizar-pix" style="flex: 1;"><i class="fas fa-copy"></i> Copiar Chave PIX</button>
                         </div>
                     </div>
                 </div>
@@ -626,10 +626,9 @@
             const urlWebhook = 'https://hook.us2.make.com/wasy76h8qayiv6gp5ytwchkl7o1kbc8f';
 
             if (urlWebhook && urlWebhook.startsWith('http')) {
-                let textoItens = carrinho.map(i => `▫️ ${i.quantidade}x ${i.nome}`).join('\\n');
+                let textoItens = carrinho.map(i => `▫️ ${i.quantidade}x ${i.nome}`).join('\n');
                 let metodoFormatado = metodo === 'credit_card' ? '💳 Cartão de Crédito' : '💠 PIX';
                 
-                // Empacota os dados para enviar à automação
                 const payload = {
                     numero_pedido: numeroFormatado,
                     nome_cliente: nome,
@@ -637,20 +636,55 @@
                     itens: textoItens,
                     valor_total: (totalCarrinho + valorFrete).toFixed(2),
                     metodo_pagamento: metodoFormatado,
-                    whatsapp_lojista: whatsappLoja // Envia o número do admin para o Make saber a quem notificar
+                    whatsapp_lojista: whatsappLoja
                 };
 
-                // Disparo em segundo plano (O cliente não vê nada)
-                fetch(urlWebhook, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                }).catch(err => console.log("Erro silencioso no Webhook:", err));
+                try {
+                    await fetch(urlWebhook, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    console.log("🚀 Webhook disparado com sucesso para o Make!");
+                } catch (err) {
+                    console.error("❌ Erro no disparo do Webhook:", err);
+                }
             }
 
-    // Apenas retorna o número, já não devolve link do WhatsApp para abrir popups
-    return { numeroGerado: numeroFormatado, linkWpp: null };
-}
+            // Retorna também o ID real do banco para podermos monitorar o PIX
+            return { numeroGerado: numeroFormatado, idPedidoBD: idPedido };
+        }
+
+        let intervaloPix = null;
+
+        function iniciarMonitoramentoPix(idPedido) {
+            if (intervaloPix) clearInterval(intervaloPix);
+            
+            let tentativas = 0;
+            // Checa o banco de dados a cada 5 segundos
+            intervaloPix = setInterval(async () => {
+                tentativas++;
+                if (tentativas > 120) { // Cancela após 10 minutos (120 tentativas de 5s)
+                    clearInterval(intervaloPix);
+                    const btnPix = document.getElementById('btn-finalizar-pix');
+                    if(btnPix) btnPix.innerHTML = '<i class="fas fa-times"></i> Tempo Esgotado. Gere novo PIX.';
+                    return;
+                }
+
+                // Consulta o status do pedido no Supabase
+                const { data, error } = await clienteSupa
+                    .from('pedidos')
+                    .select('status')
+                    .eq('id', idPedido)
+                    .single();
+
+                // Se o Webhook atualizou o status para aprovado ou pago, avança a tela!
+                if (data && (data.status === 'aprovado' || data.status === 'pago' || data.status === 'approved')) {
+                    clearInterval(intervaloPix);
+                    goToStep(3); // Vai para a tela de Sucesso!
+                }
+            }, 5000);
+        }
 
         async function gerarPixAutomatico() {
             const btnPix = document.getElementById('btn-finalizar-pix');
@@ -670,19 +704,25 @@
                 if (gatewayConfig.provider === 'mock') {
                     await new Promise(r => setTimeout(r, 1000));
                     if(btnPix) {
-                        btnPix.innerHTML = '<i class="fas fa-copy"></i> Copiar e Finalizar Compra'; 
+                        btnPix.innerHTML = '<i class="fas fa-copy"></i> Copiar Chave PIX'; 
                         btnPix.disabled = false;
+                        
                         btnPix.onclick = async function() {
                             const inputCopiaCola = document.querySelector('.pix-container input');
                             if(inputCopiaCola) { inputCopiaCola.select(); document.execCommand("copy"); }
-                            btnPix.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A finalizar...';
                             
-                            const numeroGerado = await registrarPedidoEEnviarWhatsApp('pix', 'pendente');
+                            btnPix.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chave Copiada! Aguardando pagamento...';
+                            
+                            const res = await registrarPedidoEEnviarWhatsApp('pix', 'pendente');
+                            const numeroGerado = res ? res.numeroGerado : null;
+                            const idPedidoBD = res ? res.idPedidoBD : null;
                             
                             document.getElementById('order-id').innerText = numeroGerado || '#PIX-TESTE';
                             document.getElementById('order-date').innerText = new Date().toLocaleDateString('pt-BR');
                             localStorage.removeItem(CHAVE_CARRINHO);
-                            goToStep(3);
+                            
+                            // Em modo teste, simula o pagamento caindo após 8 segundos
+                            setTimeout(() => { goToStep(3); }, 8000);
                         };
                     }
                     return;
@@ -697,20 +737,30 @@
                     if(inputCopiaCola) inputCopiaCola.value = data.copia_cola;
                     
                     if(btnPix) {
-                        btnPix.innerHTML = '<i class="fas fa-copy"></i> Copiar e Finalizar Compra'; 
+                        btnPix.innerHTML = '<i class="fas fa-copy"></i> Copiar Chave PIX'; 
                         btnPix.disabled = false;
                         
                         btnPix.onclick = async function() {
+                            // Copia a chave
                             inputCopiaCola.select();
                             document.execCommand("copy");
-                            btnPix.innerHTML = '<i class="fas fa-spinner fa-spin"></i> A finalizar...';
                             
-                            const numeroGerado = await registrarPedidoEEnviarWhatsApp('pix', 'pendente');
+                            // Altera o visual do botão
+                            btnPix.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chave Copiada! Aguardando banco...';
+                            
+                            // Registra o pedido como 'pendente'
+                            const res = await registrarPedidoEEnviarWhatsApp('pix', 'pendente');
+                            const numeroGerado = res ? res.numeroGerado : null;
+                            const idPedidoBD = res ? res.idPedidoBD : null; // Pega o ID real
                             
                             document.getElementById('order-id').innerText = numeroGerado || '#PIX-GERADO';
                             document.getElementById('order-date').innerText = new Date().toLocaleDateString('pt-BR');
                             localStorage.removeItem(CHAVE_CARRINHO);
-                            goToStep(3);
+                            
+                            // Inicia o monitoramento real no banco de dados!
+                            if(idPedidoBD) {
+                                iniciarMonitoramentoPix(idPedidoBD);
+                            }
                         };
                     }
                 } else {
@@ -739,7 +789,9 @@
                 // ==========================================
                 if (gatewayConfig.provider === 'mock') {
                     await new Promise(r => setTimeout(r, 1200)); // Finge que está a consultar o banco
-                    const numeroGerado = await registrarPedidoEEnviarWhatsApp('credit_card', 'aprovado');
+                    
+                    const res = await registrarPedidoEEnviarWhatsApp('credit_card', 'aprovado');
+                    const numeroGerado = res ? res.numeroGerado : null;
                     
                     document.getElementById('order-id').innerText = numeroGerado || ('#TESTE-' + Math.floor(Math.random() * 90000 + 10000));
                     document.getElementById('order-date').innerText = new Date().toLocaleDateString('pt-BR');
@@ -784,7 +836,9 @@
                 if (error) throw new Error("Falha na ligação com o servidor.");
 
                 if (data && data.sucesso) {
-                    const numeroGerado = await registrarPedidoEEnviarWhatsApp('credit_card', 'aprovado');
+                    const res = await registrarPedidoEEnviarWhatsApp('credit_card', 'aprovado');
+                    const numeroGerado = res ? res.numeroGerado : null;
+                    
                     document.getElementById('order-id').innerText = numeroGerado || ('#' + (data.id_transacao || Math.floor(Math.random() * 90000 + 10000)));
                     document.getElementById('order-date').innerText = new Date().toLocaleDateString('pt-BR');
                     localStorage.removeItem(CHAVE_CARRINHO);
