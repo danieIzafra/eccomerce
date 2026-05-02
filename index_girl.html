@@ -7,52 +7,7 @@
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style id="cortina-saas">body { opacity: 0 !important; visibility: hidden !important; }</style>
-    
-    <script>
-        if (!window.__SaaS_Intercepted__) {
-            window.__SaaS_Intercepted__ = true;
-            (async function() {
-                try {
-                    const params = new URLSearchParams(window.location.search);
-                    const slug = params.get('loja');
-                    if (!slug) { document.getElementById('cortina-saas')?.remove(); return; }
-
-                    const SUPABASE_URL = 'https://ikkjgtgvohrwurtiustm.supabase.co'; 
-                    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra2pndGd2b2hyd3VydGl1c3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NzE4OTEsImV4cCI6MjA5MDE0Nzg5MX0.HNrSvCmSHWTe2yoQy27GOq5g_ZoZxFdox_eCW14f_nI';
-                    const supaClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-                    const { data } = await supaClient.from('lojas').select('codigo_customizado').eq('slug', slug).single();
-                    let usouCodigoNovo = false;
-
-                    if (data && data.codigo_customizado) {
-                        const codigos = typeof data.codigo_customizado === 'string' ? JSON.parse(data.codigo_customizado) : data.codigo_customizado;
-                        let paginaAtual = window.location.pathname.split('/').pop().replace('.html', '');
-                        if (!paginaAtual || paginaAtual === '') paginaAtual = 'index'; 
-                        
-                        if (codigos[paginaAtual] && codigos[paginaAtual].length > 50) {
-                            usouCodigoNovo = true;
-                            let tagFechamento = '</' + 'style>';
-                            let htmlLimpo = codigos[paginaAtual].replace(new RegExp('<style id="cortina-saas">[\\s\\S]*?' + tagFechamento, 'ig'), '');
-
-                            document.open(); document.write(htmlLimpo); document.close();
-                            
-                            if (codigos.style) { const tagCss = document.createElement('style'); tagCss.textContent = codigos.style; document.head.appendChild(tagCss); }
-                            if (codigos.script) { const tagJs = document.createElement('script'); tagJs.textContent = codigos.script; document.body.appendChild(tagJs); }
-                        }
-                    }
-
-                    if (!usouCodigoNovo) document.getElementById('cortina-saas')?.remove();
-
-                } catch (err) { document.getElementById('cortina-saas')?.remove(); }
-            })();
-        } else {
-            setTimeout(function() {
-                var cortina = document.getElementById('cortina-saas');
-                if (cortina) cortina.remove();
-                document.body.style.opacity = '1'; document.body.style.visibility = 'visible';
-            }, 100);
-        }
-    </script>
+    <script src="interceptador.js"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
@@ -284,8 +239,8 @@
     <footer><p>&copy; 2026 SaaS Master. Desenvolvido com excelência.</p></footer>
 
     <script>
-        const observerOptions = { root: null, rootMargin: '0px', threshold: 0.15 };
-        const observer = new IntersectionObserver((entries, obs) => {
+        var observerOptions = { root: null, rootMargin: '0px', threshold: 0.15 };
+        var observer = new IntersectionObserver((entries, obs) => {
             entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
         });
         document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
@@ -309,13 +264,13 @@
             return min > 0 ? min : parseInt(str) || 60;
         }
 
-        const SUPABASE_URL = 'https://ikkjgtgvohrwurtiustm.supabase.co'; 
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra2pndGd2b2hyd3VydGl1c3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NzE4OTEsImV4cCI6MjA5MDE0Nzg5MX0.HNrSvCmSHWTe2yoQy27GOq5g_ZoZxFdox_eCW14f_nI';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        var SUPABASE_URL = 'https://ikkjgtgvohrwurtiustm.supabase.co'; 
+        var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra2pndGd2b2hyd3VydGl1c3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NzE4OTEsImV4cCI6MjA5MDE0Nzg5MX0.HNrSvCmSHWTe2yoQy27GOq5g_ZoZxFdox_eCW14f_nI';
+        var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        const slug = new URLSearchParams(window.location.search).get('loja');
-        let lojaId = null;
-        let servicosGlobais = [];
+        var slug = new URLSearchParams(window.location.search).get('loja');
+        var lojaId = null;
+        var servicosGlobais = [];
 
         async function initSaaS() {
             if(!slug) return document.getElementById('titulo-hero').innerHTML = "Demonstração<br><span id='hero-subtitulo'>Painel Master</span>";
@@ -430,8 +385,8 @@
             }
         }
 
-        const catSelect = document.getElementById('categoria-agendamento');
-        const servSelect = document.getElementById('servico-agendamento');
+        var catSelect = document.getElementById('categoria-agendamento');
+        var servSelect = document.getElementById('servico-agendamento');
         
         catSelect.addEventListener('change', (e) => {
             servSelect.innerHTML = '<option value="" disabled selected>Escolha o serviço...</option>';
