@@ -2,528 +2,524 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studio | Alto Padrão</title>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style id="cortina-saas">body { opacity: 0 !important; visibility: hidden !important; }</style>
+    
     <script>
-        // ESCUDO ANTI-LOOP E ANTI-SINTAXE DEFINITIVO
         if (!window.__SaaS_Intercepted__) {
             window.__SaaS_Intercepted__ = true;
             (async function() {
                 try {
                     const params = new URLSearchParams(window.location.search);
                     const slug = params.get('loja');
-                    
-                    if (!slug) {
-                        document.getElementById('cortina-saas')?.remove();
-                        return;
-                    }
+                    if (!slug) { document.getElementById('cortina-saas')?.remove(); return; }
 
                     const SUPABASE_URL = 'https://ikkjgtgvohrwurtiustm.supabase.co'; 
                     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra2pndGd2b2hyd3VydGl1c3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NzE4OTEsImV4cCI6MjA5MDE0Nzg5MX0.HNrSvCmSHWTe2yoQy27GOq5g_ZoZxFdox_eCW14f_nI';
                     const supaClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
                     const { data } = await supaClient.from('lojas').select('codigo_customizado').eq('slug', slug).single();
-                    
                     let usouCodigoNovo = false;
 
                     if (data && data.codigo_customizado) {
                         const codigos = typeof data.codigo_customizado === 'string' ? JSON.parse(data.codigo_customizado) : data.codigo_customizado;
-                        
                         let paginaAtual = window.location.pathname.split('/').pop().replace('.html', '');
                         if (!paginaAtual || paginaAtual === '') paginaAtual = 'index'; 
                         
                         if (codigos[paginaAtual] && codigos[paginaAtual].length > 50) {
                             usouCodigoNovo = true;
-                            
-                            // A MÁGICA AQUI: Construir o Regex dinamicamente evita que o navegador quebre o document.write
                             let tagFechamento = '</' + 'style>';
-                            let cortinaRegex = new RegExp('<style id="cortina-saas">[\\s\\S]*?' + tagFechamento, 'ig');
-                            let htmlLimpo = codigos[paginaAtual].replace(cortinaRegex, '');
+                            let htmlLimpo = codigos[paginaAtual].replace(new RegExp('<style id="cortina-saas">[\\s\\S]*?' + tagFechamento, 'ig'), '');
 
-                            document.open();
-                            document.write(htmlLimpo);
-                            document.close();
+                            document.open(); document.write(htmlLimpo); document.close();
                             
-                            if (codigos.style) {
-                                const tagCss = document.createElement('style');
-                                tagCss.textContent = codigos.style;
-                                document.head.appendChild(tagCss);
-                            }
-                            
-                            if (codigos.script) {
-                                const tagJs = document.createElement('script');
-                                tagJs.textContent = codigos.script;
-                                document.body.appendChild(tagJs);
-                            }
+                            if (codigos.style) { const tagCss = document.createElement('style'); tagCss.textContent = codigos.style; document.head.appendChild(tagCss); }
+                            if (codigos.script) { const tagJs = document.createElement('script'); tagJs.textContent = codigos.script; document.body.appendChild(tagJs); }
                         }
                     }
 
-                    if (!usouCodigoNovo) {
-                        document.getElementById('cortina-saas')?.remove();
-                    }
+                    if (!usouCodigoNovo) document.getElementById('cortina-saas')?.remove();
 
-                } catch (err) {
-                    console.error("Erro no interceptador:", err);
-                    document.getElementById('cortina-saas')?.remove();
-                }
+                } catch (err) { document.getElementById('cortina-saas')?.remove(); }
             })();
         } else {
-            // PLANO B: Se o código já foi injetado, garante que a tela vai aparecer
             setTimeout(function() {
                 var cortina = document.getElementById('cortina-saas');
                 if (cortina) cortina.remove();
-                document.body.style.opacity = '1';
-                document.body.style.visibility = 'visible';
+                document.body.style.opacity = '1'; document.body.style.visibility = 'visible';
             }, 100);
         }
     </script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Studio | Nail Art & Cuidados</title>
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* ==========================================
-           Tema Fluido (Minimalista / Mobile-First)
-           ========================================== */
         :root {
-            --bg-color: #120c0f; 
-            --text-color: #fdf8fa;
-            --accent: #f472b6; 
-            --accent-hover: #ec4899;
-            --glass-bg: rgba(255, 255, 255, 0.04);
+            --bg-color: #120b0e; 
+            --text-color: #fcf5f7;
+            /* Cor Fixa Alice Russo - Rosé Gold Brilhante */
+            --accent: #e8a5b1; 
+            --accent-hover: #ffc4d0;
+            
+            --glass-bg: rgba(28, 17, 22, 0.45);
             --glass-border: rgba(255, 255, 255, 0.08);
-            --font-heading: 'Playfair Display', serif; 
+            --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            --glass-highlight: rgba(255, 255, 255, 0.1);
+            --font-heading: 'Playfair Display', serif;
             --font-body: 'Montserrat', sans-serif;
-            --spacing-section: 80px;
-        }
-
-        [data-theme="light"] {
-            --bg-color: #fdfafb; 
-            --text-color: #2d1b24;
-            --accent: #db2777; 
-            --accent-hover: #be185d;
-            --glass-bg: rgba(0, 0, 0, 0.03);
-            --glass-border: rgba(0, 0, 0, 0.06);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body { 
-            background-color: var(--bg-color); 
-            color: var(--text-color); 
-            font-family: var(--font-body); 
-            line-height: 1.7; 
-            position: relative; 
-            overflow-x: hidden; 
-            min-height: 100vh; 
-            transition: background-color 0.4s ease, color 0.4s ease; 
-            font-size: 1rem; 
-        }
+        body { background-color: var(--bg-color); color: var(--text-color); font-family: var(--font-body); line-height: 1.6; overflow-x: hidden; min-height: 100vh; }
 
-        /* Luzes flutuantes */
-        body::before, body::after { 
-            content: ''; position: fixed; border-radius: 50%; 
-            filter: blur(90px); z-index: -1; opacity: 0.35; 
-            animation: float 20s infinite alternate ease-in-out; 
-            pointer-events: none;
-        }
-        body::before { width: 350px; height: 350px; background: var(--accent); top: 5%; left: -10%; }
-        body::after { width: 400px; height: 400px; background: #9d4edd; bottom: -5%; right: -10%; animation-delay: -5s; }
-        @keyframes float { 0% { transform: translate(0, 0); } 100% { transform: translate(30px, 40px); } }
-        
-        h1, h2, h3 { font-family: var(--font-heading); font-weight: 400; line-height: 1.3; }
+        body::before, body::after { content: ''; position: fixed; border-radius: 50%; filter: blur(90px); z-index: -1; opacity: 0.6; animation: float 12s infinite alternate ease-in-out; }
+        body::before { width: 350px; height: 350px; background: var(--accent); top: 5%; left: -5%; }
+        body::after { width: 450px; height: 450px; background: #3a1c28; bottom: -10%; right: -5%; animation-delay: -6s; }
 
+        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(30px, 50px) scale(1.1); } }
+        h1, h2, h3 { font-family: var(--font-heading); font-weight: 400; }
         .fade-in { opacity: 0; transform: translateY(20px); transition: opacity 0.8s ease-out, transform 0.8s ease-out; }
         .fade-in.visible { opacity: 1; transform: translateY(0); }
 
-        .container { max-width: 800px; margin: 0 auto; padding: 0 24px; }
-        section { padding: var(--spacing-section) 0; }
-        
-        .section-title { 
-            text-align: center; 
-            font-size: 2.2rem; 
-            color: var(--accent); 
-            margin-bottom: 50px; 
-        }
+        .btn-primary { display: inline-block; padding: 12px 32px; background: var(--glass-bg); color: var(--accent); border: 1px solid var(--accent); text-transform: uppercase; letter-spacing: 2px; font-size: 0.85rem; font-weight: 500; text-decoration: none; cursor: pointer; transition: all 0.3s ease; border-radius: 30px; backdrop-filter: blur(4px); }
+        .btn-primary:hover { background: var(--accent); color: #120b0e; box-shadow: 0 0 15px rgba(232, 165, 177, 0.4); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .full-width { width: 100%; }
 
-        /* Navegação */
-        nav { 
-            padding: 30px 24px 0; 
-            display: flex; justify-content: space-between; align-items: center; 
-            max-width: 800px; margin: 0 auto; 
-        }
-        .theme-btn { 
-            background: var(--glass-bg); 
-            border: 1px solid var(--glass-border); 
-            color: var(--text-color); 
-            width: 44px; height: 44px; 
-            border-radius: 50%; cursor: pointer; 
-            font-size: 1.1rem; transition: all 0.3s ease; 
-            display: flex; align-items: center; justify-content: center; 
-            backdrop-filter: blur(10px);
-        }
-        .theme-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+        .floating-btn { position: fixed; bottom: 30px; right: 30px; background: var(--accent); color: #120b0e; padding: 15px 25px; border-radius: 30px; text-decoration: none; box-shadow: 0 4px 15px rgba(232, 165, 177, 0.4); z-index: 1000; font-weight: 600; transition: transform 0.3s ease; }
+        .floating-btn:hover { transform: translateY(-5px); box-shadow: 0 6px 20px rgba(232, 165, 177, 0.6); }
 
-        /* Hero Section */
-        .hero { 
-            padding: 60px 0 40px; 
-            text-align: center; display: flex; flex-direction: column; align-items: center; 
-        }
-        .hero-profile-holder { margin-bottom: 30px; display: none; }
-        
-        /* Foto maior, sem bolinha perfeita, sem borda de vidro */
-        .profile-frame { 
-            width: 180px; 
-            height: 180px; 
-            border-radius: 20px; 
-            display: flex; justify-content: center; align-items: center; 
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        .profile-frame img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-            /* REMOVIDO: transition e cursor pointer daqui */
-        }
-        
-        .hero h1 { font-size: clamp(2.8rem, 10vw, 4rem); color: var(--accent); margin-bottom: 20px; }
-        .hero h1 span { 
-            color: var(--text-color); font-size: clamp(1rem, 4vw, 1.2rem); 
-            font-family: var(--font-body); font-weight: 300; 
-            letter-spacing: 3px; text-transform: uppercase; display: block; margin-top: 10px;
-        }
-        .hero p { 
-            font-size: 1.05rem; opacity: 0.7; margin-bottom: 40px; 
-            max-width: 500px; font-weight: 300; 
-        }
+        .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 100px 20px 60px; position: relative; }
+        .hero-container { display: flex; align-items: center; justify-content: center; max-width: 1000px; width: 100%; z-index: 1; }
+        .hero-branding-card { background: var(--glass-bg); padding: 40px; border-radius: 28px; backdrop-filter: blur(16px); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); text-align: center; max-width: 750px; width: 100%; display: flex; flex-direction: column; align-items: center; }
+        .hero-profile-holder { margin-top: -80px; margin-bottom: 25px; position: relative; }
+        .profile-frame { width: 160px; height: 160px; border-radius: 50%; background: var(--glass-highlight); border: 4px solid var(--accent); box-shadow: 0 8px 25px rgba(232, 165, 177, 0.2); overflow: hidden; display: flex; justify-content: center; align-items: flex-start; }
+        .alice-photo-integrated { width: 105%; height: auto; object-fit: contain; margin-top: 5px; }
 
-        /* Botões */
-        .btn-primary { 
-            display: inline-flex; justify-content: center; align-items: center; gap: 12px; 
-            padding: 18px 40px; background: var(--accent); color: #fff; 
-            border: none; text-transform: uppercase; letter-spacing: 1.5px; 
-            font-size: 0.85rem; font-weight: 500; text-decoration: none; 
-            cursor: pointer; border-radius: 100px; transition: all 0.3s ease; 
-            width: 100%; max-width: 350px;
-        }
-        .btn-primary:hover { transform: translateY(-3px); background: var(--accent-hover); }
+        .hero-text-content { width: 100%; max-width: 600px; }
+        .hero-text-content h1 { font-size: clamp(2.8rem, 5.5vw, 4.8rem); color: var(--accent); margin-bottom: 12px; line-height: 1.05; }
+        .hero-text-content h1 span { color: var(--text-color); font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 300; }
+        .hero-text-content p { font-size: 1.15rem; margin: 0 auto 35px; opacity: 0.9; max-width: 500px; }
 
-        /* Diferenciais */
-        .trust-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 10px; 
-            align-items: stretch; 
-        }
-        .trust-badge { 
-            display: flex; flex-direction: column; align-items: center; text-align: center;
-            background: var(--glass-bg); border: 1px solid var(--glass-border);
-            padding: 18px 10px; border-radius: 16px;
-            backdrop-filter: blur(10px);
-            /* ADICIONADO: Preparação para o efeito de salto suave */
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            cursor: pointer;
-        }
-        /* ADICIONADO: Efeito de salto ao clicar nos diferenciais */
-        .trust-badge:active {
-            transform: scale(1.06);
-        }
+        section { padding: 80px 20px; max-width: 1000px; margin: 0 auto; }
+        .section-title { text-align: center; font-size: 2.2rem; color: var(--accent); margin-bottom: 50px; }
 
-        .trust-badge i { font-size: 1.6rem; color: var(--accent); margin-bottom: 10px; }
-        .trust-badge h3 { font-size: 0.75rem; color: var(--text-color); font-family: var(--font-body); font-weight: 600; margin-bottom: 6px; line-height: 1.2; }
-        .trust-badge p { font-size: 0.65rem; opacity: 0.7; line-height: 1.3; margin: 0; }
+        .tabs-container, .booking-container, .trust-badge, .instagram-container { background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); border-radius: 16px; padding: 30px; box-shadow: var(--glass-shadow); }
 
-        /* Sobre Nós */
-        .about-flex { display: flex; flex-direction: column; gap: 40px; align-items: center; text-align: center; }
-        .about-text h2 { font-size: 2.2rem; color: var(--accent); margin-bottom: 20px; }
-        .about-text p { font-size: 1rem; opacity: 0.7; margin-bottom: 20px; font-weight: 300; line-height: 1.8; }
-        
-        .about-image { 
-            width: 100%; max-width: 340px; aspect-ratio: 4/5; 
-            border-radius: 30px; overflow: hidden; 
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2); 
-        }
-        [data-theme="light"] .about-image { box-shadow: 0 20px 40px rgba(0,0,0,0.05); }
-        .about-image img { 
-            width: 100%; height: 100%; object-fit: cover; display: block; filter: grayscale(10%); 
-            /* REMOVIDO: transition e cursor pointer daqui para tirar o salto */
-        }
+        .tab-buttons { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
+        .tab-btn { background: transparent; border: none; border-bottom: 2px solid transparent; padding: 10px 20px; font-family: var(--font-body); font-size: 0.9rem; color: var(--text-color); cursor: pointer; transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px; }
+        .tab-btn.active, .tab-btn:hover { color: var(--accent); border-bottom-color: var(--accent); }
+        .tab-content { display: none; animation: fadeIn 0.5s ease; }
+        .tab-content.active { display: block; }
 
-        /* Serviços */
-        .service-list { display: flex; flex-direction: column; gap: 15px; }
-        .service-item { 
-            display: flex; justify-content: space-between; align-items: center; 
-            padding: 24px; background: var(--glass-bg); 
-            border: 1px solid var(--glass-border); border-radius: 20px;
-            backdrop-filter: blur(10px); transition: 0.3s; 
-        }
-        .service-item:hover { border-color: var(--accent); }
-        .service-info strong { display: block; font-size: 1.1rem; font-weight: 400; font-family: var(--font-heading); margin-bottom: 5px; }
-        .service-info small { font-size: 0.8rem; opacity: 0.5; text-transform: uppercase; letter-spacing: 1px; }
-        .service-price { font-weight: 500; color: var(--accent); font-size: 1.2rem; }
+        .table-responsive { overflow-x: auto; }
+        .luxury-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .luxury-table th, .luxury-table td { padding: 15px 20px; border-bottom: 1px solid var(--glass-border); }
+        .luxury-table th { font-family: var(--font-heading); color: var(--accent); font-weight: 600; }
+        .luxury-table tr:nth-child(even) { background-color: var(--glass-highlight); }
 
-        /* Galeria */
-        .instagram-cta-container { text-align: center; margin-bottom: 40px; }
-        .instagram-cta-container i.fa-instagram { font-size: 3rem; color: var(--accent); margin-bottom: 15px; }
-        .instagram-cta-container p { font-size: 1rem; opacity: 0.7; max-width: 450px; margin: 0 auto; font-weight: 300; }
-        
-        .gallery-scroll { 
-            display: flex; gap: 20px; overflow-x: auto; 
-            padding-bottom: 20px; scrollbar-width: none; margin-bottom: 30px; 
-            scroll-snap-type: x mandatory;
-        }
-        .gallery-scroll::-webkit-scrollbar { display: none; }
-        
-        /* Largura reduzida para as imagens do Venha Conhecer */
-        .gallery-item { 
-            flex: 0 0 150px; 
-            border-radius: 20px; overflow: hidden; 
-            aspect-ratio: 4/5; scroll-snap-align: center;
-            /* ADICIONADO: Preparação para o efeito de salto suave nas fotos da galeria */
-            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            cursor: pointer;
-        }
-        /* ADICIONADO: Efeito de salto ao clicar nas fotos da galeria */
-        .gallery-item:active {
-            transform: scale(1.08);
-        }
-        .gallery-item img { width: 100%; height: 100%; object-fit: cover; }
+        .gallery-scroll { display: flex; gap: 15px; overflow-x: auto; padding-bottom: 20px; scrollbar-width: thin; scrollbar-color: var(--accent) transparent; }
+        .gallery-scroll::-webkit-scrollbar { height: 8px; }
+        .gallery-scroll::-webkit-scrollbar-thumb { background-color: var(--accent); border-radius: 10px; }
+        .gallery-item { flex: 0 0 160px; border-radius: 12px; overflow: hidden; position: relative; border: 1px solid var(--glass-border); aspect-ratio: 4/5; box-shadow: var(--glass-shadow); }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+        .gallery-item:hover img { transform: scale(1.08); }
 
-        /* Formulários */
-        .form-grid { display: flex; flex-direction: column; gap: 25px; }
-        .form-group label { 
-            display: block; margin-bottom: 10px; font-size: 0.8rem; 
-            text-transform: uppercase; color: var(--text-color); 
-            font-weight: 500; letter-spacing: 1px; opacity: 0.8;
-        }
-        
-        input[type="text"], input[type="tel"], input[type="date"], select { 
-            width: 100%; padding: 18px 20px; 
-            background: var(--glass-bg); border: 1px solid var(--glass-border); 
-            color: var(--text-color); font-family: var(--font-body); 
-            border-radius: 16px; font-size: 1rem; outline: none; 
-            transition: 0.3s; backdrop-filter: blur(10px); 
-            -webkit-appearance: none;
-        }
-        input:focus, select:focus { border-color: var(--accent); background: transparent; }
+        .trust-section { padding: 60px 20px 20px; max-width: 1100px; margin: 0 auto; }
+        .trust-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+        .trust-badge { padding: 25px 20px; display: flex; align-items: flex-start; gap: 15px; transition: transform 0.3s ease; }
+        .trust-badge:hover { transform: translateY(-5px); border-color: var(--accent); }
+        .trust-badge i { font-size: 2.2rem; color: var(--accent); }
+        .trust-badge h3 { font-size: 1.1rem; margin-bottom: 5px; color: var(--accent); font-family: var(--font-heading); }
+        .trust-badge p { font-size: 0.85rem; opacity: 0.8; }
+
+        .instagram-section { padding: 40px 20px; }
+        .instagram-container { max-width: 800px; margin: 0 auto; text-align: center; transition: transform 0.3s ease; }
+        .instagram-container:hover { transform: scale(1.02); border-color: var(--accent); }
+        .instagram-icon { font-size: 3rem; color: var(--accent); margin-bottom: 15px; }
+        .instagram-container h2 { font-size: 2.2rem; color: var(--accent); margin-bottom: 15px; font-family: var(--font-heading); }
+        .instagram-container p { font-size: 1rem; opacity: 0.8; margin-bottom: 25px; max-width: 500px; margin: 0 auto; }
+
+        .form-group { margin-bottom: 25px; }
+        .form-group label { display: block; margin-bottom: 8px; font-size: 0.85rem; text-transform: uppercase; color: var(--accent); font-weight: 500; }
+        input[type="text"], input[type="date"], input[type="time"], select { width: 100%; padding: 14px; background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(5px); border: 1px solid var(--glass-border); color: var(--text-color); font-family: var(--font-body); border-radius: 8px; transition: all 0.3s ease; }
+        input:focus, select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 10px rgba(232, 165, 177, 0.2); background: var(--glass-highlight); }
+        select:disabled { opacity: 0.5; cursor: not-allowed; }
         select option { background: var(--bg-color); color: var(--text-color); }
 
-        .horarios-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
-        .btn-horario { 
-            padding: 14px 5px; border: 1px solid var(--glass-border); 
-            background: var(--glass-bg); color: var(--text-color); 
-            border-radius: 12px; cursor: pointer; font-size: 0.9rem; 
-            text-align: center; transition: 0.2s; backdrop-filter: blur(5px);
-        }
-        .btn-horario:hover { border-color: var(--accent); color: var(--accent); }
-        .btn-horario.active { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 500; }
+        .date-scroll-container { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 15px; scrollbar-width: thin; scrollbar-color: var(--accent) transparent; }
+        .date-scroll-container::-webkit-scrollbar { height: 6px; }
+        .date-scroll-container::-webkit-scrollbar-thumb { background-color: var(--accent); border-radius: 10px; }
+        .date-card { flex: 0 0 auto; width: 75px; height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; border: 1px solid var(--glass-border); border-radius: 12px; background: var(--glass-highlight); color: var(--text-color); cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .date-card .day-name { font-size: 0.8rem; text-transform: uppercase; opacity: 0.7; margin-bottom: 5px; }
+        .date-card .day-num { font-size: 1.6rem; font-weight: 500; font-family: var(--font-heading); color: var(--accent); }
+        .date-card:hover { border-color: var(--accent); transform: translateY(-3px); }
+        .date-card.active { background: var(--accent); border-color: var(--accent); }
+        .date-card.active .day-name, .date-card.active .day-num { color: #120b0e; }
 
-        footer { text-align: center; padding: 60px 24px; font-size: 0.85rem; opacity: 0.4; font-weight: 300; letter-spacing: 1px; }
+        .time-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+        .time-slot input { display: none; }
+        .time-slot span { display: block; text-align: center; padding: 12px; background: var(--glass-highlight); border: 1px solid var(--glass-border); border-radius: 8px; cursor: pointer; transition: all 0.3s ease; }
+        .time-slot span:hover { border-color: var(--accent); }
+        .time-slot input:checked + span { background-color: var(--accent); color: #120b0e; border-color: var(--accent); font-weight: bold; }
 
-        /* Tablet e Desktop */
-        @media (min-width: 768px) {
-            .trust-badge { padding: 30px 20px; }
-            .trust-badge i { font-size: 2.2rem; margin-bottom: 15px; }
-            .trust-badge h3 { font-size: 1rem; }
-            .trust-badge p { font-size: 0.85rem; }
-            
-            .about-flex { flex-direction: row; text-align: left; justify-content: space-between; gap: 60px; }
-            .about-image { max-width: 400px; margin: 0; }
-            .about-text { flex: 1; }
-            .about-text h2 { margin-bottom: 30px; }
-            
-            .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
-            .btn-primary { width: auto; }
-        }
+        .form-status { margin-top: 15px; text-align: center; font-size: 0.9rem; }
+        footer { text-align: center; padding: 30px; border-top: 1px solid var(--glass-border); font-size: 0.85rem; opacity: 0.7; background: var(--glass-bg); backdrop-filter: blur(10px); }
+
+        @media (max-width: 768px) { .hero { padding-top: 100px; } .hero-branding-card { padding: 30px 20px; } .hero-profile-holder { margin-top: -70px; } .profile-frame { width: 140px; height: 140px; } .hero-text-content h1 { margin-top: 10px; } }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.1/dist/browser-image-compression.js"></script>
 </head>
 <body>
+    <a href="#agendamento" class="floating-btn">Agendar <i class="fa-solid fa-calendar-check"></i></a>
 
-    <nav>
-        <div id="container-insta"></div>
-        <button class="theme-btn" onclick="toggleTheme()" aria-label="Alternar Tema"><i class="fas fa-moon"></i></button>
-    </nav>
-
-    <div class="container">
-        <header class="hero fade-in">
-            <div class="hero-profile-holder" id="holder-perfil">
-                <div class="profile-frame"><img id="img-perfil" src="" alt="Foto de Perfil"></div>
+    <header class="hero fade-in">
+        <div class="hero-container hero-branding-card">
+            <div class="hero-profile-holder" id="holder-perfil" style="display: none;">
+                <div class="profile-frame">
+                    <img id="img-perfil" src="" alt="Perfil da Loja" class="alice-photo-integrated">
+                </div>
             </div>
-            <h1 id="titulo-hero">Carregando... <br><span id="hero-subtitulo">Nail Studio</span></h1>
-            <p id="hero-texto">Onde a saúde das suas unhas encontra o design de luxo.</p>
-            <a href="#agendamento" class="btn-primary">Agendar Experiência</a>
-        </header>
+            <div class="hero-text-content">
+                <h1 id="titulo-hero">Carregando... <br><span id="hero-subtitulo">Studio</span></h1>
+                <p id="hero-texto">Descubra o verdadeiro luxo do autocuidado.</p>
+                <a href="#agendamento" class="btn-primary">Reserve seu Horário</a>
+            </div>
+        </div>
+    </header>
 
-        <section id="diferenciais" class="fade-in">
-            <div class="trust-grid">
-                <div class="trust-badge">
-                    <i class="fa-solid fa-shield-virus"></i>
+    <section id="seguranca" class="trust-section fade-in">
+        <div class="trust-container">
+            <div class="trust-badge">
+                <i class="fa-solid fa-shield-halved"></i>
+                <div>
                     <h3 id="dif1-titulo">Biossegurança</h3>
-                    <p id="dif1-texto">Materiais 100% descartáveis e autoclave.</p>
-                </div>
-                <div class="trust-badge">
-                    <i class="fa-solid fa-gem"></i>
-                    <h3 id="dif2-titulo">Esmaltaria Premium</h3>
-                    <p id="dif2-texto">Melhores marcas nacionais e importadas.</p>
-                </div>
-                <div class="trust-badge">
-                    <i class="fa-solid fa-spa"></i>
-                    <h3 id="dif3-titulo">Ambiente Climatizado</h3>
-                    <p id="dif3-texto">Espaço planejado para seu relaxamento.</p>
+                    <p id="dif1-texto">Materiais 100% descartáveis e esterilização rigorosa em autoclave.</p>
                 </div>
             </div>
-        </section>
-
-        <section id="sobre" class="fade-in">
-            <div class="about-flex">
-                <div class="about-image"><img id="sobre-imagem" src="https://images.unsplash.com/photo-1604654894610-df63bc536371?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"></div>
-                <div class="about-text">
-                    <h2 id="sobre-titulo">A Arte em Suas Mãos</h2>
-                    <div id="sobre-texto"><p>Nascemos com o propósito de elevar o padrão do design de unhas.</p></div>
+            <div class="trust-badge">
+                <i class="fa-solid fa-gem"></i>
+                <div>
+                    <h3 id="dif2-titulo">Produtos Premium</h3>
+                    <p id="dif2-texto">Utilizamos apenas marcas de alta qualidade aprovadas pela Anvisa.</p>
                 </div>
             </div>
-        </section>
-
-        <section id="servicos" class="fade-in">
-            <h2 class="section-title">Menu de Serviços</h2>
-            <div class="service-list" id="lista-servicos">
-                <div style="text-align:center; opacity:0.5; font-weight:300; padding: 40px 0;"><i class="fas fa-spinner fa-spin"></i> Preparando o menu...</div>
+            <div class="trust-badge">
+                <i class="fa-solid fa-certificate"></i>
+                <div>
+                    <h3 id="dif3-titulo">Excelência</h3>
+                    <p id="dif3-texto">Ambiente preparado com foco total no seu conforto e segurança.</p>
+                </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <section id="galeria" class="fade-in" style="display: none;">
-            <div class="instagram-cta-container">
-                <i class="fa-brands fa-instagram"></i>
-                <h2 class="section-title" style="margin-bottom: 20px;">#VenhaConhecer</h2>
-                <p>Acompanhe nosso dia a dia, transformações reais e dicas exclusivas no nosso Instagram.</p>
-            </div>
-            
-            <div class="gallery-scroll" id="galeria-fotos"></div>
-            
-            <div id="btn-insta-galeria" style="text-align: center; margin-top: 20px;"></div>
-        </section>
+    <section id="servicos" class="services-section fade-in">
+        <h2 class="section-title">Nossos Serviços</h2>
+        <div class="tabs-container">
+            <div class="tab-buttons" id="dynamic-tab-buttons">
+                </div>
+            <div id="dynamic-tab-contents">
+                </div>
+        </div>
+    </section>
 
-        <section id="agendamento" class="fade-in">
-            <h2 class="section-title">Reserve seu Horário</h2>
-            <form id="form-agendamento">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Selecione o Serviço</label>
-                        <select id="select-servico" required><option value="" disabled selected>Aguarde...</option></select>
-                    </div>
-                    
-                    <div class="form-row">
-                        <div class="form-group"><label>Seu Nome</label><input type="text" id="input-nome" placeholder="Como deseja ser chamada?" required></div>
-                        <div class="form-group"><label>WhatsApp</label><input type="tel" id="input-tel" placeholder="(00) 00000-0000" required oninput="this.value = this.value.replace(/[^0-9() -]/g, '')"></div>
-                    </div>
+    <section id="instagram-cta" class="instagram-section fade-in">
+        <div class="instagram-container">
+            <i class="fa-brands fa-instagram instagram-icon"></i>
+            <h2>#VenhaConhecer</h2>
+            <p>Acompanhe nosso dia a dia, transformações reais e dicas exclusivas.</p>
+            <div id="container-insta-btn"></div>
+        </div>
+    </section>
 
-                    <div class="form-group">
-                        <label>Data de Preferência</label>
-                        <input type="date" id="input-data" required>
-                    </div>
+    <section id="galeria" class="gallery-section fade-in">
+        <h2 class="section-title">Galeria de Arte</h2>
+        <div class="gallery-scroll" id="gallery-grid-client">
+            <p style="text-align: center; width: 100%; opacity: 0.5;">Carregando...</p>
+        </div>
+    </section>
 
-                    <div class="form-group">
-                        <label>Horários Disponíveis</label>
-                        <div class="horarios-grid" id="grid-horarios"></div>
-                        <input type="hidden" id="horario-selecionado" required>
-                    </div>
-
-                    <div style="text-align: center; margin-top: 20px;">
-                        <button type="submit" class="btn-primary" id="btn-agendar"><i class="fa-brands fa-whatsapp" style="font-size: 1.2rem;"></i> Confirmar Solicitação</button>
+    <section id="agendamento" class="booking-section fade-in">
+        <div class="booking-container">
+            <h2 class="section-title">Agende sua Experiência</h2>
+            <form id="booking-form">
+                <div class="form-group">
+                    <label>Seu Nome</label>
+                    <input type="text" id="nome" required placeholder="Como deseja ser chamada?">
+                </div>
+                <div class="form-group">
+                    <label>O que você deseja fazer?</label>
+                    <select id="categoria-agendamento" required>
+                        <option value="" disabled selected>Aguardando Categorias...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Selecione o Serviço</label>
+                    <select id="servico-agendamento" required disabled>
+                        <option value="" disabled selected>Selecione uma categoria primeiro...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Data de Preferência</label>
+                    <input type="hidden" id="data" required>
+                    <div id="date-scroll" class="date-scroll-container"></div>
+                </div>
+                <div class="form-group">
+                    <label>Horários Disponíveis</label>
+                    <div class="time-grid" id="grid-horarios-cliente">
+                        <p style="font-size: 0.85rem; opacity: 0.7; grid-column: 1/-1;">Selecione um serviço e data.</p>
                     </div>
                 </div>
+                <button type="submit" class="btn-primary full-width" id="btn-agendar">Confirmar Solicitação</button>
+                <p id="form-status" class="form-status"></p>
             </form>
-        </section>
+        </div>
+    </section>
 
-        <footer><p>&copy; 2026 Nail Studio. Desenvolvido com excelência.</p></footer>
-    </div>
+    <footer><p>&copy; 2026 SaaS Master. Desenvolvido com excelência.</p></footer>
 
     <script>
-        var observer = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }); }, { threshold: 0.1 });
+        const observerOptions = { root: null, rootMargin: '0px', threshold: 0.15 };
+        const observer = new IntersectionObserver((entries, obs) => {
+            entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } });
+        });
         document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-        function toggleTheme() {
-            // Pode deixar const aqui dentro da função, não tem problema
-            const body = document.documentElement; const icon = document.querySelector('.theme-btn i');
-            if (body.getAttribute('data-theme') === 'light') { body.removeAttribute('data-theme'); icon.className = 'fas fa-moon'; } 
-            else { body.setAttribute('data-theme', 'light'); icon.className = 'fas fa-sun'; }
+        function openTab(evt, tabName) {
+            document.querySelectorAll(".tab-content").forEach(el => { el.style.display = "none"; el.classList.remove("active"); });
+            document.querySelectorAll(".tab-btn").forEach(el => el.classList.remove("active"));
+            const currentTab = document.getElementById(tabName);
+            if(currentTab) {
+                currentTab.style.display = "block";
+                setTimeout(() => currentTab.classList.add("active"), 10);
+            }
+            evt.currentTarget.classList.add("active");
         }
 
-        var SUPABASE_URL = 'https://ikkjgtgvohrwurtiustm.supabase.co'; 
-        var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra2pndGd2b2hyd3VydGl1c3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NzE4OTEsImV4cCI6MjA5MDE0Nzg5MX0.HNrSvCmSHWTe2yoQy27GOq5g_ZoZxFdox_eCW14f_nI';
-        var supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        function timeToMinutes(timeStr) { const [h, m] = timeStr.split(':').map(Number); return h * 60 + m; }
+        function parseDuracao(str) {
+            if(!str) return 60;
+            let min = 0; const hM = str.match(/(\d+)\s*h/i); const mM = str.match(/(\d+)\s*m/i);
+            if (hM) min += parseInt(hM[1]) * 60; if (mM) min += parseInt(mM[1]);
+            return min > 0 ? min : parseInt(str) || 60;
+        }
 
-        var slug = new URLSearchParams(window.location.search).get('loja');
-        var lojaId = null;
+        const SUPABASE_URL = 'https://ikkjgtgvohrwurtiustm.supabase.co'; 
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlra2pndGd2b2hyd3VydGl1c3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ1NzE4OTEsImV4cCI6MjA5MDE0Nzg5MX0.HNrSvCmSHWTe2yoQy27GOq5g_ZoZxFdox_eCW14f_nI';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        var hoje = new Date().toISOString().split('T')[0]; document.getElementById('input-data').min = hoje;
-        var gridHorarios = document.getElementById('grid-horarios');
-        for(let h = 9; h <= 18; h++) { let hora = h < 10 ? `0${h}:00` : `${h}:00`; gridHorarios.innerHTML += `<div class="btn-horario" onclick="selecionarHorario(this, '${hora}')">${hora}</div>`; }
-        function selecionarHorario(btn, hora) { document.querySelectorAll('.btn-horario').forEach(b => b.classList.remove('active')); btn.classList.add('active'); document.getElementById('horario-selecionado').value = hora; }
+        const slug = new URLSearchParams(window.location.search).get('loja');
+        let lojaId = null;
+        let servicosGlobais = [];
 
-        async function init() {
-            if(!slug) { document.getElementById('titulo-hero').innerHTML = "Demonstração<br><span id='hero-subtitulo'>Nail Studio</span>"; document.getElementById('lista-servicos').innerHTML = '<div style="text-align:center;">Sem loja selecionada.</div>'; return; }
+        async function initSaaS() {
+            if(!slug) return document.getElementById('titulo-hero').innerHTML = "Demonstração<br><span id='hero-subtitulo'>Painel Master</span>";
             
             const { data: loja } = await supabaseClient.from('lojas').select('*').eq('slug', slug).single();
-            if(!loja) return; lojaId = loja.id; document.title = `${loja.nome_loja} | Alto Padrão`;
+            if(!loja) return; lojaId = loja.id;
             
-            if(loja.cor_principal) document.documentElement.style.setProperty('--accent', loja.cor_principal);
-            if(loja.instagram) { 
-                const userInsta = loja.instagram.replace('@', ''); 
-                document.getElementById('container-insta').innerHTML = `<a href="https://instagram.com/${userInsta}" target="_blank" style="color:var(--text-color); text-decoration:none; font-weight:500; display:flex; align-items:center; gap:8px; font-size:0.85rem;"><i class="fab fa-instagram" style="color:var(--accent); font-size:1.2rem;"></i> ${loja.instagram}</a>`; 
-                document.getElementById('btn-insta-galeria').innerHTML = `<a href="https://instagram.com/${userInsta}" target="_blank" class="btn-primary" style="width: auto; padding: 12px 30px; display: inline-flex;"><i class="fa-brands fa-instagram"></i> Seguir ${loja.instagram}</a>`;
+            document.title = `${loja.nome_loja} | Alto Padrão`;
+            
+            if(loja.perfil_imagem_url) { 
+                document.getElementById('img-perfil').src = loja.perfil_imagem_url; 
+                document.getElementById('holder-perfil').style.display = 'block'; 
             }
 
-            if(loja.perfil_imagem_url) { document.getElementById('img-perfil').src = loja.perfil_imagem_url; document.getElementById('holder-perfil').style.display = 'block'; }
-
-            let subHeroStr = loja.hero_subtitulo ? loja.hero_subtitulo : 'Nail Studio';
+            let subHeroStr = loja.hero_subtitulo ? loja.hero_subtitulo : 'Studio';
             document.getElementById('titulo-hero').innerHTML = `${loja.nome_loja}<br><span id="hero-subtitulo">${subHeroStr}</span>`;
             if(loja.hero_texto) document.getElementById('hero-texto').innerText = loja.hero_texto;
-
             if(loja.dif1_titulo) document.getElementById('dif1-titulo').innerText = loja.dif1_titulo; if(loja.dif1_texto) document.getElementById('dif1-texto').innerText = loja.dif1_texto;
             if(loja.dif2_titulo) document.getElementById('dif2-titulo').innerText = loja.dif2_titulo; if(loja.dif2_texto) document.getElementById('dif2-texto').innerText = loja.dif2_texto;
             if(loja.dif3_titulo) document.getElementById('dif3-titulo').innerText = loja.dif3_titulo; if(loja.dif3_texto) document.getElementById('dif3-texto').innerText = loja.dif3_texto;
 
-            if(loja.sobre_titulo) document.getElementById('sobre-titulo').innerText = loja.sobre_titulo;
-            if(loja.descricao) document.getElementById('sobre-texto').innerText = loja.descricao;
-            if(loja.sobre_imagem_url) document.getElementById('sobre-imagem').src = loja.sobre_imagem_url;
+            if(loja.instagram) { 
+                const userInsta = loja.instagram.replace('@', ''); 
+                document.getElementById('container-insta-btn').innerHTML = `<a href="https://instagram.com/${userInsta}" target="_blank" class="btn-primary">Seguir ${loja.instagram}</a>`;
+            }
 
-            const { data: fotos } = await supabaseClient.from('lookbook').select('*').eq('loja_id', lojaId).order('id', {ascending: false});
-            if(fotos && fotos.length > 0) { document.getElementById('galeria').style.display = 'block'; const div = document.getElementById('galeria-fotos'); div.innerHTML = ''; fotos.forEach(f => { div.innerHTML += `<div class="gallery-item"><img src="${f.imagem_url}" loading="lazy"></div>`; }); }
+            // CARREGAR CATEGORIAS DINAMICAMENTE
+            const { data: categorias } = await supabaseClient.from('categorias').select('*').eq('loja_id', lojaId);
+            const catList = categorias || [];
 
+            const tabBtns = document.getElementById('dynamic-tab-buttons');
+            const tabConts = document.getElementById('dynamic-tab-contents');
+            const selectAgendamentoCat = document.getElementById('categoria-agendamento');
+
+            tabBtns.innerHTML = ''; tabConts.innerHTML = '';
+            selectAgendamentoCat.innerHTML = '<option value="" disabled selected>Escolha uma categoria...</option>';
+
+            if(catList.length === 0) {
+                tabBtns.innerHTML = '<p style="opacity:0.5; width:100%; text-align:center;">Nenhuma categoria configurada no Admin.</p>';
+            } else {
+                catList.forEach((cat, idx) => {
+                    const isActive = idx === 0 ? 'active' : '';
+                    const display = idx === 0 ? 'block' : 'none';
+                    const safeId = 'cat-' + cat.id;
+
+                    tabBtns.innerHTML += `<button class="tab-btn ${isActive}" onclick="openTab(event, '${safeId}')">${cat.nome}</button>`;
+                    
+                    tabConts.innerHTML += `
+                        <div id="${safeId}" class="tab-content ${isActive}" style="display: ${display};">
+                            <div class="table-responsive">
+                                <table class="luxury-table"><tbody id="tbody-${safeId}"></tbody></table>
+                            </div>
+                        </div>
+                    `;
+                    selectAgendamentoCat.innerHTML += `<option value="${cat.nome}">${cat.nome}</option>`;
+                });
+            }
+
+            // CARREGAR SERVIÇOS
             const { data: servicos } = await supabaseClient.from('servicos').select('*').eq('loja_id', lojaId);
-            const listaServicos = document.getElementById('lista-servicos'); const selectServico = document.getElementById('select-servico');
-            listaServicos.innerHTML = ''; selectServico.innerHTML = '<option value="" disabled selected>Escolha um serviço...</option>';
-            
-            if(servicos && servicos.length > 0) { 
-                servicos.forEach(s => { 
-                    listaServicos.innerHTML += `<div class="service-item"><div class="service-info"><strong>${s.nome}</strong><small>⏳ ${s.duracao_minutos} min</small></div><div class="service-price">R$ ${s.preco.toFixed(2).replace('.', ',')}</div></div>`; 
-                    selectServico.innerHTML += `<option value="${s.id}">${s.nome}</option>`; 
-                }); 
-            } else { listaServicos.innerHTML = '<div style="text-align:center; font-weight: 300;">Nenhum serviço cadastrado.</div>'; }
+            servicosGlobais = servicos || [];
+
+            catList.forEach(cat => {
+                const tbody = document.getElementById(`tbody-cat-${cat.id}`);
+                if(!tbody) return;
+                const filtrados = servicosGlobais.filter(s => s.categoria === cat.nome);
+                if(filtrados.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" style="opacity:0.5; text-align:center;">Nenhum serviço disponível nesta categoria.</td></tr>';
+                } else {
+                    filtrados.forEach(s => tbody.innerHTML += `<tr><td>${s.nome}</td><td>${s.duracao}</td><td>${s.valor}</td></tr>`);
+                }
+            });
+
+            // CARREGAR GALERIA
+            const { data: fotos } = await supabaseClient.from('lookbook').select('*').eq('loja_id', lojaId).order('id', {ascending: false});
+            const gridGaleria = document.getElementById('gallery-grid-client');
+            gridGaleria.innerHTML = '';
+            if(fotos && fotos.length > 0) {
+                fotos.forEach(f => gridGaleria.innerHTML += `<div class="gallery-item"><img src="${f.imagem_url}" loading="lazy"></div>`);
+            } else {
+                gridGaleria.innerHTML = '<p style="text-align: center; width: 100%; opacity: 0.5;">Em breve novas fotos.</p>';
+            }
+
+            carregarDiasDisponiveis();
         }
 
-        document.getElementById('form-agendamento').addEventListener('submit', async (e) => {
-            e.preventDefault(); const horario = document.getElementById('horario-selecionado').value;
-            if(!horario) return alert("Por favor, selecione um horário!");
-            const btn = document.getElementById('btn-agendar'); btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...'; btn.disabled = true;
+        async function carregarDiasDisponiveis() {
+            const { data: config } = await supabaseClient.from('config_dias').select('selecionados').eq('loja_id', lojaId).single();
+            const diasTrabalho = config && config.selecionados ? config.selecionados : [1,2,3,4,5,6]; 
+            
+            const container = document.getElementById('date-scroll');
+            const inputData = document.getElementById('data');
+            container.innerHTML = '';
+            
+            let dataAtual = new Date(); let add = 0; const nomesDias = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+            while(add < 15) {
+                const diaDaSemana = dataAtual.getDay();
+                if(diasTrabalho.includes(diaDaSemana)) {
+                    const dia = dataAtual.getDate().toString().padStart(2, '0');
+                    const mes = (dataAtual.getMonth()+1).toString().padStart(2, '0');
+                    const dataStr = `${dataAtual.getFullYear()}-${mes}-${dia}`;
+                    const btn = document.createElement('div');
+                    btn.className = 'date-card';
+                    btn.innerHTML = `<span class="day-name">${nomesDias[diaDaSemana]}</span><span class="day-num">${dia}</span>`;
+                    btn.onclick = function() {
+                        document.querySelectorAll('.date-card').forEach(e => e.classList.remove('active'));
+                        this.classList.add('active'); inputData.value = dataStr; verificarHorariosSupabase();
+                    };
+                    container.appendChild(btn); add++;
+                }
+                dataAtual.setDate(dataAtual.getDate() + 1);
+            }
+        }
 
-            const { error } = await supabaseClient.from('agendamentos').insert([{ loja_id: lojaId, servico_id: document.getElementById('select-servico').value, data_agendamento: document.getElementById('input-data').value, horario_agendamento: horario, nome_cliente: document.getElementById('input-nome').value, telefone_cliente: document.getElementById('input-tel').value }]);
-            if(error) { alert("Erro: " + error.message); } 
-            else { alert("✨ Solicitação enviada! Entraremos em contato via WhatsApp."); document.getElementById('form-agendamento').reset(); document.querySelectorAll('.btn-horario').forEach(b => b.classList.remove('active')); document.getElementById('horario-selecionado').value = ''; }
-            btn.innerHTML = '<i class="fa-brands fa-whatsapp" style="font-size: 1.2rem;"></i> Confirmar Solicitação'; btn.disabled = false;
+        const catSelect = document.getElementById('categoria-agendamento');
+        const servSelect = document.getElementById('servico-agendamento');
+        
+        catSelect.addEventListener('change', (e) => {
+            servSelect.innerHTML = '<option value="" disabled selected>Escolha o serviço...</option>';
+            const filtrados = servicosGlobais.filter(s => s.categoria === e.target.value);
+            if(filtrados.length > 0) {
+                servSelect.disabled = false;
+                filtrados.forEach(s => servSelect.innerHTML += `<option value="${s.nome}" data-duracao="${s.duracao}">${s.nome} (${s.duracao})</option>`);
+            } else { servSelect.disabled = true; }
+            verificarHorariosSupabase();
+        });
+        servSelect.addEventListener('change', verificarHorariosSupabase);
+
+        async function verificarHorariosSupabase() {
+            const gridHorarios = document.getElementById('grid-horarios-cliente');
+            const dataEscolhida = document.getElementById('data').value;
+            const servicoEscolhido = servSelect.value;
+            
+            if(!dataEscolhida || !servicoEscolhido) { gridHorarios.innerHTML = '<p style="grid-column:1/-1; opacity:0.7;">Selecione o serviço e a data.</p>'; return; }
+            gridHorarios.innerHTML = '<p style="grid-column:1/-1; color:var(--accent);">Buscando horários...</p>';
+
+            const duracao = parseDuracao(servSelect.options[servSelect.selectedIndex].getAttribute('data-duracao'));
+            
+            const { data: horSnap } = await supabaseClient.from('horarios').select('horario').eq('loja_id', lojaId);
+            let horariosBase = horSnap ? horSnap.map(d => d.horario).sort() : [];
+            if(horariosBase.length === 0) { horariosBase = ["09:00","10:00","11:00","13:00","14:00","15:00","16:00","17:00"]; }
+
+            const { data: agendamentosDoDia } = await supabaseClient.from('agendamentos').select('horario, duracao_minutos').eq('loja_id', lojaId).eq('data_agendamento', dataEscolhida);
+
+            gridHorarios.innerHTML = ''; let temVaga = false;
+            
+            horariosBase.forEach(horCandidato => {
+                const inicioCand = timeToMinutes(horCandidato); 
+                const fimCand = inicioCand + duracao;
+                let conflito = false;
+                
+                if(agendamentosDoDia) {
+                    for(let ag of agendamentosDoDia) {
+                        if(inicioCand < (timeToMinutes(ag.horario) + ag.duracao_minutos) && fimCand > timeToMinutes(ag.horario)) { conflito = true; break; }
+                    }
+                }
+
+                if(!conflito) {
+                    temVaga = true;
+                    gridHorarios.innerHTML += `<label class="time-slot"><input type="radio" name="horario" value="${horCandidato}" required><span>${horCandidato}</span></label>`;
+                }
+            });
+            
+            if(!temVaga) gridHorarios.innerHTML = '<p style="color:#d9534f; grid-column:1/-1;">Sem horários disponíveis para a duração deste serviço hoje.</p>';
+        }
+
+        document.getElementById('booking-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const status = document.getElementById('form-status');
+            const btnSubmit = document.getElementById('btn-agendar');
+            const nome = document.getElementById('nome').value;
+            const data = document.getElementById('data').value;
+            const hrInput = document.querySelector('input[name="horario"]:checked');
+
+            if(!data || !hrInput) { status.textContent = "Selecione uma data e horário."; status.style.color = "#d9534f"; return; }
+            
+            btnSubmit.textContent = "Processando..."; btnSubmit.disabled = true;
+
+            try {
+                const horario = hrInput.value;
+                const servico = servSelect.value;
+                const duracao = parseDuracao(servSelect.options[servSelect.selectedIndex].getAttribute('data-duracao'));
+                
+                const { error } = await supabaseClient.from('agendamentos').insert([{ 
+                    loja_id: lojaId, nome_cliente: nome, servico: servico, 
+                    data_agendamento: data, horario: horario, duracao_minutos: duracao 
+                }]);
+
+                if(error) throw error;
+
+                status.innerHTML = `Sucesso, ${nome}! <strong>${servico}</strong> reservado.`;
+                status.style.color = "var(--accent)";
+                e.target.reset(); servSelect.disabled = true; 
+                document.querySelectorAll('.date-card').forEach(el => el.classList.remove('active'));
+                document.getElementById('data').value = ''; 
+                document.getElementById('grid-horarios-cliente').innerHTML = '<p style="font-size: 0.85rem; opacity: 0.7; grid-column: 1/-1;">Selecione um serviço e data.</p>';
+            } catch(err) {
+                status.textContent = "Erro. Tente novamente."; status.style.color = "#d9534f";
+            } finally { 
+                btnSubmit.textContent = "Confirmar Solicitação"; btnSubmit.disabled = false; 
+            }
         });
 
-        init();
+        initSaaS();
     </script>
 </body>
 </html>

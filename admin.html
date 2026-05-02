@@ -395,9 +395,15 @@
                             <label>Fale Conosco</label>
                             <textarea id="txt-contato" class="form-control" rows="2" placeholder="Email: suporte@suamarca.com"></textarea>
                         </div>
+                        
+                        <!-- BLOCO WHATSAPP E EMAIL -->
                         <div class="form-group" style="margin-top: 15px; border-top: 1px dashed var(--border-color); padding-top: 15px;">
                             <label><i class="fab fa-whatsapp" style="color:#10b981;"></i> WhatsApp para Receber Pedidos</label>
                             <input type="text" id="whatsapp-pedidos" class="form-control" placeholder="Ex: 5511999999999 (Apenas números com DDD)">
+                        </div>
+                        <div class="form-group" style="margin-top: 15px;">
+                            <label><i class="fas fa-envelope" style="color:var(--accent-neon);"></i> E-mail para Receber Pedidos</label>
+                            <input type="email" id="email-pedidos" class="form-control" placeholder="Ex: vendas@loja.com">
                         </div>
                     </div>
                 </div>
@@ -571,7 +577,8 @@
                 if(t.faq) document.getElementById('txt-faq').value = t.faq;
                 if(t.devolucao) document.getElementById('txt-devolucao').value = t.devolucao;
                 if(t.contato) document.getElementById('txt-contato').value = t.contato;
-                if(t.whatsappPedidos) document.getElementById('whatsapp-pedidos').value = t.whatsappPedidos; // NOVO
+                if(t.whatsappPedidos) document.getElementById('whatsapp-pedidos').value = t.whatsappPedidos;
+                if(t.emailPedidos) document.getElementById('email-pedidos').value = t.emailPedidos; // E-mail carregado
 
                 if (t.gatewayProvider) document.getElementById('gateway-provider').value = t.gatewayProvider;
                 if (t.gatewayPublicKey) document.getElementById('gateway-public-key').value = t.gatewayPublicKey;
@@ -617,7 +624,8 @@
                 faq: document.getElementById('txt-faq').value, 
                 devolucao: document.getElementById('txt-devolucao').value, 
                 contato: document.getElementById('txt-contato').value,
-                whatsappPedidos: document.getElementById('whatsapp-pedidos').value, // NOVO
+                whatsappPedidos: document.getElementById('whatsapp-pedidos').value,
+                emailPedidos: document.getElementById('email-pedidos').value, // E-mail salvo
                 api_imgbb_key: IMGBB_API_KEY, 
                 api_gemini_key: GEMINI_API_KEY,
                 

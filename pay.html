@@ -349,6 +349,7 @@
 
         // VARIÁVEIS DO WHATSAPP E DO BANCO DE DADOS
         var whatsappLoja = '';
+        var emailLoja = ''; // NOVO
         var lojaIdBD = null;
 
         var SUPABASE_URL = 'https://ikkjgtgvohrwurtiustm.supabase.co'; 
@@ -384,7 +385,8 @@
                         gatewayConfig.enableCC = t.enableCC !== undefined ? String(t.enableCC) : 'true';
                         gatewayConfig.enablePix = t.enablePix !== undefined ? String(t.enablePix) : 'true';
                         
-                        whatsappLoja = t.whatsappPedidos || ''; // Puxa o WhatsApp guardado
+                        whatsappLoja = t.whatsappPedidos || '';
+                        emailLoja = t.emailPedidos || ''; // NOVO
                         
                         aplicarRegrasDePagamento();
                     }
@@ -623,11 +625,13 @@
 
             // 2. Prepara o envio silencioso para a Automação (Webhook)
             // COLOCA AQUI O LINK DO TEU WEBHOOK (Ex: Make.com ou n8n)
-            const urlWebhook = 'https://hook.us2.make.com/wasy76h8qayiv6gp5ytwchkl7o1kbc8f';
+            const urlWebhook = 'https://hook.us2.make.com/rt1idr9jas5o7fq8ytjtrnkyarjsrrwc';
 
             if (urlWebhook && urlWebhook.startsWith('http')) {
                 let textoItens = carrinho.map(i => `▫️ ${i.quantidade}x ${i.nome}`).join('\n');
                 let metodoFormatado = metodo === 'credit_card' ? '💳 Cartão de Crédito' : '💠 PIX';
+                
+                let textoEndereco = `${document.getElementById('rua').value}, ${document.getElementById('numero').value} - ${document.getElementById('bairro').value}. ${document.getElementById('cidade_estado').value}. CEP: ${document.getElementById('cep').value}`; // NOVO
                 
                 const payload = {
                     numero_pedido: numeroFormatado,
@@ -636,7 +640,9 @@
                     itens: textoItens,
                     valor_total: (totalCarrinho + valorFrete).toFixed(2),
                     metodo_pagamento: metodoFormatado,
-                    whatsapp_lojista: whatsappLoja
+                    whatsapp_lojista: whatsappLoja,
+                    email_lojista: emailLoja, // NOVO
+                    endereco_entrega: textoEndereco // NOVO
                 };
 
                 try {
